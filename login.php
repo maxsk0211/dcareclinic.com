@@ -1,3 +1,4 @@
+<?php session_start(); ?>
 <!doctype html>
 
 <html
@@ -55,6 +56,9 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="assets/js/config.js"></script>
+    <!-- sweet Alerts 2 -->
+    <link rel="stylesheet" href="assets/vendor/libs/animate-css/animate.css" />
+    <link rel="stylesheet" href="assets/vendor/libs/sweetalert2/sweetalert2.css" />
   </head>
 
   <body>
@@ -106,7 +110,7 @@
 
             <form id="" class="mb-5" action="sql/chk-login.php" method="post">
               <div class="form-floating form-floating-outline mb-5">
-                <input type="text" class="form-control" id="email" name="users_username" placeholder="Enter your username" autofocus />
+                <input type="text" class="form-control" id="email" name="users_username" placeholder="Enter your username" autofocus  value="<?php if(isset($_SESSION['users_username'])){echo $_SESSION['users_username'];}  ?>" />
                 <label for="email">Username</label>
               </div>
               <div class="mb-5">
@@ -131,6 +135,7 @@
                 </a>
               </div> -->
               <button class="btn btn-primary d-grid w-100" type="submit">Sign in</button>
+
             </form>
 
 <!--             <p class="text-center">
@@ -170,7 +175,10 @@
     <!-- / Content -->
 
     <!-- Core JS -->
+    <!-- sweet Alerts 2 -->
+    <script src="assets/vendor/libs/sweetalert2/sweetalert2.js" />
     <!-- build:js assets/vendor/js/core.js -->
+
     <script src="assets/vendor/libs/jquery/jquery.js"></script>
     <script src="assets/vendor/libs/popper/popper.js"></script>
     <script src="assets/vendor/js/bootstrap.js"></script>
@@ -193,5 +201,26 @@
 
     <!-- Page JS -->
     <script src="assets/js/pages-auth.js"></script>
+
+
+
+<script type="text/javascript">
+  
+    // login error
+    <?php if(isset($_SESSION['login_error'])){ ?>
+      Swal.fire({
+         icon: 'error',
+         title: 'เข้าสู่ระบบไม่สำเร็จ',
+         text: '<?php echo $_SESSION['login_error']; ?>',
+         customClass: {
+              confirmButton: 'btn btn-primary waves-effect waves-light'
+            },
+         buttonsStyling: false
+
+      })
+    <?php unset($_SESSION['login_error']); } ?>
+
+
+</script>
   </body>
 </html>
