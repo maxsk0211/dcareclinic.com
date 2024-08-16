@@ -118,7 +118,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="cus_birthday" class="form-label">วัน/เดือน/ปี เกิด (พ.ศ.):</label>
-                                <input type="text" class="form-control border-primary date-mask" id="cus_birthday" name="cus_birthday" placeholder=" DD-MM-YYYY">
+                                <input type="text" class="form-control border-primary date-mask" id="cus_birthday" name="cus_birthday" placeholder=" DD/MM/YYYY">
                             </div>
                         </div>
                         <div class="col-md-6">

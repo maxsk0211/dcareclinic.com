@@ -26,16 +26,15 @@
             </li>
 
             <li class="menu-item">
-              <div class="text-center mt-2 mb-5 d-block d-xl-none"> <span class="alert bg-primary text-white p-3" role="alert">สาขา : <?php echo $row_branch->branch_name; ?></span> </div>
               <a href="javascript:void(0)" class="menu-link menu-toggle">
                 <i class="menu-icon ri-book-open-line"></i>
                 <div data-i18n="Dashboards">คอร์ส</div>
               </a>
               <ul class="menu-sub">
                 <li class="menu-item">
-                  <a href="customer.php" class="menu-link" >
+                  <a href="course.php" class="menu-link" >
                     <i class="menu-icon tf-icons ri-shopping-cart-2-line"></i>
-                    <div data-i18n="eCommerce">ข้อมูลลูกค้า</div>
+                    <div data-i18n="eCommerce">จัดการคอร์ส</div>
                   </a>
                 </li>
                 <li class="menu-item">
@@ -47,6 +46,47 @@
               </ul>
             </li>
 
+            <li class="menu-item">
+              <a href="javascript:void(0)" class="menu-link menu-toggle">
+                <i class="menu-icon ri-server-line"></i>
+                <div data-i18n="Dashboards">สต๊อกคลินิค</div>
+              </a>
+
+                    <ul class="menu-sub">
+                      <li class="menu-item">
+                        <a href="javascript:void(0);" class="menu-link menu-toggle">
+                          <i class="menu-icon tf-icons ri-shopping-cart-2-line"></i>
+                          <div data-i18n="eCommerce">eCommerce</div>
+                        </a>
+                        <ul class="menu-sub">
+                          <li class="menu-item">
+                            <a href="app-ecommerce-dashboard.html" class="menu-link">
+                              <i class="menu-icon tf-icons ri-circle-fill"></i>
+                              <div data-i18n="Dashboard">Dashboard</div>
+                            </a>
+                          </li>
+                        </ul>
+                      </li>
+
+
+
+
+              <ul class="menu-item">
+                <li class="menu-item">
+                  <a href="course.php" class="menu-link" >
+                    <i class="menu-icon tf-icons ri-shopping-cart-2-line"></i>
+                    <div data-i18n="eCommerce">จัดการจัดการยา</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="type-course.php" class="menu-link">
+                    <i class="menu-icon tf-icons ri-donut-chart-fill"></i>
+                    <div data-i18n="CRM">ประเภทคอร์ส</div>
+                  </a>
+                </li>
+              </ul>
+            </ul>
+            </li>
 
             <li class="menu-item">
               <a href="page-2.html" class="menu-link">
