@@ -56,13 +56,20 @@
                       <li class="menu-item">
                         <a href="javascript:void(0);" class="menu-link menu-toggle">
                           <i class="menu-icon tf-icons ri-shopping-cart-2-line"></i>
-                          <div data-i18n="eCommerce">eCommerce</div>
+                          <div data-i18n="eCommerce">ยา</div>
                         </a>
                         <ul class="menu-sub">
                           <li class="menu-item">
                             <a href="app-ecommerce-dashboard.html" class="menu-link">
                               <i class="menu-icon tf-icons ri-circle-fill"></i>
-                              <div data-i18n="Dashboard">Dashboard</div>
+                              <div data-i18n="Dashboard">จัดการยา</div>
+                            </a>
+                          </li>
+                        
+                          <li class="menu-item">
+                            <a href="drug-type.php" class="menu-link">
+                              <i class="menu-icon tf-icons ri-circle-fill"></i>
+                              <div data-i18n="Dashboard">จัดการประเภทยา</div>
                             </a>
                           </li>
                         </ul>
@@ -72,12 +79,6 @@
 
 
               <ul class="menu-item">
-                <li class="menu-item">
-                  <a href="course.php" class="menu-link" >
-                    <i class="menu-icon tf-icons ri-shopping-cart-2-line"></i>
-                    <div data-i18n="eCommerce">จัดการจัดการยา</div>
-                  </a>
-                </li>
                 <li class="menu-item">
                   <a href="type-course.php" class="menu-link">
                     <i class="menu-icon tf-icons ri-donut-chart-fill"></i>

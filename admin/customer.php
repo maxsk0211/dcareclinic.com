@@ -261,7 +261,7 @@
 
 
                 
-
+    <div class="container">
                 <div class="card-datatable table-responsive">
     <table id="customersTable" class="table table-striped table-bordered table-hover table-primary">
     <thead>
@@ -482,7 +482,7 @@
 </table>
                 </div>
 
-
+</div>
               </div>
             </div>
             <!--/ Content -->
