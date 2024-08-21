@@ -3,17 +3,15 @@
   
   include 'chk-session.php';
   require '../dbcon.php';
-  $editFormAction = $_SERVER['PHP_SELF'];
-
+$editFormAction = htmlspecialchars($_SERVER['PHP_SELF']);
 
 if (isset($_GET['branch_id'])) {
-    $branch_id = $_GET['branch_id'];
-    $_SESSION['branch_id'] = $branch_id; 
+    $branch_id = filter_input(INPUT_GET, 'branch_id', FILTER_SANITIZE_NUMBER_INT);
+    $_SESSION['branch_id'] = $branch_id;
 }
 
 if (isset($_GET['branch_out'])) {
-    $branch_id = $_GET['branch_out'];
-    unset($_SESSION['branch_id']);  
+    unset($_SESSION['branch_id']);
 }
  ?>
 
@@ -76,7 +74,7 @@ if (isset($_GET['branch_out'])) {
       <div class="layout-container">
         <!-- Navbar -->
 
-        <?php include 'navbar.php'; ?>
+        <?php if(isset($_SESSION['branch_id'])){ include 'navbar.php'; } ?>
 
         <!-- / Navbar -->
 
@@ -86,7 +84,7 @@ if (isset($_GET['branch_out'])) {
           <div class="content-wrapper">
             <!-- Menu -->
 
-            <?php include 'menu.php'; ?>
+            <?php if(isset($_SESSION['branch_id'])){ include 'menu.php'; } ?>
 
             <!-- / Menu -->
 
@@ -98,7 +96,7 @@ if (isset($_GET['branch_out'])) {
 
             <!-- Footer -->
             
-            <?php include 'footer.php'; ?>
+            <?php if(isset($_SESSION['branch_id'])){ include 'footer.php'; } ?>
 
             <!-- / Footer -->
 

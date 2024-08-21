@@ -60,7 +60,7 @@
                         </a>
                         <ul class="menu-sub">
                           <li class="menu-item">
-                            <a href="app-ecommerce-dashboard.html" class="menu-link">
+                            <a href="drug.php" class="menu-link">
                               <i class="menu-icon tf-icons ri-circle-fill"></i>
                               <div data-i18n="Dashboard">จัดการยา</div>
                             </a>

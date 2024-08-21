@@ -21,7 +21,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>จัดการสาขา | dcareclinic.com</title>
+    <title>จัดการประเภทยา | dcareclinic.com</title>
 
     <meta name="description" content="" />
 
@@ -90,7 +90,7 @@
               <!-- Users List Table -->
               <div class="card">
                 <div class="card-header border-bottom d-flex justify-content-between">
-                  <h5 class="card-title mb-0 alert alert-danger">ข้อมูลสาขาในระบบทั้งหมด</h5>
+                  <h5 class="card-title mb-0 alert alert-danger">ข้อมูลประเภทยาในระบบทั้งหมด</h5>
                 </div>
 
                 <div class="row">
