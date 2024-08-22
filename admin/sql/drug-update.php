@@ -12,7 +12,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $drug_properties = mysqli_real_escape_string($conn, $_POST['drug_properties']);
     $drug_advice = mysqli_real_escape_string($conn, $_POST['drug_advice']);
     $drug_warning = mysqli_real_escape_string($conn, $_POST['drug_warning']);
-    $drug_amount = mysqli_real_escape_string($conn, $_POST['drug_amount']);
     $drug_unit_id = mysqli_real_escape_string($conn, $_POST['drug_unit_id']);
     $drug_status = mysqli_real_escape_string($conn, $_POST['drug_status']);
 
@@ -24,7 +23,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             drug_properties = '$drug_properties', 
             drug_advice = '$drug_advice', 
             drug_warning = '$drug_warning', 
-            drug_amount = '$drug_amount', 
             drug_unit_id = '$drug_unit_id', 
             drug_status = '$drug_status' 
             WHERE drug_id = '$drug_id'";

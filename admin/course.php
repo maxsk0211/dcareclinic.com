@@ -234,6 +234,27 @@
     </thead>
     <tbody>
         <?php
+
+        function formatId($id) {
+          // ตรวจสอบว่า $id เป็นตัวเลขหรือไม่
+          if (!is_numeric($id)) {
+              return "Error: Input must be numeric.";
+          }
+
+          // แปลง $id เป็นสตริงและนับจำนวนหลัก
+          $idString = (string)$id;
+          $digitCount = strlen($idString);
+
+          // แสดงจำนวนหลักของ $id
+          //echo "จำนวนหลักของ ID: " . $digitCount . "\n";
+
+          // เติม '0' ด้านหน้าให้ครบ 6 หลัก และเพิ่ม 'd' นำหน้า
+          $formattedId = 'C-' . str_pad($idString, 6, '0', STR_PAD_LEFT);
+
+          return $formattedId;
+      }
+
+
         $i = 1;
         $branch_id=$_SESSION['branch_id'];
         if($_SESSION['position_id']==1){
@@ -246,7 +267,7 @@
         ?>
         <tr> 
             <td class="text-center"><a href="course-detail.php?id=<?= $row->course_id ?>"><?= $i++ ?></a></td>
-            <td class="text-center"><a href="course-detail.php?id=<?= $row->course_id ?>"><?= $padded_number = str_pad($row->course_id, 6, '0', STR_PAD_LEFT); ?></a></td>
+            <td class="text-center"><a href="course-detail.php?id=<?= $row->course_id ?>"><?= formatId($row->course_id); ?></a></td>
             <td><a href="course-detail.php?id=<?= $row->course_id ?>"><?= $row->course_name ?></a></td>
             <td><a href="course-detail.php?id=<?= $row->course_id ?>">
                 <?php

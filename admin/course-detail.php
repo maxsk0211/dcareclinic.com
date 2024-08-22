@@ -25,6 +25,27 @@ if (isset($_GET['id'])) {
         $sql_course_type = "SELECT course_type_name FROM course_type WHERE course_type_id = " . $row->course_type_id;
         $result_course_type = $conn->query($sql_course_type);
         $course_type_name = $result_course_type->fetch_object()->course_type_name;
+
+        function formatId($id) {
+          // ตรวจสอบว่า $id เป็นตัวเลขหรือไม่
+          if (!is_numeric($id)) {
+              return "Error: Input must be numeric.";
+          }
+
+          // แปลง $id เป็นสตริงและนับจำนวนหลัก
+          $idString = (string)$id;
+          $digitCount = strlen($idString);
+
+          // แสดงจำนวนหลักของ $id
+          //echo "จำนวนหลักของ ID: " . $digitCount . "\n";
+
+          // เติม '0' ด้านหน้าให้ครบ 6 หลัก และเพิ่ม 'd' นำหน้า
+          $formattedId = 'C-' . str_pad($idString, 6, '0', STR_PAD_LEFT);
+
+          return $formattedId;
+      }
+
+
     } else {
         // กรณีที่ไม่พบข้อมูลคอร์ส หรือเกิดข้อผิดพลาดในการ query
         $_SESSION['msg_error'] = "ไม่พบข้อมูลคอร์ส หรือเกิดข้อผิดพลาด: " . mysqli_error($conn);
@@ -105,7 +126,7 @@ if (isset($_GET['id'])) {
                         <p><strong>รหัส:</strong></p>
                       </div>
                       <div class="col-8">
-                        <input type="text" class="form-control" value="<?= str_pad($row->course_id, 6, '0', STR_PAD_LEFT); ?>" readonly> 
+                        <input type="text" class="form-control" value="<?= formatId($row->course_id); ?>" readonly> 
                       </div>
                     </div>
                     <div class="row mb-3">

@@ -96,7 +96,7 @@
               <!-- Users List Table -->
               <div class="card">
                 <div class="card-header border-bottom d-flex justify-content-between">
-                  <h5 class="card-title mb-0 alert alert-danger">ข้อมูลคอร์สในระบบทั้งหมด</h5>
+                  <h5 class="card-title mb-0 alert alert-danger">ข้อมูลยาในระบบทั้งหมด</h5>
                   <div>
                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addDrugModal">เพิ่มยา</button>
                     <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addUnitModal">จัดการหน่วยนับ</button>
@@ -105,14 +105,9 @@
 
 <!-- Modal -->
 <?php 
-// ดึงข้อมูลสาขา
-if($_SESSION['position_id']==1){
-  $branch_sql = "SELECT * FROM branch";
-}else{
-  $branch_id=$_SESSION['branch_id'];
-  $branch_sql = "SELECT * FROM branch where branch_id='$branch_id'";
-}
-$branch_result = mysqli_query($conn, $branch_sql);
+
+
+
 
 // ดึงข้อมูลประเภทยา
 $drug_type_sql = "SELECT * FROM drug_type";
@@ -142,6 +137,13 @@ $unit_result = mysqli_query($conn, $unit_sql);
                 <label for="branch_id" class="form-label">สาขา</label>
                 <select class="form-select" id="branch_id" name="branch_id" required>
                   <option value="">เลือกสาขา</option>
+                  <?php 
+                  // ดึงข้อมูลสาขา
+
+                  $branch_id=$_SESSION['branch_id'];
+                  $branch_sql = "SELECT * FROM branch where branch_id='$branch_id'";
+                  $branch_result = mysqli_query($conn, $branch_sql);
+                   ?>
                   <?php while($branch = mysqli_fetch_object($branch_result)) { ?>
                     <option value="<?php echo $branch->branch_id; ?>"><?php echo $branch->branch_name; ?></option>
                   <?php } ?>
@@ -186,8 +188,8 @@ $unit_result = mysqli_query($conn, $unit_sql);
               <div class="mb-3">
                 <label for="drug_status" class="form-label">สถานะ</label>
                 <select class="form-select" id="drug_status" name="drug_status" required>
-                  <option value="1">ใช้งาน</option>
-                  <option value="0">ไม่ใช้งาน</option>
+                  <option value="1">พร้อมใช้งาน</option>
+                  <option value="0">ไม่พร้อมใช้งาน</option>
                 </select>
               </div>
             </div>
@@ -272,34 +274,63 @@ $unit_result = mysqli_query($conn, $unit_sql);
                     <th>ชื่อยา</th>
                     <th>สาขา</th>
                     <th>ประเภทยา</th>
-                    <th>จำนวนคงเหลือ</th>
-                    <th>หน่วยนับ</th>
+                    <th>จำนวนคงเหลือ/หน่วยนับ</th>
                     <th>สถานะ</th>
                     <th>จัดการ</th>
                 </tr>
             </thead>
             <tbody>
                 <?php 
+                $branch_id=$_SESSION['branch_id'];
                 // ดึงข้อมูลยาทั้งหมด
                 $sql = "SELECT d.*, b.branch_name, dt.drug_type_name, u.unit_name 
                         FROM drug d
                         LEFT JOIN branch b ON d.branch_id = b.branch_id
                         LEFT JOIN drug_type dt ON d.drug_type_id = dt.drug_type_id
                         LEFT JOIN unit u ON d.drug_unit_id = u.unit_id
+                        where b.branch_id='$branch_id'
                         ORDER BY d.drug_id DESC";
                 $result = mysqli_query($conn, $sql);
 
+function formatId($id) {
+    // ตรวจสอบว่า $id เป็นตัวเลขหรือไม่
+    if (!is_numeric($id)) {
+        return "Error: Input must be numeric.";
+    }
+
+    // แปลง $id เป็นสตริงและนับจำนวนหลัก
+    $idString = (string)$id;
+    $digitCount = strlen($idString);
+
+    // แสดงจำนวนหลักของ $id
+    //echo "จำนวนหลักของ ID: " . $digitCount . "\n";
+
+    // เติม '0' ด้านหน้าให้ครบ 6 หลัก และเพิ่ม 'd' นำหน้า
+    $formattedId = 'D-' . str_pad($idString, 6, '0', STR_PAD_LEFT);
+
+    return $formattedId;
+}
+
                 while($row = mysqli_fetch_object($result)) { ?>
                 <tr>
-                    <td><?php echo $row->drug_id; ?></td>
+                    <td><?php  ?>
+<?php
+
+
+// ตัวอย่างการใช้งาน
+
+ echo formatId($row->drug_id) ;
+
+?>
+
+                  </td>
                     <td><?php echo $row->drug_name; ?></td>
                     <td><?php echo $row->branch_name; ?></td>
                     <td><?php echo $row->drug_type_name; ?></td>
-                    <td><?php echo $row->drug_amount; ?></td>
-                    <td><?php echo $row->unit_name; ?></td>
+                    <td><?php echo $row->drug_amount." ".$row->unit_name; ?></td>
                     <td><?php echo ($row->drug_status == 1) ? '<span class="badge bg-success">พร้อมใช้งาน</span>' : '<span class="badge bg-danger">ไม่พร้อมใช้งาน</span>'; ?></td>
                     <td>
-                        <a href="" class="text-primary" data-bs-toggle="modal" data-bs-target="#editDrugModal" data-drug-id="<?php echo $row->drug_id; ?>">
+                        <a href="" class="text-primary" data-bs-toggle="modal" data-bs-target="#editDrugModal<?php echo $row->drug_id; ?>">
                             <i class="ri-edit-line"></i>
                         </a>
                         <a href="" class="text-danger" onClick="confirmDelete('sql/drug-delete.php?id=<?php echo $row->drug_id; ?>'); return false;">
@@ -310,7 +341,7 @@ $unit_result = mysqli_query($conn, $unit_sql);
 
 
                 <!-- update  modal -->
-                <div class="modal fade" id="editDrugModal" tabindex="-1" aria-labelledby="editDrugModalLabel" aria-hidden="true">
+                <div class="modal fade" id="editDrugModal<?php echo $row->drug_id; ?>" tabindex="-1" aria-labelledby="editDrugModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -371,10 +402,10 @@ $unit_result = mysqli_query($conn, $unit_sql);
                 <label for="drug_warning" class="form-label">ข้อควรระวัง</label>
                 <input type="text" class="form-control" id="drug_warning" name="drug_warning" value="<?php echo $row->drug_warning ?? ''; ?>">
               </div>
-              <div class="mb-3">
+<!--               <div class="mb-3">
                 <label for="drug_amount" class="form-label">จำนวนคงเหลือ</label>
                 <input type="number" class="form-control" id="drug_amount" name="drug_amount" value="<?php echo $row->drug_amount ?? ''; ?>" required>
-              </div>
+              </div> -->
               <div class="mb-3">
                 <label for="drug_unit_id" class="form-label">หน่วยนับ</label>
                 <select class="form-select" id="drug_unit_id" name="drug_unit_id" required>
