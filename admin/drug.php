@@ -126,7 +126,7 @@ $unit_result = mysqli_query($conn, $unit_sql);
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="sql/drug-insert.php" method="post">
+        <form action="sql/drug-insert.php" method="post" enctype="multipart/form-data">
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
@@ -184,6 +184,10 @@ $unit_result = mysqli_query($conn, $unit_sql);
                     <option value="<?php echo $unit->unit_id; ?>"><?php echo $unit->unit_name; ?></option>
                   <?php } ?>
                 </select>
+              </div>
+              <div class="mb-3">
+                <label for="drug_pic" class="form-label">รูปภาพ:</label>
+                <input type="file" class="form-control" id="drug_pic" name="drug_pic">
               </div>
               <div class="mb-3">
                 <label for="drug_status" class="form-label">สถานะ</label>
@@ -313,21 +317,11 @@ function formatId($id) {
 
                 while($row = mysqli_fetch_object($result)) { ?>
                 <tr>
-                    <td><?php  ?>
-<?php
-
-
-// ตัวอย่างการใช้งาน
-
- echo formatId($row->drug_id) ;
-
-?>
-
-                  </td>
-                    <td><?php echo $row->drug_name; ?></td>
-                    <td><?php echo $row->branch_name; ?></td>
-                    <td><?php echo $row->drug_type_name; ?></td>
-                    <td><?php echo $row->drug_amount." ".$row->unit_name; ?></td>
+                    <td><a href="drug-detail.php?drug_id=<?= $row->drug_id?>"><?php echo formatId($row->drug_id); ?></a></td>
+                    <td><a href="drug-detail.php?drug_id=<?= $row->drug_id?>"><?php echo $row->drug_name; ?></a></td>
+                    <td><a href="drug-detail.php?drug_id=<?= $row->drug_id?>"><?php echo $row->branch_name; ?></a></td>
+                    <td><a href="drug-detail.php?drug_id=<?= $row->drug_id?>"><?php echo $row->drug_type_name; ?></a></td>
+                    <td><a href="drug-detail.php?drug_id=<?= $row->drug_id?>"><?php echo $row->drug_amount." ".$row->unit_name; ?></a></td>
                     <td><?php echo ($row->drug_status == 1) ? '<span class="badge bg-success">พร้อมใช้งาน</span>' : '<span class="badge bg-danger">ไม่พร้อมใช้งาน</span>'; ?></td>
                     <td>
                         <a href="" class="text-primary" data-bs-toggle="modal" data-bs-target="#editDrugModal<?php echo $row->drug_id; ?>">
@@ -349,7 +343,7 @@ function formatId($id) {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="sql/drug-update.php" method="post">
+        <form action="sql/drug-update.php" method="post" enctype="multipart/form-data">
           <input type="hidden" name="drug_id" value="<?php echo $row->drug_id ?? ''; ?>">
           <div class="row">
             <div class="col-md-6">
@@ -420,6 +414,12 @@ function formatId($id) {
                 </select>
               </div>
               <div class="mb-3">
+                <label for="drug_pic" class="form-label">รูปภาพ:</label>
+                <input type="file" class="form-control" id="drug_pic" name="drug_pic">
+                <?php if (!empty($row->drug_pic)): ?>
+                  <img src="../../img/drug/<?= $row->drug_pic ?>" alt="รูปภาพยา" width="100">
+                <?php endif; ?>
+                <br>
                 <label for="drug_status" class="form-label">สถานะ</label>
                 <select class="form-select" id="drug_status" name="drug_status" required>
                   <option value="1" <?php echo ($row->drug_status ?? '') == 1 ? 'selected' : ''; ?>>ใช้งาน</option>
@@ -603,9 +603,6 @@ $(document).ready(function() {
 
 
 });
-
-
-
     </script>
 
     <!-- ล้าง session -->

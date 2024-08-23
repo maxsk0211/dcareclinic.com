@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // ... (เพิ่มโค้ดตรวจสอบข้อมูลในส่วนนี้)
 
     // อัปโหลดรูปภาพ (ถ้ามี)
-    $course_pic = ''; // กำหนดค่าเริ่มต้น
+    $course_pic = 'course.png'; // กำหนดค่าเริ่มต้น
     if (isset($_FILES['course_pic']) && $_FILES['course_pic']['error'] === UPLOAD_ERR_OK) {
         $targetDir = "../../img/course/"; // ตรวจสอบให้แน่ใจว่ามีโฟลเดอร์ uploads อยู่
         $originalFileName = basename($_FILES["course_pic"]["name"]);
