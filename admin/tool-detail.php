@@ -3,25 +3,24 @@ session_start();
 include 'chk-session.php';
 require '../dbcon.php';
 
-if (isset($_GET['drug_id'])) {
-    $drug_id = mysqli_real_escape_string($conn, $_GET['drug_id']);
-    $sql = "SELECT d.*, dt.drug_type_name, b.branch_name, u.unit_name 
-            FROM drug d
-            LEFT JOIN drug_type dt ON d.drug_type_id = dt.drug_type_id
-            LEFT JOIN branch b ON d.branch_id = b.branch_id
-            LEFT JOIN unit u ON d.drug_unit_id = u.unit_id
-            WHERE d.drug_id = '$drug_id'";
+if (isset($_GET['tool_id'])) {
+    $tool_id = mysqli_real_escape_string($conn, $_GET['tool_id']);
+    $sql = "SELECT t.*,  b.branch_name, u.unit_name 
+            FROM tool t
+            LEFT JOIN branch b ON t.branch_id = b.branch_id
+            LEFT JOIN unit u ON t.tool_unit_id = u.unit_id
+            WHERE t.tool_id = '$tool_id'";
     $result = mysqli_query($conn, $sql);
-    $drug = mysqli_fetch_object($result);
+    $tool = mysqli_fetch_object($result);
 
-    if (!$drug) {
-        $_SESSION['msg_error'] = "ไม่พบข้อมูลยา";
-        header("Location: drug.php");
+    if (!$tool) {
+        $_SESSION['msg_error'] = "ไม่พบข้อมูลเครื่องมือ1";
+        header("Location: tool.php");
         exit();
     }
 } else {
-    $_SESSION['msg_error'] = "ไม่ได้ระบุรหัสยา";
-    header("Location: drug.php");
+    $_SESSION['msg_error'] = "ไม่ได้ระบุรหัสเครื่องมือ2";
+    header("Location: tool.php");
     exit();
 }
 ?>
@@ -31,7 +30,7 @@ if (isset($_GET['drug_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายละเอียดยา | <?php echo $drug->drug_name; ?></title>
+    <title>รายละเอียดเครื่องมือ | <?php echo $tool->tool_name; ?></title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
@@ -157,7 +156,7 @@ function formatId($id) {
     //echo "จำนวนหลักของ ID: " . $digitCount . "\n";
 
     // เติม '0' ด้านหน้าให้ครบ 6 หลัก และเพิ่ม 'd' นำหน้า
-    $formattedId = 'D-' . str_pad($idString, 6, '0', STR_PAD_LEFT);
+    $formattedId = 'TOOL-' . str_pad($idString, 6, '0', STR_PAD_LEFT);
 
     return $formattedId;
 }
@@ -166,49 +165,28 @@ function formatId($id) {
             <div class="row">
                 <div class="col-md-6">
                     <div class="detail-section">
-                        <p><span class="drug-info-label">รหัส:</span> <span class="drug-info-value"><?php echo formatId($drug->drug_id); ?></span></p>
-                        <p><span class="drug-info-label">ชื่อ:</span> <span class="drug-info-value"><?php echo $drug->drug_name; ?></span></p>
-                        <p><span class="drug-info-label">กลุ่ม:</span> <span class="drug-info-value"><?php echo $drug->drug_type_name; ?></span></p>
-                        <p><span class="drug-info-label">ประเภท:</span> <span class="drug-info-value"><?php echo $drug->drug_properties; ?></span></p>
-                        <p><span class="drug-info-label">หมวดหมู่:</span> <span class="drug-info-value"><?php echo $drug->drug_advice; ?></span></p>
+                        <p><span class="drug-info-label">รหัส:</span> <span class="drug-info-value"><?php echo formatId($tool->tool_id); ?></span></p>
+                        <p><span class="drug-info-label">ชื่อ:</span> <span class="drug-info-value"><?php echo $tool->tool_name; ?></span></p>
+                        <p><span class="drug-info-label">รายละเอียดเครื่องมือ:</span> <span class="drug-info-value"><?php echo $tool->tool_detail; ?></span></p>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="detail-section">
-                        <p class=""><span class="drug-info-label">จำนวนคงเหลือ:</span> <span class="drug-info-value"><?php echo $drug->drug_amount." ".$drug->unit_name; ?></span></p>
-                        <p><span class="drug-info-label">หน่วยนับ:</span> <span class="drug-info-value"><?php echo $drug->unit_name; ?></span></p>
-                        <p><span class="drug-info-label">ราคาต้นทุน/<?= $drug->unit_name?>:</span> <span class="drug-info-value"><?php echo number_format($drug->drug_cost, 2); ?> บาท</span></p>
+                        <p class=""><span class="drug-info-label">จำนวนคงเหลือ:</span> <span class="drug-info-value"><?php echo $tool->tool_amount." ".$tool->unit_name; ?></span></p>
+                        <p><span class="drug-info-label">หน่วยนับ:</span> <span class="drug-info-value"><?php echo $tool->unit_name; ?></span></p>
+                        <p><span class="drug-info-label">ราคาต้นทุน/<?= $tool->unit_name ?>:</span> <span class="drug-info-value"><?php echo number_format($tool->tool_cost, 2); ?> บาท</span></p>
                         <p>
                             <span class="drug-info-label">สถานะ:</span>
-                            <span class="badge <?php echo $drug->drug_status == 1 ? 'bg-success' : 'bg-danger'; ?> status-badge">
-                                <?php echo $drug->drug_status == 1 ? 'พร้อมใช้งาน' : 'ไม่พร้อมใช้งาน'; ?>
+                            <span class="badge <?php echo $tool->tool_status == 1 ? 'bg-success' : 'bg-danger'; ?> status-badge">
+                                <?php echo $tool->tool_status == 1 ? 'พร้อมใช้งาน' : 'ไม่พร้อมใช้งาน'; ?>
                             </span>
                         </p>
-                        <p><span class="drug-info-label">รูปภาพ:</span><br>
-                            <?php if (!empty($drug->drug_pic)): ?>
-                                <img src="../img/drug/<?php echo $drug->drug_pic; ?>" alt="รูปภาพยา" style="max-width: 100px; max-height: 100px;">
-                            <?php else: ?>
-                                ไม่มีรูปภาพ
-                            <?php endif; ?>
-                        </p>
+
                     </div>
                 </div>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="detail-section">
-                        <h5>วิธีใช้</h5>
-                        <p><?php echo $drug->drug_advice; ?></p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="detail-section">
-                        <h5>ข้อควรระวัง</h5>
-                        <p><?php echo $drug->drug_warning; ?></p>
-                    </div>
-                </div>
-            </div>
+
 
             <div class="mt-4">
                 <div class="d-flex justify-content-between">
@@ -232,15 +210,15 @@ function formatId($id) {
             </div>
             <div class="col-md-6">
                 <div class="form-label">รหัส-ขื่อยา</div>
-                <input type="text" class="form-control text-danger fw-bold" value="<?php echo formatId($drug->drug_id)." - ".$drug->drug_name; ?>">
+                <input type="text" class="form-control text-danger fw-bold" value="<?php echo formatId($tool->tool_id)." - ".$tool->tool_name; ?>">
             </div>
           </div>
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="quantity" class="form-label">จำนวนรับเข้า (<?= $drug->unit_name ?>)</label>
+              <label for="quantity" class="form-label">จำนวนรับเข้า (<?= $tool->unit_name ?>)</label>
               <div class="input-group">
                 <input type="number" class="form-control" id="quantity" name="quantity" step="0.01" required>
-                <span class="input-group-text"><?= $drug->unit_name ?></span>
+                <span class="input-group-text"><?= $tool->unit_name ?></span>
                </div>
             </div>
           
@@ -264,8 +242,8 @@ function formatId($id) {
             <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
           </div>
           <input type="hidden" name="users_id" value="<?= $_SESSION['users_id']; ?>">
-          <input type="hidden" name="stock_type" value="drug">
-          <input type="hidden" name="related_id" value="<?= $_GET['drug_id']; ?>">
+          <input type="hidden" name="stock_type" value="tool">
+          <input type="hidden" name="related_id" value="<?= $_GET['tool_id']; ?>">
           <input type="hidden" name="branch_id" value="<?= $_SESSION['branch_id']; ?>">
         </form>
       </div>
@@ -308,7 +286,7 @@ function formatId($id) {
 $stock_sql = "SELECT st.*, u.users_fname, u.users_lname 
               FROM stock_transactions st
               JOIN users u ON st.users_id = u.users_id
-              WHERE st.stock_type = 'drug' AND st.related_id = '$drug_id'
+              WHERE st.stock_type = 'tool' AND st.related_id = '$tool_id'
               ORDER BY st.transaction_date DESC";
 $stock_result = mysqli_query($conn, $stock_sql);
 

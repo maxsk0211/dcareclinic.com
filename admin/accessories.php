@@ -279,11 +279,11 @@
 
                         while($row = mysqli_fetch_object($result)) { ?>
                         <tr>
-                          <td><?php echo formatAccId($row->acc_id); ?></td>
-                          <td><?php echo $row->acc_name; ?></td>
-                          <td><?php echo $row->branch_name; ?></td>
-                          <td><?php echo $row->acc_type_name; ?></td>
-                          <td><?php echo $row->acc_amount." ".$row->unit_name; ?></td>
+                          <td><a href="accessories-detail.php?acc_id=<?= $row->acc_id; ?>"><?php echo formatAccId($row->acc_id); ?></a></td>
+                          <td><a href="accessories-detail.php?acc_id=<?= $row->acc_id; ?>"><?php echo $row->acc_name; ?></a></td>
+                          <td><a href="accessories-detail.php?acc_id=<?= $row->acc_id; ?>"><?php echo $row->branch_name; ?></a></td>
+                          <td><a href="accessories-detail.php?acc_id=<?= $row->acc_id; ?>"><?php echo $row->acc_type_name; ?></a></td>
+                          <td><a href="accessories-detail.php?acc_id=<?= $row->acc_id; ?>"><?php echo $row->acc_amount." ".$row->unit_name; ?></a></td>
                           <td><?php echo ($row->acc_status == 1) ? '<span class="badge bg-success">พร้อมใช้งาน</span>' : '<span class="badge bg-danger">ไม่พร้อมใช้งาน</span>'; ?></td>
                           <td>
                             <a href="" class="text-primary" data-bs-toggle="modal" data-bs-target="#editAccessoryModal<?php echo $row->acc_id; ?>" >

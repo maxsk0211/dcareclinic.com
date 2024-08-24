@@ -97,18 +97,206 @@ if (isset($_GET['id'])) {
         .course-image {
             max-width: 100%;
             height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
-        .course-details .form-control, .course-details .form-select {
+        .course-image:hover {
+            transform: scale(1.03);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .card-header {
             background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px;
+        }
+        .card-body {
+            padding: 30px;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+
+        .course-quick-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .course-quick-info .info-item {
+            background-color: #f0f4f8;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .course-quick-info .info-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        .course-quick-info .info-item .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .course-details-modern {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 25px;
+            margin-top: 20px;
+        }
+        .course-details-modern .detail-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .course-details-modern .detail-item:last-child {
+            border-bottom: none;
+        }
+        .course-details-modern label {
+            display: block;
+            font-weight: 600;
+            color: #344767;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .course-details-modern .detail-content {
+            font-size: 1rem;
+            color: #2d3748;
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
             border: 1px solid #e0e0e0;
         }
-        .course-details label {
-            font-weight: 600;
-            color: #566a7f;
+        .course-details-modern textarea.detail-content {
+            min-height: 100px;
+            resize: vertical;
         }
-    </style>
+        .course-details-modern .badge-status {
+            display: inline-block;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .course-details-modern .badge-status.active {
+            background-color: #48bb78;
+            color: white;
+        }
+        .course-details-modern .badge-status.inactive {
+            background-color: #f56565;
+            color: white;
+        }
+        .course-details-modern .date-info {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .course-details-modern .date-info .date-item {
+            flex: 1;
+        }
+        @media (max-width: 768px) {
+            .course-details-modern .date-info {
+                flex-direction: column;
+            }
+        }
+        .modal-content {
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .modal-title {
+    color: #495057;
+    font-weight: 600;
+  }
+  
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+  }
+  
+  .form-select, .form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 10px 15px;
+  }
+  
+  .input-group .form-select {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+  }
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    vertical-align: top;
+    border-color: #dee2e6;
+}
+.table > :not(caption) > * > * {
+    padding: 0.5rem 0.5rem;
+    background-color: var(--bs-table-bg);
+    border-bottom-width: 1px;
+    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+}
+.table-bordered > :not(caption) > * {
+    border-width: 1px 0;
+}
+.table-bordered > :not(caption) > * > * {
+    border-width: 0 1px;
+}
+.table-hover > tbody > tr:hover > * {
+    --bs-table-accent-bg: rgba(0, 0, 0, 0.075);
+    color: var(--bs-table-hover-color);
+}
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.25rem;
+}
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+.card-title {
+    margin-bottom: 0;
+}
+</style>
 
     <!-- Helpers -->
     <script src="../assets/vendor/js/helpers.js"></script>
@@ -137,99 +325,223 @@ if (isset($_GET['id'])) {
                                     <div class="col-md-5 d-flex justify-content-center align-items-start">
                                         <img src="../../img/course/<?= $row->course_pic ?>" alt="รูปภาพคอร์ส" class="course-image">
                                     </div>
-                                    <div class="col-md-7 course-details">
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">รหัส</label>
+                                    <div class="col-md-7">
+                                        <div class="course-quick-info">
+                                            <div class="info-item">
+                                                <label>รหัส</label>
+                                                <div class="value"><?= formatId($row->course_id); ?></div>
                                             </div>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control" value="<?= formatId($row->course_id); ?>" readonly>
+                                            <div class="info-item">
+                                                <label>ประเภท</label>
+                                                <div class="value"><?= $course_type_name ?></div>
                                             </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">ชื่อคอร์ส</label>
+                                            <div class="info-item">
+                                                <label>จำนวน</label>
+                                                <div class="value"><?= $row->course_amount ?> ครั้ง</div>
                                             </div>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control" value="<?= $row->course_name ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">รายละเอียดคอร์ส</label>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <textarea class="form-control" rows="3" readonly><?= $row->course_detail ?></textarea>
+                                            <div class="info-item">
+                                                <label>ราคา</label>
+                                                <div class="value"><?= number_format($row->course_price) ?> บาท</div>
                                             </div>
                                         </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">ประเภท</label>
+
+                                        <div class="course-details-modern">
+                                            <div class="detail-item">
+                                                <label>ชื่อคอร์ส</label>
+                                                <div class="detail-content"><?= $row->course_name ?></div>
                                             </div>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control" value="<?= $course_type_name ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">จำนวน</label>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="input-group">
-                                                    <input type="number" class="form-control" value="<?= $row->course_amount ?>" readonly>
-                                                    <span class="input-group-text">ครั้ง</span>
+                                            <div class="row">
+                                                <div class="detail-item col-md-6">
+                                                    <label>รายละเอียดคอร์ส</label>
+                                                    <textarea class="detail-content" readonly><?= $row->course_detail ?></textarea>
+                                                </div>
+                                                <div class="detail-item col-md-6">
+                                                    <label>หมายเหตุ</label>
+                                                    <textarea class="detail-content" readonly><?= $row->course_note ?></textarea>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">ราคา</label>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="input-group">
-                                                    <input type="number" class="form-control" value="<?= $row->course_price ?>" readonly>
-                                                    <span class="input-group-text">บาท</span>
+                                            <div class="detail-item">
+                                                <label>ระยะเวลาคอร์ส</label>
+                                                <div class="date-info">
+                                                    <div class="date-item">
+                                                        <label>วันที่เริ่ม</label>
+                                                        <div class="detail-content"><?= date('d/m/Y', strtotime($row->course_start) + 543 * 365 * 24 * 60 * 60) ?></div>
+                                                    </div>
+                                                    <div class="date-item">
+                                                        <label>วันที่สิ้นสุด</label>
+                                                        <div class="detail-content"><?= date('d/m/Y', strtotime($row->course_end) + 543 * 365 * 24 * 60 * 60) ?></div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">วันที่เริ่ม</label>
+
+                                            <div class="detail-item">
+                                                <label>สถานะ</label>
+                                                <div>
+                                                    <?php if ($row->course_status == 1): ?>
+                                                        <span class="badge-status active">พร้อมใช้งาน</span>
+                                                    <?php else: ?>
+                                                        <span class="badge-status inactive">ไม่พร้อมใช้งาน</span>
+                                                    <?php endif ?>
+                                                </div>
                                             </div>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control" value="<?= date('d/m/Y', strtotime($row->course_start) + 543 * 365 * 24 * 60 * 60) ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">วันที่สิ้นสุด</label>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control" value="<?= date('d/m/Y', strtotime($row->course_end) + 543 * 365 * 24 * 60 * 60) ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">สถานะ</label>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <?php if ($row->course_status == 1): ?>
-                                                    <span class="badge bg-success">พร้อมใช้งาน</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-danger">ไม่พร้อมใช้งาน</span>
-                                                <?php endif ?>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-sm-4">
-                                                <label class="form-label">หมายเหตุ</label>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <textarea class="form-control" rows="3" readonly><?= $row->course_note ?></textarea>
-                                            </div>
+
+
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- modal -->
+<?php
+// ดึงข้อมูลยา
+$course_id = $_GET['id'];
+$drug_sql = "SELECT d.drug_id as id, d.drug_name as name, u.unit_name as unit FROM drug d LEFT JOIN unit u ON d.drug_unit_id = u.unit_id WHERE d.drug_status = 1";
+$drug_result = $conn->query($drug_sql);
+$drugs = $drug_result->fetch_all(MYSQLI_ASSOC);
+
+// ดึงข้อมูลเครื่องมือ
+$tool_sql = "SELECT t.tool_id as id, t.tool_name as name, u.unit_name as unit FROM tool t LEFT JOIN unit u ON t.tool_unit_id = u.unit_id WHERE t.tool_status = 1";
+$tool_result = $conn->query($tool_sql);
+$tools = $tool_result->fetch_all(MYSQLI_ASSOC);
+
+// ดึงข้อมูลอุปกรณ์
+$accessory_sql = "SELECT a.acc_id as id, a.acc_name as name, u.unit_name as unit FROM accessories a LEFT JOIN unit u ON a.acc_unit_id = u.unit_id WHERE a.acc_status = 1";
+$accessory_result = $conn->query($accessory_sql);
+$accessories = $accessory_result->fetch_all(MYSQLI_ASSOC);
+?>
+<div class="modal fade" id="addResourceModal" tabindex="-1" aria-labelledby="addResourceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addResourceModalLabel">เพิ่มทรัพยากรสำหรับคอร์ส</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addResourceForm" action="sql/course-resources-insert.php" method="POST">
+          <input type="hidden" name="course_id" id="course_id" value="<?php echo isset($course_id) ? $course_id : ''; ?>" required>
+          <div class="mb-3">
+            <label for="resourceType" class="form-label">ประเภททรัพยากร</label>
+            <select class="form-select" id="resourceType" name="resource_type" required>
+              <option value="">เลือกประเภท</option>
+              <option value="drug">ยา</option>
+              <option value="tool">เครื่องมือ</option>
+              <option value="accessory">อุปกรณ์</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="resourceName" class="form-label">ชื่อทรัพยากร</label>
+            <select class="form-select" id="resourceName" name="resource_id" required>
+              <option value="">เลือกทรัพยากร</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="quantity" class="form-label">จำนวน</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="quantity" name="quantity" required min="0" step="0.01">
+              <span class="input-group-text" id="unitLabel"></span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary"  form="addResourceForm"  data-course-id="<?php echo $course_id; ?>">เพิ่มทรัพยากร</button>
+      </div>
+    </div>
+  </div>
+</div>
+                                <!-- modal -->
+<?php
+// ดึงข้อมูล course_resources (ส่วนนี้ยังคงเดิม)
+$resources_sql = "SELECT cr.*,
+                        CASE
+                            WHEN cr.resource_type = 'drug' THEN d.drug_name
+                            WHEN cr.resource_type = 'tool' THEN t.tool_name
+                            WHEN cr.resource_type = 'accessory' THEN a.acc_name
+                        END AS resource_name,
+                        CASE
+                            WHEN cr.resource_type = 'drug' THEN d.drug_cost
+                            WHEN cr.resource_type = 'tool' THEN t.tool_cost
+                            WHEN cr.resource_type = 'accessory' THEN a.acc_cost
+                        END AS unit_cost,
+                        CASE
+                            WHEN cr.resource_type = 'drug' THEN u1.unit_name
+                            WHEN cr.resource_type = 'tool' THEN u2.unit_name
+                            WHEN cr.resource_type = 'accessory' THEN u3.unit_name
+                        END AS unit_name
+                        FROM course_resources cr
+                        LEFT JOIN drug d ON cr.resource_type = 'drug' AND cr.resource_id = d.drug_id
+                        LEFT JOIN tool t ON cr.resource_type = 'tool' AND cr.resource_id = t.tool_id
+                        LEFT JOIN accessories a ON cr.resource_type = 'accessory' AND cr.resource_id = a.acc_id
+                        LEFT JOIN unit u1 ON d.drug_unit_id = u1.unit_id
+                        LEFT JOIN unit u2 ON t.tool_unit_id = u2.unit_id
+                        LEFT JOIN unit u3 ON a.acc_unit_id = u3.unit_id
+                        WHERE cr.course_id = ?";
+
+$stmt = $conn->prepare($resources_sql);
+$stmt->bind_param("i", $course_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$total_cost = 0;
+$resources = [];
+
+// เปลี่ยนจาก fetch_assoc เป็น fetch_object
+while ($row = $result->fetch_object()) {
+    $row->total_cost = $row->quantity * $row->unit_cost;
+    $total_cost += $row->total_cost;
+    $resources[] = $row;
+}
+$stmt->close();
+?>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <div class="d-flex justify-content-between">
+            <h5 class="card-title">ทรัพยากรที่ใช้ในคอร์ส</h5>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addResourceModal">เพิ่มทรัพยากรสำหรับคอร์ส</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>ประเภท</th>
+                        <th>ชื่อทรัพยากร</th>
+                        <th>จำนวน</th>
+                        <th>หน่วยนับ</th>
+                        <th>ต้นทุนต่อหน่วย</th>
+                        <th>ต้นทุนรวม</th>
+                        <th>การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($resources as $resource): ?>
+                    <tr>
+                        <td><?php echo ucfirst($resource->resource_type); ?></td>
+                        <td><?php echo $resource->resource_name; ?></td>
+                        <td><?php echo $resource->quantity; ?></td>
+                        <td><?php echo $resource->unit_name; ?></td>
+                        <td><?php echo number_format($resource->unit_cost, 2); ?> บาท</td>
+                        <td><?php echo number_format($resource->total_cost, 2); ?> บาท</td>
+                        <td>
+                            <a href="" class="text-danger" onClick="confirmDelete('sql/course-resource-delete.php?id=<?php echo $resource->resource_id; ?>&course_id=<?php echo $course_id; ?>'); return false;"><i class="ri-delete-bin-6-line"></i></a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <tr class="table-primary">
+                        <th colspan="5" class="text-end">ต้นทุนรวมทั้งหมด:</th>
+                        <th><?php echo number_format($total_cost, 2); ?> บาท</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
                             </div>
                         </div>
                     </div>
@@ -264,7 +576,58 @@ if (isset($_GET['id'])) {
 
 
 
+<script>
 
+
+document.addEventListener('DOMContentLoaded', function() {
+  const resourceType = document.getElementById('resourceType');
+  const resourceName = document.getElementById('resourceName');
+  const unitLabel = document.getElementById('unitLabel');
+
+  // ข้อมูลทรัพยากรแต่ละประเภท
+  const resources = {
+    drug: <?php echo json_encode($drugs); ?>,
+    tool: <?php echo json_encode($tools); ?>,
+    accessory: <?php echo json_encode($accessories); ?>
+  };
+
+  resourceType.addEventListener('change', function() {
+    const selectedType = this.value;
+    resourceName.innerHTML = '<option value="">เลือกทรัพยากร</option>';
+    unitLabel.textContent = '';
+    
+    if (selectedType && resources[selectedType]) {
+      resources[selectedType].forEach(item => {
+        const option = new Option(item.name, item.id);
+        resourceName.add(option);
+      });
+    }
+  });
+
+  resourceName.addEventListener('change', function() {
+    const selectedType = resourceType.value;
+    const selectedId = this.value;
+    
+    if (selectedType && selectedId) {
+      const selectedResource = resources[selectedType].find(item => item.id == selectedId);
+      if (selectedResource) {
+        unitLabel.textContent = selectedResource.unit;
+      }
+    }
+  });
+
+    // เมื่อ modal เปิด ให้เซ็ต course_id
+    $('#addResourceModal').on('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const courseId = button.getAttribute('data-course-id');
+      if (courseId) {
+        document.getElementById('course_id').value = courseId;
+      } else {
+        console.error('ไม่พบ course_id');
+      }
+    });
+});
+</script>
 
 
 
@@ -326,29 +689,7 @@ if (isset($_GET['id'])) {
       })
     <?php unset($_SESSION['msg_ok']); } ?>
 
-      $(document).ready(function() {
-          $('#coursesTable').DataTable({
-              // ภาษาไทย
-              language: {
-                  "lengthMenu": "แสดง _MENU_ แถวต่อหน้า",
-                  "zeroRecords": "ไม่พบข้อมูล",
-                  "info": "แสดงหน้า _PAGE_ จาก _PAGES_",
-                  "infoEmpty": "ไม่มีข้อมูล",
-                  "infoFiltered": "(กรองข้อมูลจาก _MAX_ รายการทั้งหมด)",
-                  "search": "ค้นหา:",
-                  "paginate": {
-                      "first": "หน้าแรก",
-                      "last": "หน้าสุดท้าย",
-                      "next": "ถัดไป",
-                      "previous": "ก่อนหน้า"
-                  }
-              },
-              lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"] ],
-              pagingType: 'full_numbers'
-          });
 
-
-      });
 
 
 

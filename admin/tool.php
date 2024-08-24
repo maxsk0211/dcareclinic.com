@@ -265,11 +265,11 @@
 
                         while($row = mysqli_fetch_object($result)) { ?>
                         <tr>
-                          <td><?php echo formatToolId($row->tool_id); ?></td>
-                          <td><?php echo $row->branch_name; ?></td>
-                          <td><?php echo $row->tool_name; ?></td>
-                          <td><?php echo $row->tool_detail; ?></td>
-                          <td><?php echo $row->tool_amount." ".$row->unit_name; ?></td>
+                          <td><a href="tool-detail.php?tool_id=<?= $row->tool_id; ?>"><?php echo formatToolId($row->tool_id); ?></a></td>
+                          <td><a href="tool-detail.php?tool_id=<?= $row->tool_id; ?>"><?php echo $row->branch_name; ?></a></td>
+                          <td><a href="tool-detail.php?tool_id=<?= $row->tool_id; ?>"><?php echo $row->tool_name; ?></a></td>
+                          <td><a href="tool-detail.php?tool_id=<?= $row->tool_id; ?>"><?php echo $row->tool_detail; ?></a></td>
+                          <td><a href="tool-detail.php?tool_id=<?= $row->tool_id; ?>"><?php echo $row->tool_amount." ".$row->unit_name; ?></a></td>
                           <td><?php echo ($row->tool_status == 1) ? '<span class="badge bg-success">พร้อมใช้งาน</span>' : '<span class="badge bg-danger">ไม่พร้อมใช้งาน</span>'; ?></td>
                           <td>
                             <a href="" class="text-primary" data-bs-toggle="modal" data-bs-target="#editToolModal<?php echo $row->tool_id; ?>" >
