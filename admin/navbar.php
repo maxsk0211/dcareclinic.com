@@ -80,6 +80,14 @@
             <?php } ?>
             <?php if($_SESSION['position_id']==1 or $_SESSION['position_id']==2){ ?>
             <li>
+              <a class="dropdown-item" href="clinic-settings.php">
+                <i class="ri-settings-4-line me-3"></i><span class="align-middle">คั้งค่าสาขา</span>
+              </a>
+            </li>
+            <?php } ?>
+
+            <?php if($_SESSION['position_id']==1 or $_SESSION['position_id']==2){ ?>
+            <li>
               <a class="dropdown-item" href="users.php">
                 <i class="ri-settings-4-line me-3"></i><span class="align-middle">จัดการพนังงาน</span>
               </a>
