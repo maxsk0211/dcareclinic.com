@@ -2,6 +2,12 @@
         <div class="container-xxl d-flex h-100">
           <ul class="menu-inner">
             <!-- Page -->
+            <li class="menu-item">
+              <a href="booking.php" class="menu-link">
+                <i class="menu-icon tf-icons ri-file-line"></i>
+                <div data-i18n="Page 2">การจองคอร์ส</div>
+              </a>
+            </li>
 
             <li class="menu-item">
               <div class="text-center mt-2 mb-5 d-block d-xl-none"> <span class="alert bg-primary text-white p-3" role="alert">สาขา : <?php echo $row_branch->branch_name; ?></span> </div>
