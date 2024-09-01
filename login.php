@@ -137,19 +137,26 @@
               <button class="btn btn-primary d-grid w-100" type="submit">Sign in</button>
 
             </form>
+            <div class="divider my-5">
+              <div class="divider-text">or</div>
+            </div>
 
-<!--             <p class="text-center">
+             <div class="d-flex justify-content-center">
+                  <a href="line-login.php" class="btn btn-success w-100">
+                      <i class="ri-line-fill me-2"></i>Login with LINE
+                  </a>
+              </div>
+            <!-- 
+            <p class="text-center">
               <span>New on our platform?</span>
               <a href="auth-register-cover.html">
                 <span>Create an account</span>
               </a>
-            </p> -->
+            </p>
 
-<!--             <div class="divider my-5">
-              <div class="divider-text">or</div>
-            </div> -->
 
-<!--             <div class="d-flex justify-content-center gap-2">
+
+            <div class="d-flex justify-content-center gap-2">
               <a href="javascript:;" class="btn btn-icon rounded-circle btn-text-facebook">
                 <i class="tf-icons ri-facebook-fill"></i>
               </a>
@@ -164,8 +171,8 @@
 
               <a href="javascript:;" class="btn btn-icon rounded-circle btn-text-google-plus">
                 <i class="tf-icons ri-google-fill"></i>
-              </a>
-            </div> -->
+              </a> -->
+            </div>
           </div>
         </div>
         <!-- /Login -->

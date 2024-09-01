@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Aug 31, 2024 at 11:25 AM
+-- Generation Time: Sep 01, 2024 at 12:08 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 5.6.40
 
@@ -125,6 +125,13 @@ CREATE TABLE `clinic_closures` (
   `reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
+--
+-- Dumping data for table `clinic_closures`
+--
+
+INSERT INTO `clinic_closures` (`id`, `closure_date`, `reason`) VALUES
+(6, '2024-09-15', 'หยุด');
+
 -- --------------------------------------------------------
 
 --
@@ -220,26 +227,9 @@ CREATE TABLE `course_bookings` (
 --
 
 INSERT INTO `course_bookings` (`id`, `branch_id`, `cus_id`, `booking_datetime`, `created_at`, `users_id`, `status`) VALUES
-(11, 1, 1, '2024-08-27 10:00:00', '2024-08-28 02:54:09', 1, 'confirmed'),
-(12, 1, 1, '2024-08-27 09:15:00', '2024-08-28 05:40:41', 1, 'cancelled'),
-(13, 1, 4, '2024-08-27 16:45:00', '2024-08-28 02:54:14', 1, 'confirmed'),
-(14, 1, 1, '2024-08-31 19:45:00', '2024-08-28 05:05:10', 1, 'cancelled'),
-(15, 1, 1, '2024-08-28 10:00:00', '2024-08-28 05:09:47', 1, 'cancelled'),
-(16, 1, 1, '2024-08-28 10:30:00', '2024-08-28 05:05:27', 1, 'cancelled'),
-(17, 1, 1, '2024-08-28 09:00:00', '2024-08-28 05:39:09', 1, 'confirmed'),
-(18, 1, 1, '2024-08-28 12:00:00', '2024-08-28 05:40:57', 1, 'confirmed'),
-(19, 1, 1, '2024-08-28 14:30:00', '2024-08-28 07:28:32', 1, 'confirmed'),
-(20, 1, 1, '2024-08-28 14:45:00', '2024-08-28 07:35:07', 1, 'confirmed'),
-(21, 1, 1, '2024-08-28 16:30:00', '2024-08-28 07:35:31', 1, 'confirmed'),
-(22, 1, 1, '2024-08-28 15:00:00', '2024-08-28 07:36:12', 1, 'confirmed'),
-(23, 1, 1, '2024-08-28 15:15:00', '2024-08-28 07:36:27', 1, 'confirmed'),
-(24, 1, 1, '2024-08-28 15:30:00', '2024-08-28 07:36:38', 1, 'confirmed'),
-(25, 1, 1, '2024-08-28 15:45:00', '2024-08-28 07:36:50', 1, 'confirmed'),
-(26, 1, 1, '2024-08-28 16:00:00', '2024-08-28 07:37:01', 1, 'confirmed'),
-(27, 1, 1, '2024-08-28 16:15:00', '2024-08-28 07:37:12', 1, 'confirmed'),
-(28, 1, 1, '2024-08-28 16:45:00', '2024-08-28 07:37:26', 1, 'confirmed'),
-(29, 1, 1, '2024-08-31 10:45:00', '2024-08-31 04:15:49', 1, 'confirmed'),
-(30, 1, 1, '2024-08-31 12:00:00', '2024-08-31 04:16:18', 1, 'confirmed');
+(3, 1, 1, '2024-08-31 17:00:00', '2024-08-31 08:01:29', 1, 'confirmed'),
+(4, 1, 1, '2024-08-31 17:15:00', '2024-08-31 08:10:29', 1, 'confirmed'),
+(5, 1, 3, '2024-09-05 09:00:00', '2024-09-01 04:17:35', 1, 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -305,7 +295,6 @@ CREATE TABLE `customer` (
   `cus_title` varchar(10) NOT NULL,
   `cus_gender` varchar(10) NOT NULL,
   `cus_nickname` varchar(20) DEFAULT NULL,
-  `cus_line_id` varchar(50) DEFAULT NULL,
   `cus_email` varchar(100) DEFAULT NULL,
   `cus_blood` varchar(10) DEFAULT NULL,
   `cus_tel` varchar(15) NOT NULL,
@@ -318,26 +307,29 @@ CREATE TABLE `customer` (
   `cus_province` varchar(100) NOT NULL,
   `cus_postal_code` varchar(10) NOT NULL,
   `cus_image` varchar(100) DEFAULT 'customer,png',
-  `cus_status` int(5) NOT NULL DEFAULT 1
+  `cus_status` int(5) NOT NULL DEFAULT 1,
+  `line_user_id` varchar(255) DEFAULT NULL,
+  `line_display_name` varchar(255) DEFAULT NULL,
+  `line_picture_url` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `customer`
 --
 
-INSERT INTO `customer` (`cus_id`, `cus_id_card_number`, `cus_birthday`, `cus_firstname`, `cus_lastname`, `cus_title`, `cus_gender`, `cus_nickname`, `cus_line_id`, `cus_email`, `cus_blood`, `cus_tel`, `cus_drugallergy`, `cus_congenital`, `cus_remark`, `cus_address`, `cus_district`, `cus_city`, `cus_province`, `cus_postal_code`, `cus_image`, `cus_status`) VALUES
-(1, '1819900189796', '2024-08-15', 'สน', '123', 'นาย', 'ชาย', '123', '123', '123@ef.wef', 'A+', '123123', '123', '123', '123', '123', '123', '12', '1233', '123', 'customer.png', 1),
-(2, '2345678901234', '1995-02-15', 'สมหญิง', 'ใจเย็น', 'นางสาว', 'หญิง', 'หญิง', 'somying', 'somying@example.com', 'B', '0823456789', 'ยา penicillin', NULL, NULL, '456 หมู่ 5', 'บางรัก', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10500', 'customer.png', 1),
-(3, '3456789012345', '1985-03-30', 'สมศักดิ์', 'รักเรียน', 'นาย', 'ชาย', 'ศักดิ์', 'somsak', 'somsak@example.com', 'O', '0834567890', NULL, 'โรคหัวใจ', NULL, '789 หมู่ 6', 'ห้วยขวาง', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10310', 'customer.png', 1),
-(4, '123', '1995-11-02', '123', '123', 'นาย', 'ชาย', '', '123', '', 'A+', '1123', '123', '123', '123', '123', '123', '123', '', '123', 'customer.png', 1),
-(5, '5678901234567', '1992-05-25', 'สมหมาย', 'ใจสู้', 'นาย', 'ชาย', 'หมาย', 'sommai', 'sommai@example.com', 'A', '0856789012', 'ยาแอสไพริน', NULL, NULL, '234 หมู่ 8', 'บางกะปิ', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10240', 'customer.png', 1),
-(6, '6789012345678', '1988-06-20', 'สมใจ', 'ใจถึง', 'นางสาว', 'หญิง', 'ใจ', 'somjai', 'somjai@example.com', 'B', '0867890123', NULL, 'โรคเบาหวาน', NULL, '567 หมู่ 9', 'ลาดพร้าว', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10230', 'customer.png', 1),
-(7, '7890123456789', '1997-07-05', 'สมคิด', 'ใจกว้าง', 'นาย', 'ชาย', 'คิด', 'somkit', 'somkit@example.com', 'O', '0878901234', NULL, NULL, NULL, '890 หมู่ 10', 'บางเขน', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10220', 'customer.png', 1),
-(8, '8901234567890', '1983-08-18', 'สมรัก', 'ใจดี', 'นาง', 'หญิง', 'รัก', 'somrak', 'somrak@example.com', 'AB', '0889012345', 'อาหารทะเล', NULL, NULL, '123 หมู่ 1', 'บางซื่อ', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10800', 'customer.png', 1),
-(9, '9012345678901', '2002-09-22', 'สมหวัง', 'ใจเย็น', 'นาย', 'ชาย', 'หวัง', 'somwang', 'somwang@example.com', 'A', '0890123456', NULL, 'โรคความดันโลหิตสูง', NULL, '456 หมู่ 2', 'ดุสิต', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10300', 'customer.png', 1),
-(10, '0123456789012', '1994-10-08', 'สมบูรณ์', 'ใจสู้', 'นาย', 'ชาย', 'บูรณ์', 'somboon', 'somboon@example.com', 'B', '0901234567', NULL, NULL, NULL, '789 หมู่ 3', 'พญาไท', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10400', 'customer.png', 1),
-(11, '1234567890123', '1990-01-01', 'สมชาย', 'ใจดี', 'นาย', 'ชาย', 'ชาย', 'somchai', 'somchai@example.com', 'A', '0812345678', NULL, NULL, NULL, '123 หมู่ 4', 'เมือง', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10100', 'customer.png', 1),
-(12, '4567890123456', '2000-04-10', 'สมพร', 'ใจบุญ', 'นาง', 'หญิง', 'พร', 'somporn', 'somporn@example.com', 'AB', '0845678901', NULL, NULL, 'แพ้ฝุ่น', '101 หมู่ 7', 'จตุจักร', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10900', 'customer.png', 1);
+INSERT INTO `customer` (`cus_id`, `cus_id_card_number`, `cus_birthday`, `cus_firstname`, `cus_lastname`, `cus_title`, `cus_gender`, `cus_nickname`, `cus_email`, `cus_blood`, `cus_tel`, `cus_drugallergy`, `cus_congenital`, `cus_remark`, `cus_address`, `cus_district`, `cus_city`, `cus_province`, `cus_postal_code`, `cus_image`, `cus_status`, `line_user_id`, `line_display_name`, `line_picture_url`) VALUES
+(1, '1819900189796', '2024-08-15', 'สน', '123', 'นาย', 'ชาย', '123', '123@ef.wef', 'A+', '123123', '123', '123', '123', '123', '123', '12', '1233', '123', 'customer.png', 1, NULL, NULL, NULL),
+(2, '2345678901234', '1995-02-15', 'สมหญิง', 'ใจเย็น', 'นางสาว', 'หญิง', 'หญิง', 'somying@example.com', 'B', '0823456789', 'ยา penicillin', NULL, NULL, '456 หมู่ 5', 'บางรัก', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10500', 'customer.png', 1, NULL, NULL, NULL),
+(3, '3456789012345', '1985-03-30', 'สมศักดิ์', 'รักเรียน', 'นาย', 'ชาย', 'ศักดิ์', 'somsak@example.com', 'O', '0834567890', NULL, 'โรคหัวใจ', NULL, '789 หมู่ 6', 'ห้วยขวาง', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10310', 'customer.png', 1, NULL, NULL, NULL),
+(4, '123', '1995-11-02', '123', '123', 'นาย', 'ชาย', '', '', 'A+', '1123', '123', '123', '123', '123', '123', '123', '', '123', 'customer.png', 1, NULL, NULL, NULL),
+(5, '5678901234567', '1992-05-25', 'สมหมาย', 'ใจสู้', 'นาย', 'ชาย', 'หมาย', 'sommai@example.com', 'A', '0856789012', 'ยาแอสไพริน', NULL, NULL, '234 หมู่ 8', 'บางกะปิ', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10240', 'customer.png', 1, NULL, NULL, NULL),
+(6, '6789012345678', '1988-06-20', 'สมใจ', 'ใจถึง', 'นางสาว', 'หญิง', 'ใจ', 'somjai@example.com', 'B', '0867890123', NULL, 'โรคเบาหวาน', NULL, '567 หมู่ 9', 'ลาดพร้าว', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10230', 'customer.png', 1, NULL, NULL, NULL),
+(7, '7890123456789', '1997-07-05', 'สมคิด', 'ใจกว้าง', 'นาย', 'ชาย', 'คิด', 'somkit@example.com', 'O', '0878901234', NULL, NULL, NULL, '890 หมู่ 10', 'บางเขน', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10220', 'customer.png', 1, NULL, NULL, NULL),
+(8, '8901234567890', '1983-08-18', 'สมรัก', 'ใจดี', 'นาง', 'หญิง', 'รัก', 'somrak@example.com', 'AB', '0889012345', 'อาหารทะเล', NULL, NULL, '123 หมู่ 1', 'บางซื่อ', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10800', 'customer.png', 1, NULL, NULL, NULL),
+(9, '9012345678901', '2002-09-22', 'สมหวัง', 'ใจเย็น', 'นาย', 'ชาย', 'หวัง', 'somwang@example.com', 'A', '0890123456', NULL, 'โรคความดันโลหิตสูง', NULL, '456 หมู่ 2', 'ดุสิต', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10300', 'customer.png', 1, NULL, NULL, NULL),
+(10, '0123456789012', '1994-10-08', 'สมบูรณ์', 'ใจสู้', 'นาย', 'ชาย', 'บูรณ์', 'somboon@example.com', 'B', '0901234567', NULL, NULL, NULL, '789 หมู่ 3', 'พญาไท', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10400', 'customer.png', 1, NULL, NULL, NULL),
+(11, '1234567890123', '1990-01-01', 'สมชาย', 'ใจดี', 'นาย', 'ชาย', 'ชาย', 'somchai@example.com', 'A', '0812345678', NULL, NULL, NULL, '123 หมู่ 4', 'เมือง', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10100', 'customer.png', 1, NULL, NULL, NULL),
+(12, '4567890123456', '2000-04-10', 'สมพร', 'ใจบุญ', 'นาง', 'หญิง', 'พร', 'somporn@example.com', 'AB', '0845678901', NULL, NULL, 'แพ้ฝุ่น', '101 หมู่ 7', 'จตุจักร', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10900', 'customer.png', 1, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -429,13 +421,22 @@ CREATE TABLE `order_course` (
   `oc_id` int(11) NOT NULL,
   `cus_id` int(11) NOT NULL,
   `users_id` int(11) NOT NULL,
-  `app_id` int(11) NOT NULL,
+  `course_bookings_id` int(11) NOT NULL,
   `order_datetime` datetime NOT NULL,
   `order_payment` varchar(50) DEFAULT NULL,
   `order_net_total` int(11) DEFAULT NULL,
   `order_payment_date` datetime DEFAULT NULL,
   `order_status` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `order_course`
+--
+
+INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`, `order_datetime`, `order_payment`, `order_net_total`, `order_payment_date`, `order_status`) VALUES
+(9, 1, 1, 3, '2024-08-31 15:01:29', 'ยังไม่จ่ายเงิน', 35000, NULL, 1),
+(10, 1, 1, 4, '2024-08-31 15:10:29', 'เงินสด', 50000, NULL, 1),
+(11, 3, 1, 5, '2024-09-01 11:17:35', 'ยังไม่จ่ายเงิน', 35000, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -450,6 +451,18 @@ CREATE TABLE `order_detail` (
   `od_amount` int(11) NOT NULL,
   `od_price` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `order_detail`
+--
+
+INSERT INTO `order_detail` (`od_id`, `oc_id`, `course_id`, `od_amount`, `od_price`) VALUES
+(5, 9, 4, 1, 15000),
+(6, 9, 5, 1, 20000),
+(7, 10, 6, 1, 30000),
+(8, 10, 5, 1, 20000),
+(9, 11, 4, 1, 15000),
+(10, 11, 5, 1, 20000);
 
 -- --------------------------------------------------------
 
@@ -680,7 +693,8 @@ ALTER TABLE `course_type`
 -- Indexes for table `customer`
 --
 ALTER TABLE `customer`
-  ADD PRIMARY KEY (`cus_id`);
+  ADD PRIMARY KEY (`cus_id`),
+  ADD UNIQUE KEY `line_user_id` (`line_user_id`);
 
 --
 -- Indexes for table `drug`
@@ -700,8 +714,7 @@ ALTER TABLE `drug_type`
 ALTER TABLE `order_course`
   ADD PRIMARY KEY (`oc_id`),
   ADD KEY `cus_id` (`cus_id`),
-  ADD KEY `users_id` (`users_id`),
-  ADD KEY `app_id` (`app_id`);
+  ADD KEY `users_id` (`users_id`);
 
 --
 -- Indexes for table `order_detail`
@@ -773,7 +786,7 @@ ALTER TABLE `branch`
 -- AUTO_INCREMENT for table `clinic_closures`
 --
 ALTER TABLE `clinic_closures`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `clinic_hours`
@@ -791,7 +804,7 @@ ALTER TABLE `course`
 -- AUTO_INCREMENT for table `course_bookings`
 --
 ALTER TABLE `course_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `course_resources`
@@ -827,13 +840,13 @@ ALTER TABLE `drug_type`
 -- AUTO_INCREMENT for table `order_course`
 --
 ALTER TABLE `order_course`
-  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `order_detail`
 --
 ALTER TABLE `order_detail`
-  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `position`
@@ -881,7 +894,7 @@ ALTER TABLE `course_bookings`
 ALTER TABLE `order_course`
   ADD CONSTRAINT `order_course_ibfk_1` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`),
   ADD CONSTRAINT `order_course_ibfk_2` FOREIGN KEY (`users_id`) REFERENCES `users` (`users_id`),
-  ADD CONSTRAINT `order_course_ibfk_3` FOREIGN KEY (`app_id`) REFERENCES `course_bookings` (`id`);
+  ADD CONSTRAINT `order_course_ibfk_3` FOREIGN KEY (`course_bookings_id`) REFERENCES `course_bookings` (`id`);
 
 --
 -- Constraints for table `order_detail`
