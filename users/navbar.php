@@ -1,3 +1,25 @@
+<?php 
+// escape ตัวแปรเพื่อป้องกัน SQL injection
+$user_id = mysqli_real_escape_string($conn, $_SESSION['users_id']);
+
+// สร้างคำสั่ง SQL โดยใช้ mysqli_real_escape_string
+$sql_users = "SELECT * FROM customer WHERE cus_id = '$user_id'";
+
+// ดำเนินการ query
+$result_users = $conn->query($sql_users);
+$row_users=mysqli_fetch_object($result_users);
+
+if ($row_users->line_user_id!=null) {
+    $profile_pic=$row_users->line_picture_url;
+    $profile_name=$row_users->line_display_name;
+}else{
+    $profile_pic="../img/customer/".$row_users->cus_image;
+    $profile_name=$row_users->cus_firstname." ".$row_users->cus_lastname;
+}
+
+ ?>
+
+
 <!-- Navbar -->
 
           <nav
@@ -15,7 +37,7 @@
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                   <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                      <img src="../../assets/img/avatars/1.png" alt class="rounded-circle" />
+                      <img src="<?= $profile_pic; ?>" alt class="rounded-circle" />
                     </div>
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end">
@@ -24,12 +46,12 @@
                         <div class="d-flex">
                           <div class="flex-shrink-0 me-2">
                             <div class="avatar avatar-online">
-                              <img src="../../assets/img/avatars/1.png" alt class="rounded-circle" />
+                              <img src="<?= $profile_pic; ?>" alt class="rounded-circle" />
                             </div>
                           </div>
                           <div class="flex-grow-1">
-                            <span class="fw-medium d-block">John Doe</span>
-                            <small class="text-muted">Admin</small>
+                            <span class="fw-medium d-block"><?= $profile_name; ?></span>
+                            <small class="text-muted">Line</small>
                           </div>
                         </div>
                       </a>
@@ -60,7 +82,7 @@
                       <div class="dropdown-divider"></div>
                     </li>
                     <li>
-                      <a class="dropdown-item" href="javascript:void(0);">
+                      <a class="dropdown-item" href="../logout.php">
                         <i class="ri-shut-down-line me-3"></i>
                         <span class="align-middle">Log Out</span>
                       </a>
