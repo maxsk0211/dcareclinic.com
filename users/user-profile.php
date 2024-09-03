@@ -3,25 +3,65 @@ session_start();
 require_once '../dbcon.php';
 
 if (!isset($_SESSION['users_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
-$stmt = $conn->prepare("SELECT * FROM customer WHERE cus_id = ?");
-$stmt->bind_param("i", $_SESSION['users_id']);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
+$user_id = $_SESSION['users_id'];
+
+// Fetch user data
+$query = "SELECT * FROM customer WHERE cus_id = '$user_id'";
+$result = mysqli_query($conn, $query);
+$user = mysqli_fetch_object($result);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $firstname = $_POST['firstname'];
-    $lastname = $_POST['lastname'];
-    $email = $_POST['email'];
-    $phone = $_POST['phone'];
+    $cus_id_card_number = $_POST['cus_id_card_number'];
+    $cus_birthday = $_POST['cus_birthday'];
+    $cus_firstname = $_POST['cus_firstname'];
+    $cus_lastname = $_POST['cus_lastname'];
+    $cus_title = $_POST['cus_title'];
+    $cus_gender = $_POST['cus_gender'];
+    $cus_nickname = $_POST['cus_nickname'];
+    $cus_email = $_POST['cus_email'];
+    $cus_blood = $_POST['cus_blood'];
+    $cus_tel = $_POST['cus_tel'];
+    $cus_drugallergy = $_POST['cus_drugallergy'];
+    $cus_congenital = $_POST['cus_congenital'];
+    $cus_remark = $_POST['cus_remark'];
+    $cus_address = $_POST['cus_address'];
+    $cus_district = $_POST['cus_district'];
+    $cus_city = $_POST['cus_city'];
+    $cus_province = $_POST['cus_province'];
+    $cus_postal_code = $_POST['cus_postal_code'];
 
-    $stmt = $conn->prepare("UPDATE customer SET cus_firstname = ?, cus_lastname = ?, cus_email = ?, cus_tel = ? WHERE cus_id = ?");
-    $stmt->bind_param("ssssi", $firstname, $lastname, $email, $phone, $_SESSION['users_id']);
-    $stmt->execute();
+    $update_query = "UPDATE customer SET 
+        cus_id_card_number = '$cus_id_card_number',
+        cus_birthday = '$cus_birthday',
+        cus_firstname = '$cus_firstname',
+        cus_lastname = '$cus_lastname',
+        cus_title = '$cus_title',
+        cus_gender = '$cus_gender',
+        cus_nickname = '$cus_nickname',
+        cus_email = '$cus_email',
+        cus_blood = '$cus_blood',
+        cus_tel = '$cus_tel',
+        cus_drugallergy = '$cus_drugallergy',
+        cus_congenital = '$cus_congenital',
+        cus_remark = '$cus_remark',
+        cus_address = '$cus_address',
+        cus_district = '$cus_district',
+        cus_city = '$cus_city',
+        cus_province = '$cus_province',
+        cus_postal_code = '$cus_postal_code'
+        WHERE cus_id = '$user_id'";
+
+    $update_result = mysqli_query($conn, $update_query);
+
+    if ($update_result) {
+        $_SESSION['msg_ok'] = "Profile updated successfully.";
+    } else {
+        $_SESSION['msg_error'] = "Error updating profile: " . mysqli_error($conn);
+    }
 
     header('Location: user-profile.php');
     exit;
@@ -104,7 +144,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <!-- Content -->
     <div class="container-xxl flex-grow-1 container-p-y">
         <h4 class="fw-bold py-3 mb-4">Profile</h4>
-
         <div class="row">
             <div class="col-md-12">
                 <div class="card mb-4">
@@ -113,20 +152,95 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <form method="POST">
                             <div class="row">
                                 <div class="mb-3 col-md-6">
-                                    <label for="firstname" class="form-label">First Name</label>
-                                    <input class="form-control" type="text" id="firstname" name="firstname" value="<?php echo htmlspecialchars($user['cus_firstname']); ?>" autofocus />
+                                    <label for="cus_id_card_number" class="form-label">หมายเลขบัตรประชาชน</label>
+                                    <input class="form-control" type="text" id="cus_id_card_number" name="cus_id_card_number" value="<?php echo htmlspecialchars($user->cus_id_card_number); ?>" required />
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="lastname" class="form-label">Last Name</label>
-                                    <input class="form-control" type="text" id="lastname" name="lastname" value="<?php echo htmlspecialchars($user['cus_lastname']); ?>" />
+                                    <label for="cus_birthday" class="form-label">วันเกิด</label>
+                                    <input class="form-control" type="date" id="cus_birthday" name="cus_birthday" value="<?php echo htmlspecialchars($user->cus_birthday); ?>" required />
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="email" class="form-label">E-mail</label>
-                                    <input class="form-control" type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['cus_email']); ?>" />
+                                    <label for="cus_firstname" class="form-label">ชื่อ</label>
+                                    <input class="form-control" type="text" id="cus_firstname" name="cus_firstname" value="<?php echo htmlspecialchars($user->cus_firstname); ?>" required />
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="phone" class="form-label">Phone Number</label>
-                                    <input type="text" class="form-control" id="phone" name="phone" value="<?php echo htmlspecialchars($user['cus_tel']); ?>" />
+                                    <label for="cus_lastname" class="form-label">นามสกุล</label>
+                                    <input class="form-control" type="text" id="cus_lastname" name="cus_lastname" value="<?php echo htmlspecialchars($user->cus_lastname); ?>" required />
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_title" class="form-label">คำนำหน้า</label>
+                                    <select class="form-select" id="cus_title" name="cus_title" required>
+                                        <option value="" disabled selected>โปรดเลือก</option>
+                                        <option value="นาย" <?= ($user->cus_title == 'นาย') ? 'selected' : '' ?>>นาย</option>
+                                        <option value="นาง" <?= ($user->cus_title == 'นาง') ? 'selected' : '' ?>>นาง</option>
+                                        <option value="นางสาว" <?= ($user->cus_title == 'นางสาว') ? 'selected' : '' ?>>นางสาว</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_gender" class="form-label">เพศ</label>
+                                    <select class="form-select" id="cus_gender" name="cus_gender" required>
+                                        <option value="" disabled selected>โปรดเลือก</option>
+                                        <option value="ชาย" <?= ($user->cus_gender == 'ชาย') ? 'selected' : '' ?>>ชาย</option>
+                                        <option value="หญิง" <?= ($user->cus_gender == 'หญิง') ? 'selected' : '' ?>>หญิง</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_nickname" class="form-label">ชื่อเล่น</label>
+                                    <input class="form-control" type="text" id="cus_nickname" name="cus_nickname" value="<?php echo htmlspecialchars($user->cus_nickname); ?>" />
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_email" class="form-label">Email</label>
+                                    <input class="form-control" type="email" id="cus_email" name="cus_email" value="<?php echo htmlspecialchars($user->cus_email); ?>" />
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_blood" class="form-label">กรุ๊ปเลือด</label>
+                                    <select class="form-select" id="cus_blood" name="cus_blood">
+                                        <option value="" disabled selected>โปรดเลือก</option>
+                                        <option value="A+" <?= ($user->cus_blood == 'A+') ? 'selected' : '' ?>>A+</option>
+                                        <option value="A-" <?= ($user->cus_blood == 'A-') ? 'selected' : '' ?>>A-</option>
+                                        <option value="B+" <?= ($user->cus_blood == 'B+') ? 'selected' : '' ?>>B+</option>
+                                        <option value="B-" <?= ($user->cus_blood == 'B-') ? 'selected' : '' ?>>B-</option>
+                                        <option value="O+" <?= ($user->cus_blood == 'O+') ? 'selected' : '' ?>>O+</option>
+                                        <option value="O-" <?= ($user->cus_blood == 'O-') ? 'selected' : '' ?>>O-</option>
+                                        <option value="AB+" <?= ($user->cus_blood == 'AB+') ? 'selected' : '' ?>>AB+</option>
+                                        <option value="AB-" <?= ($user->cus_blood == 'AB-') ? 'selected' : '' ?>>AB-</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_tel" class="form-label">เบอร์โทร</label>
+                                    <input class="form-control" type="text" id="cus_tel" name="cus_tel" value="<?php echo htmlspecialchars($user->cus_tel); ?>" required />
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_drugallergy" class="form-label">ประวัติการแพ้ยา</label>
+                                    <textarea class="form-control" id="cus_drugallergy" name="cus_drugallergy"><?php echo htmlspecialchars($user->cus_drugallergy); ?></textarea>
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_congenital" class="form-label">โรคประจำตัว</label>
+                                    <textarea class="form-control" id="cus_congenital" name="cus_congenital"><?php echo htmlspecialchars($user->cus_congenital); ?></textarea>
+                                </div>
+                                <div class="mb-3 col-md-12">
+                                    <label for="cus_remark" class="form-label">หมายเหตุ</label>
+                                    <textarea class="form-control" id="cus_remark" name="cus_remark"><?php echo htmlspecialchars($user->cus_remark); ?></textarea>
+                                </div>
+                                <div class="mb-3 col-md-12">
+                                    <label for="cus_address" class="form-label">ที่อยู่</label>
+                                    <input class="form-control" type="text" id="cus_address" name="cus_address" value="<?php echo htmlspecialchars($user->cus_address); ?>" required />
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_district" class="form-label">ตำบล</label>
+                                    <input class="form-control" type="text" id="cus_district" name="cus_district" value="<?php echo htmlspecialchars($user->cus_district); ?>" required />
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_city" class="form-label">อำเภอ</label>
+                                    <input class="form-control" type="text" id="cus_city" name="cus_city" value="<?php echo htmlspecialchars($user->cus_city); ?>" required />
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_province" class="form-label">จังหวัด</label>
+                                    <input class="form-control" type="text" id="cus_province" name="cus_province" value="<?php echo htmlspecialchars($user->cus_province); ?>" required />
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label for="cus_postal_code" class="form-label">รหัสไปรษณีย์</label>
+                                    <input class="form-control" type="text" id="cus_postal_code" name="cus_postal_code" value="<?php echo htmlspecialchars($user->cus_postal_code); ?>" required />
                                 </div>
                             </div>
                             <div class="mt-2">
@@ -138,6 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             </div>
         </div>
+        
     </div>
     <!-- / Content -->
 
@@ -216,6 +331,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
       })
     <?php unset($_SESSION['msg_ok']); } ?>
+
+    // msg info 
+    <?php if(isset($_SESSION['msg_info'])){ ?>
+      Swal.fire({
+         icon: 'info',
+         title: 'แจ้งเตือน!!',
+         text: '<?php echo $_SESSION['msg_info']; ?>',
+         customClass: {
+              confirmButton: 'btn btn-primary waves-effect waves-light'
+            },
+         buttonsStyling: false
+
+      })
+    <?php unset($_SESSION['msg_info']); } ?>
         
     </script>
   </body>

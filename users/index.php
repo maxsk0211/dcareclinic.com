@@ -7,20 +7,36 @@ if (!isset($_SESSION['users_id'])) {
     exit;
 }
 
-// escape ตัวแปรเพื่อป้องกัน SQL injection
 $user_id = mysqli_real_escape_string($conn, $_SESSION['users_id']);
 
-// สร้างคำสั่ง SQL โดยใช้ mysqli_real_escape_string
 $sql = "SELECT * FROM customer WHERE cus_id = '$user_id'";
-
-// ดำเนินการ query
 $result = $conn->query($sql);
-$users=mysqli_fetch_object($result);
-if ($users->cus_firstname==null or $users->cus_lastname==null or $users->cus_id_card_number==null or $users->cus_birthday==null or $users->cus_title==null or $users->cus_gender==null or $users->cus_tel==null) {
-    $_SESSION['msg_error']="กรุณากรอกข้อมูลให้ครบ ก่อนเริ่มใช้งาน";
+$users = mysqli_fetch_object($result);
+
+if ($users->cus_firstname == null || $users->cus_lastname == null || $users->cus_id_card_number == null || $users->cus_birthday == null || $users->cus_title == null || $users->cus_gender == null || $users->cus_tel == null) {
+    $_SESSION['msg_info'] = "กรุณากรอกข้อมูลให้ครบ ก่อนเริ่มใช้งาน";
     header('Location: user-profile.php');
     exit();
 }
+
+// Fetch upcoming appointments
+$appointments_query = "SELECT cb.*, c.course_name 
+                       FROM course_bookings cb
+                       LEFT JOIN order_course oc ON cb.id = oc.course_bookings_id
+                       LEFT JOIN order_detail od ON oc.oc_id = od.oc_id
+                       LEFT JOIN course c ON od.course_id = c.course_id
+                       WHERE cb.cus_id = '$user_id' AND cb.booking_datetime > NOW() 
+                       ORDER BY cb.booking_datetime ASC LIMIT 3";
+$appointments_result = $conn->query($appointments_query);
+
+// Fetch enrolled courses
+$courses_query = "SELECT c.course_name, c.course_pic, oc.order_datetime 
+                  FROM order_detail od 
+                  JOIN order_course oc ON od.oc_id = oc.oc_id 
+                  JOIN course c ON od.course_id = c.course_id 
+                  WHERE oc.cus_id = '$user_id' 
+                  ORDER BY oc.order_datetime DESC LIMIT 3";
+$courses_result = $conn->query($courses_query);
 ?>
 
 <!doctype html>
@@ -80,6 +96,47 @@ if ($users->cus_firstname==null or $users->cus_lastname==null or $users->cus_id_
     <!-- datatables -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
+        <style>
+        .welcome-banner {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .welcome-banner h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .info-card {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+        .info-card:hover {
+            transform: translateY(-5px);
+        }
+        .info-card h3 {
+            color: #4e73df;
+            margin-bottom: 15px;
+        }
+        .appointment-item, .course-item {
+            background-color: #f1f3f9;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .course-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    </style>
   </head>
 
   <body>
@@ -96,79 +153,68 @@ if ($users->cus_firstname==null or $users->cus_lastname==null or $users->cus_id_
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <!-- Content -->
-
-            <div class="container-xxl flex-grow-1 container-p-y">
-                <h4 class="fw-bold py-3 mb-4">Dashboard</h4>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card mb-4">
-                            <h5 class="card-header">Welcome, <?php echo htmlspecialchars($users->cus_firstname . ' ' . $users->cus_lastname); ?>!</h5>
-                            <div class="card-body">
-                                <p>Here's a summary of your account:</p>
-                                <ul>
-                                    <li>Email: <?php echo htmlspecialchars($users->cus_email); ?></li>
-                                    <li>Phone: <?php echo htmlspecialchars($users->cus_tel); ?></li>
-                                    <li>Line ID: <?php echo htmlspecialchars($users->line_user_id); ?></li>
-                                </ul>
-                            </div>
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        <div class="welcome-banner">
+                            <h2>Welcome, <?php echo htmlspecialchars($users->cus_firstname . ' ' . $users->cus_lastname); ?>!</h2>
+                            <p>Here's an overview of your account and upcoming activities.</p>
                         </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card mb-4">
-                            <h5 class="card-header">Upcoming Appointments</h5>
-                            <div class="card-body">
-                                <!-- Fetch and display upcoming appointments -->
-                                <?php
-                                    // escape ตัวแปรเพื่อป้องกัน SQL injection
-                                    $user_id = mysqli_real_escape_string($conn, $_SESSION['users_id']);
-
-                                    // สร้างคำสั่ง SQL โดยใช้ mysqli_real_escape_string
-                                    $sql = "SELECT * FROM course_bookings WHERE cus_id = '$user_id' AND booking_datetime > NOW() ORDER BY booking_datetime LIMIT 3";
-
-                                    // ดำเนินการ query
-                                    $result = $conn->query($sql);
-
-                                    if ($result && $result->num_rows > 0) {
-                                        while ($row = $result->fetch_assoc()) { 
-                                            echo "<p>" . htmlspecialchars(date('F j, Y, g:i a', strtotime($row['booking_datetime']))) . "</p>";
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-card">
+                                    <h3><i class="mdi mdi-calendar-clock"></i> Upcoming Appointments</h3>
+                                    <?php
+                                    if ($appointments_result->num_rows > 0) {
+                                        while ($appointment = $appointments_result->fetch_assoc()) {
+                                            echo "<div class='appointment-item'>";
+                                            echo "<strong>" . date('F j, Y, g:i a', strtotime($appointment['booking_datetime'])) . "</strong><br>";
+                                            echo "Course: " . htmlspecialchars($appointment['course_name'] ?? 'N/A');
+                                            echo "</div>";
                                         }
                                     } else {
                                         echo "<p>No upcoming appointments.</p>";
-}
-                                ?>
-                                <a href="user-appointments.php" class="btn btn-primary">View All Appointments</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card mb-4">
-                            <h5 class="card-header">Your Courses</h5>
-                            <div class="card-body">
-                                <!-- Fetch and display user's courses -->
-                                <?php
-                                $stmt = $conn->prepare("SELECT c.course_name FROM order_detail od JOIN order_course oc ON od.oc_id = oc.oc_id JOIN course c ON od.course_id = c.course_id WHERE oc.cus_id = ? LIMIT 3");
-                                $stmt->bind_param("i", $_SESSION['users_id']);
-                                $stmt->execute();
-                                $result = $stmt->get_result();
-                                if ($result->num_rows > 0) {
-                                    while ($row = $result->fetch_assoc()) {
-                                        echo "<p>" . htmlspecialchars($row['course_name']) . "</p>";
                                     }
-                                } else {
-                                    echo "<p>No courses enrolled.</p>";
-                                }
-                                ?>
-                                <a href="user-courses.php" class="btn btn-primary">View All Courses</a>
+                                    ?>
+                                    <a href="user-appointments.php" class="btn btn-primary mt-3">View All Appointments</a>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-card">
+                                    <h3><i class="mdi mdi-book-open-variant"></i> Your Recent Courses</h3>
+                                    <?php
+                                    if ($courses_result->num_rows > 0) {
+                                        while ($course = $courses_result->fetch_assoc()) {
+                                            echo "<div class='course-item d-flex align-items-center'>";
+                                            echo "<img src='../img/course/" . htmlspecialchars($course['course_pic']) . "' alt='" . htmlspecialchars($course['course_name']) . "' class='course-image'>";
+                                            echo "<div>";
+                                            echo "<strong>" . htmlspecialchars($course['course_name']) . "</strong><br>";
+                                            echo "Enrolled on: " . date('F j, Y', strtotime($course['order_datetime']));
+                                            echo "</div>";
+                                            echo "</div>";
+                                        }
+                                    } else {
+                                        echo "<p>No courses enrolled.</p>";
+                                    }
+                                    ?>
+                                    <a href="user-courses.php" class="btn btn-primary mt-3">View All Courses</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="info-card">
+                                    <h3><i class="mdi mdi-account-circle"></i> Your Profile Summary</h3>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Email:</strong> <?php echo htmlspecialchars($users->cus_email); ?></li>
+                                        <li><strong>Phone:</strong> <?php echo htmlspecialchars($users->cus_tel); ?></li>
+                                        <li><strong>Line ID:</strong> <?php echo htmlspecialchars($users->line_user_id); ?></li>
+                                    </ul>
+                                    <a href="user-profile.php" class="btn btn-outline-primary">Edit Profile</a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
             <!-- / Content -->
 
             <?php   include 'footer.php'; ?>

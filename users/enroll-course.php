@@ -6,6 +6,17 @@ if (!isset($_SESSION['users_id'])) {
     header('Location: ../login.php');
     exit;
 }
+$user_id = mysqli_real_escape_string($conn, $_SESSION['users_id']);
+
+$sql = "SELECT * FROM customer WHERE cus_id = '$user_id'";
+$result = $conn->query($sql);
+$users = mysqli_fetch_object($result);
+
+if ($users->cus_firstname == null || $users->cus_lastname == null || $users->cus_id_card_number == null || $users->cus_birthday == null || $users->cus_title == null || $users->cus_gender == null || $users->cus_tel == null) {
+    $_SESSION['msg_info'] = "กรุณากรอกข้อมูลให้ครบ ก่อนเริ่มใช้งาน";
+    header('Location: user-profile.php');
+    exit();
+}
 
 if (!isset($_GET['id'])) {
     header('Location: user-courses.php');

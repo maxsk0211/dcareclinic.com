@@ -2,9 +2,20 @@
 session_start();
 require_once '../dbcon.php';
 
-if (!isset($_SESSION['users_id']) ) {
+if (!isset($_SESSION['users_id'])) {
     header('Location: ../login.php');
     exit;
+}
+$user_id = mysqli_real_escape_string($conn, $_SESSION['users_id']);
+
+$sql = "SELECT * FROM customer WHERE cus_id = '$user_id'";
+$result = $conn->query($sql);
+$users = mysqli_fetch_object($result);
+
+if ($users->cus_firstname == null || $users->cus_lastname == null || $users->cus_id_card_number == null || $users->cus_birthday == null || $users->cus_title == null || $users->cus_gender == null || $users->cus_tel == null) {
+    $_SESSION['msg_info'] = "กรุณากรอกข้อมูลให้ครบ ก่อนเริ่มใช้งาน";
+    header('Location: user-profile.php');
+    exit();
 }
 
 if (!isset($_GET['id'])) {
@@ -92,6 +103,46 @@ $is_enrolled = $stmt->get_result()->num_rows > 0;
     <!-- datatables -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
+        <style>
+        .course-header {
+            background-color: #f8f9fa;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .course-image {
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .course-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .course-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+        .course-meta {
+            margin-bottom: 1rem;
+        }
+        .course-meta i {
+            margin-right: 0.5rem;
+        }
+        .course-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        .enroll-section {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+    </style>
   </head>
 
   <body>
@@ -107,35 +158,55 @@ $is_enrolled = $stmt->get_result()->num_rows > 0;
           <?php include 'navbar.php'; ?>
 
           <!-- Content wrapper -->
-          <div class="content-wrapper">
-    <!-- Content -->
-    <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="fw-bold py-3 mb-4">Course Details</h4>
+           <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        <div class="course-header">
+                            <div class="container">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h1 class="course-title"><?php echo htmlspecialchars($course['course_name']); ?></h1>
+                                        <div class="course-price"><?php echo number_format($course['course_price'], 2); ?> THB</div>
+                                        <div class="course-meta">
+                                            <p><i class="mdi mdi-calendar"></i> Start Date: <?php echo date('F j, Y', strtotime($course['course_start'])); ?></p>
+                                            <p><i class="mdi mdi-calendar-clock"></i> End Date: <?php echo date('F j, Y', strtotime($course['course_end'])); ?></p>
+                                            <p><i class="mdi mdi-clock-outline"></i> Duration: <?php echo $course['duration']; ?> minutes</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <img src="../img/course/<?php echo htmlspecialchars($course['course_pic']); ?>" alt="<?php echo htmlspecialchars($course['course_name']); ?>" class="img-fluid course-image">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <img src="../img/course/<?php echo htmlspecialchars($course['course_pic']); ?>" alt="<?php echo htmlspecialchars($course['course_name']); ?>" class="img-fluid rounded">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h2>Course Description</h2>
+                                    <div class="course-description">
+                                        <?php echo nl2br(htmlspecialchars($course['course_detail'])); ?>
+                                    </div>
+                                    <?php if (!empty($course['course_note'])): ?>
+                                        <h3 class="mt-4">Additional Notes</h3>
+                                        <p><?php echo nl2br(htmlspecialchars($course['course_note'])); ?></p>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="enroll-section">
+                                        <?php if ($is_enrolled): ?>
+                                            <h3>You are enrolled in this course</h3>
+                                            <p>Access your course materials and track your progress.</p>
+                                            <a href="#" class="btn btn-primary btn-lg btn-block">Go to Course</a>
+                                        <?php else: ?>
+                                            <h3>Enroll in this course</h3>
+                                            <p>Join now to start your learning journey!</p>
+                                            <a href="enroll-course.php?id=<?php echo $course_id; ?>" class="btn btn-success btn-lg btn-block">Enroll Now</a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-8">
-                        <h2><?php echo htmlspecialchars($course['course_name']); ?></h2>
-                        <p><?php echo nl2br(htmlspecialchars($course['course_detail'])); ?></p>
-                        <p><strong>Price:</strong> <?php echo number_format($course['course_price'], 2); ?> THB</p>
-                        <p><strong>Duration:</strong> <?php echo $course['duration']; ?> minutes</p>
-                        <p><strong>Start Date:</strong> <?php echo date('F j, Y', strtotime($course['course_start'])); ?></p>
-                        <p><strong>End Date:</strong> <?php echo date('F j, Y', strtotime($course['course_end'])); ?></p>
-                        <?php if ($is_enrolled): ?>
-                            <p class="text-success">You are enrolled in this course.</p>
-                        <?php else: ?>
-                            <a href="enroll-course.php?id=<?php echo $course_id; ?>" class="btn btn-primary">Enroll Now</a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- / Content -->
 
             <?php   include 'footer.php'; ?>
 

@@ -2,35 +2,42 @@
 session_start();
 require_once '../dbcon.php';
 
-if (!isset($_SESSION['users_id']) ) {
+if (!isset($_SESSION['users_id'])) {
     header('Location: ../login.php');
     exit;
 }
+$user_id = mysqli_real_escape_string($conn, $_SESSION['users_id']);
 
-// ตรวจสอบการเชื่อมต่อฐานข้อมูล
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+$sql = "SELECT * FROM customer WHERE cus_id = '$user_id'";
+$result = $conn->query($sql);
+$users = mysqli_fetch_object($result);
+
+if ($users->cus_firstname == null || $users->cus_lastname == null || $users->cus_id_card_number == null || $users->cus_birthday == null || $users->cus_title == null || $users->cus_gender == null || $users->cus_tel == null) {
+    $_SESSION['msg_info'] = "กรุณากรอกข้อมูลให้ครบ ก่อนเริ่มใช้งาน";
+    header('Location: user-profile.php');
+    exit();
 }
 
-// SQL query ที่ถูกต้อง
-$sql = "SELECT cb.*, c.course_name 
-        FROM course_bookings cb 
-        LEFT JOIN order_course oc ON cb.id = oc.course_bookings_id
-        LEFT JOIN order_detail od ON oc.oc_id = od.oc_id
-        LEFT JOIN course c ON od.course_id = c.course_id 
-        WHERE cb.cus_id = ? 
-        ORDER BY cb.booking_datetime DESC";
+$user_id = $_SESSION['users_id'];
 
-$stmt = $conn->prepare($sql);
+// Fetch appointments
+$query = "SELECT cb.*, c.course_name, c.course_pic
+          FROM course_bookings cb 
+          LEFT JOIN order_course oc ON cb.id = oc.course_bookings_id
+          LEFT JOIN order_detail od ON oc.oc_id = od.oc_id
+          LEFT JOIN course c ON od.course_id = c.course_id 
+          WHERE cb.cus_id = ? 
+          ORDER BY cb.booking_datetime DESC";
+
+$stmt = $conn->prepare($query);
 
 if ($stmt === false) {
     die("Error preparing statement: " . $conn->error);
 }
 
-$stmt->bind_param("i", $_SESSION['users_id']);
+$stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
-
 ?>
 
 <!doctype html>
@@ -90,6 +97,51 @@ $result = $stmt->get_result();
     <!-- datatables -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
+    <style>
+        .appointment-card {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            margin-bottom: 20px;
+        }
+        .appointment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .appointment-image {
+            height: 150px;
+            object-fit: cover;
+        }
+        .appointment-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .status-pending { background-color: #ffc107; color: #000; }
+        .status-confirmed { background-color: #28a745; color: #fff; }
+        .status-cancelled { background-color: #dc3545; color: #fff; }
+        .appointment-date {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .appointment-time {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        .appointment-course {
+            font-weight: 500;
+        }
+        .no-appointments {
+            text-align: center;
+            padding: 50px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
   </head>
 
   <body>
@@ -106,42 +158,41 @@ $result = $stmt->get_result();
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-    <!-- Content -->
-    <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="fw-bold py-3 mb-4">Appointments</h4>
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        <h4 class="fw-bold py-3 mb-4">Your Appointments</h4>
 
-        <div class="card">
-            <h5 class="card-header">Your Appointments</h5>
-            <div class="table-responsive text-nowrap">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Date & Time</th>
-                            <th>Course</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="table-border-bottom-0">
-                        <?php 
-                        if ($result->num_rows > 0) {
-                            while ($row = $result->fetch_assoc()): 
-                        ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars(date('F j, Y, g:i a', strtotime($row['booking_datetime']))); ?></td>
-                            <td><?php echo htmlspecialchars($row['course_name'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($row['status']); ?></td>
-                        </tr>
-                        <?php 
-                            endwhile;
-                        } else {
-                            echo "<tr><td colspan='3'>No appointments found.</td></tr>";
-                        }
-                        ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+                        <div class="row">
+                            <?php 
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()): 
+                            ?>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card appointment-card">
+                                    <img src="../img/course/<?php echo htmlspecialchars($row['course_pic'] ?? 'default.jpg'); ?>" class="card-img-top appointment-image" alt="<?php echo htmlspecialchars($row['course_name'] ?? 'Course'); ?>">
+                                    <div class="card-body">
+                                        <span class="appointment-status status-<?php echo strtolower($row['status']); ?>"><?php echo ucfirst($row['status']); ?></span>
+                                        <h5 class="card-title appointment-date"><?php echo date('F j, Y', strtotime($row['booking_datetime'])); ?></h5>
+                                        <p class="card-text appointment-time"><i class="mdi mdi-clock-outline"></i> <?php echo date('g:i A', strtotime($row['booking_datetime'])); ?></p>
+                                        <p class="card-text appointment-course"><i class="mdi mdi-book-open-page-variant"></i> <?php echo htmlspecialchars($row['course_name'] ?? 'N/A'); ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php 
+                                endwhile;
+                            } else {
+                            ?>
+                            <div class="col-12">
+                                <div class="no-appointments">
+                                    <h3><i class="mdi mdi-calendar-blank"></i></h3>
+                                    <p class="lead">You don't have any appointments scheduled.</p>
+                                    <a href="user-courses.php" class="btn btn-primary">Browse Courses</a>
+                                </div>
+                            </div>
+                            <?php
+                            }
+                            ?>
+                        </div>
+                    </div>
     <!-- / Content -->
 
             <?php   include 'footer.php'; ?>
