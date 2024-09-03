@@ -12,17 +12,21 @@ $search_term = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['
 
 // Fetch available courses
 $available_query = "
-    SELECT * FROM course 
-    WHERE course_status = 1 
-    AND course_start <= '$current_date' 
-    AND course_end >= '$current_date'
-    AND (course_name LIKE '%$search_term%' OR course_detail LIKE '%$search_term%')
-    AND course_id NOT IN (
-        SELECT od.course_id 
+    SELECT c.*, 
+           COUNT(od.course_id) AS booking_count
+    FROM course c
+    LEFT JOIN (
+        SELECT od.course_id
         FROM order_detail od 
         JOIN order_course oc ON od.oc_id = oc.oc_id 
         WHERE oc.cus_id = {$_SESSION['users_id']}
-    )
+    ) od ON c.course_id = od.course_id
+    WHERE c.course_status = 1 
+    AND c.course_start <= '$current_date' 
+    AND c.course_end >= '$current_date'
+    AND (c.course_name LIKE '%$search_term%' OR c.course_detail LIKE '%$search_term%')
+    GROUP BY c.course_id
+    ORDER BY c.course_start ASC
 ";
 $available_result = mysqli_query($conn, $available_query);
 
@@ -64,6 +68,20 @@ while ($row = $result_bookings->fetch_object()) {
         $booked_slots[] = $row->booking_datetime;
     }
 }
+
+
+function thaiDate($date) {
+    $thai_months = [
+        1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน', 5 => 'พฤษภาคม', 6 => 'มิถุนายน',
+        7 => 'กรกฎาคม', 8 => 'สิงหาคม', 9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
+    ];
+    $date_parts = explode('-', $date);
+    $year = intval($date_parts[0]) + 543;
+    $month = intval($date_parts[1]);
+    $day = intval($date_parts[2]);
+    return $day . ' ' . $thai_months[$month] . ' พ.ศ. ' . $year;
+}
+
 
 ?>
 
@@ -121,96 +139,45 @@ while ($row = $result_bookings->fetch_object()) {
     <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
 
-    <style>
-        .course-card {
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            height: 100%;
-            cursor: pointer;
-        }
-        .course-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        .course-image {
-            height: 200px;
-            object-fit: cover;
-        }
-        .course-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        .course-detail {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-bottom: 1rem;
-        }
-        .course-meta {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        .course-price {
-            font-weight: bold;
-            color: #28a745;
-        }
-        .btn-enroll {
-            width: 100%;
-            margin-top: 1rem;
-        }
-        .search-form {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 2rem;
-        }
-        .section-title {
-            border-left: 4px solid #696cff;
-            padding-left: 10px;
-            margin-bottom: 1.5rem;
-        }
-        .card-click-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 1;
-        }
-        .card-body {
-            position: relative;
-        }
-        .btn-enroll {
-            position: relative;
-            z-index: 2;
-        }
+            <style>
+    /* Global Styles */
+    body {
+        font-family: 'Inter', sans-serif;
+    }
 
+    /* Course Card Styles */
     .course-card {
         transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         height: 100%;
         cursor: pointer;
         position: relative;
         overflow: hidden;
+        border-radius: 15px;
+        border: none;
     }
     .course-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     }
     .course-image {
         height: 200px;
         object-fit: cover;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
     }
     .course-title {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         font-weight: bold;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.7rem;
+        color: #333;
     }
     .course-detail {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         color: #6c757d;
         margin-bottom: 1rem;
     }
     .course-meta {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         color: #6c757d;
     }
     .course-price {
@@ -221,65 +188,102 @@ while ($row = $result_bookings->fetch_object()) {
         border-radius: 5px;
         padding: 5px 10px;
         display: inline-block;
-        margin-bottom: 10px;
-    }
-    .btn-enroll {
-        width: 100%;
-        margin-top: 1rem;
+        margin-bottom: 15px;
     }
     .card-body {
-        padding-top: 2rem;
+        padding: 1.5rem;
     }
-            .course-card {
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            height: 100%;
-            cursor: pointer;
+    .card-click-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+    }
+
+    /* Button Styles */
+    .btn-enroll, .btn-primary {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        padding: 10px 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+    .btn-enroll:hover, .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Search Form Styles */
+    .search-form {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    .search-form .form-control {
+        border-radius: 25px;
+        padding-left: 20px;
+    }
+    .search-form .btn {
+        border-radius: 25px;
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: none;
+    }
+    .modal-title {
+        font-weight: bold;
+        color: #333;
+    }
+    .modal-body {
+        padding: 2rem;
+    }
+
+    /* Time Slot Styles */
+    .time-slot {
+        transition: all 0.3s ease;
+    }
+    .time-slot:hover:not(.disabled) {
+        transform: scale(1.05);
+    }
+    .time-slot.selected {
+        background-color: #28a745;
+        color: white;
+        border-color: #28a745;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .course-card {
+            margin-bottom: 20px;
         }
-        .course-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .course-image {
-            height: 200px;
-            object-fit: cover;
-        }
-        .course-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        .course-price {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #28a745;
-            margin-bottom: 1rem;
-        }
-        .booking-modal .modal-body {
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-        #timeSlots {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-        }
-        .time-slot {
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .time-slot.selected {
-            background-color: #28a745;
-            color: white;
-        }
-        .time-slot.booked {
-            background-color: #dc3545;
-            color: white;
-            cursor: not-allowed;
-        }
-    </style>
+    }
+
+    /* Additional Styles */
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        color: #333;
+        border-left: 5px solid #696cff;
+        padding-left: 15px;
+    }
+    .text-muted {
+        font-style: italic;
+    }
+</style>
   </head>
 
   <body>
@@ -316,23 +320,27 @@ while ($row = $result_bookings->fetch_object()) {
                             ?>
                                 <div class="col-md-6 col-lg-4 mb-4">
                                     <div class="card h-100 course-card">
+                                        <a href="course-details.php?id=<?php echo $course->course_id; ?>" class="card-click-overlay"></a>
                                         <img class="card-img-top course-image" src="../img/course/<?php echo htmlspecialchars($course->course_pic); ?>" alt="<?php echo htmlspecialchars($course->course_name); ?>">
                                         <div class="card-body">
                                             <h5 class="course-title"><?php echo htmlspecialchars($course->course_name); ?></h5>
-                                            <p class="course-price"><?php echo number_format($course->course_price, 2); ?> THB</p>
+                                            <p class="course-price"><?php echo number_format($course->course_price, 2); ?> บาท</p>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($course->course_detail, 0, 100)) . '...'; ?></p>
                                             <p class="course-meta">
-                                                <i class="mdi mdi-calendar"></i> Start: <?php echo date('M j, Y', strtotime($course->course_start)); ?><br>
-                                                <i class="mdi mdi-calendar-clock"></i> End: <?php echo date('M j, Y', strtotime($course->course_end)); ?>
+                                                <i class="mdi mdi-calendar"></i> เริ่ม: <?php echo thaiDate($course->course_start); ?><br>
+                                                <i class="mdi mdi-calendar-clock"></i> สิ้นสุด: <?php echo thaiDate($course->course_end); ?>
                                             </p>
-                                            <button class="btn btn-primary book-course" data-course-id="<?php echo $course->course_id; ?>">Book Now</button>
+                                            <?php if ($course->booking_count > 0): ?>
+                                                <p class="text-info">คุณได้จองคอร์สนี้แล้ว <?php echo $course->booking_count; ?> ครั้ง</p>
+                                            <?php endif; ?>
+                                            <button class="btn btn-primary book-course btn-enroll" data-course-id="<?php echo $course->course_id; ?>">จองตอนนี้</button>
                                         </div>
                                     </div>
                                 </div>
                             <?php endwhile; ?>
                             <?php if ($available_count == 0): ?>
                                 <div class="col-12">
-                                    <p class="text-muted">No available courses found matching your search.</p>
+                                    <p class="text-muted">ไม่พบคอร์สที่ตรงกับการค้นหาของคุณ</p>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -351,35 +359,37 @@ while ($row = $result_bookings->fetch_object()) {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="bookingModalLabel">Book Course</h5>
+                    <h5 class="modal-title" id="bookingModalLabel">จองคอร์ส</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="bookingForm" method="POST">
                         <input type="hidden" id="courseId" name="courseId">
                         <div class="mb-3">
-                            <label for="booking_date" class="form-label">Select Date</label>
+                            <label for="booking_date" class="form-label">เลือกวันที่</label>
                             <input type="text" class="form-control" id="booking_date" name="booking_date" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Select Time</label>
+                            <label class="form-label">เลือกเวลา</label>
                             <div id="timeSlots" class="row text-center"></div>
                         </div>
                         <input type="hidden" id="booking_time" name="booking_time">
                         <div class="mb-3">
-                            <label for="paymentMethod" class="form-label">Payment Method</label>
+                            <label for="paymentMethod" class="form-label">การชำระเงิน</label>
                             <select class="form-select" id="paymentMethod" name="paymentMethod" required>
-                                <option value="">Select payment method</option>
-                                <option value="cash">Cash</option>
-                                <option value="transfer">Bank Transfer</option>
-                                <option value="credit_card">Credit Card</option>
+                                <option value="">โปรดเลือกการชำระเงิน</option>
+                                <!-- <option value="cash">Cash</option> -->
+                                <option value="ยังไม่จ่ายเงิน">ยังไม่จ่ายเงิน(จ่ายภายหลัง)</option>
+                                <option value="transfer">โอนผ่านธนาคาร</option>
+
+                                <!-- <option value="credit_card">Credit Card</option> -->
                             </select>
                         </div>
                         <div id="paymentProofUpload" class="mb-3" style="display: none;">
                             <label for="paymentProof" class="form-label">Upload Payment Proof</label>
                             <input type="file" class="form-control" id="paymentProof" name="paymentProof">
                         </div>
-                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Confirm Booking</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>ยืนยันการจอง </button>
                     </form>
                 </div>
             </div>
@@ -430,17 +440,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 // แปลงวันที่ที่กำลังตรวจสอบให้อยู่ในรูปแบบ YYYY-MM-DD
                 const thaiYear = date.getFullYear() + 543;
                 const checkDate = `${thaiYear}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-                console.log("Checking Thai date:", checkDate);
+                // console.log("Checking Thai date:", checkDate);
                 
                 // ตรวจสอบว่าวันที่อยู่ในรายการวันที่ปิดทำการหรือไม่
                 if (closedDates.includes(checkDate)) {
-                    console.log("Date is closed:", checkDate);
+                    // console.log("Date is closed:", checkDate);
                     return true;
                 }
                 
                 // ตรวจสอบวันในสัปดาห์
                 const dayOfWeek = date.toLocaleString('en-us', {weekday: 'long'});
-            return closedDays.includes(dayOfWeek);
+                return closedDays.includes(dayOfWeek);
             }
         ],
         dateFormat: "d/m/Y",
@@ -518,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 timeSlotsContainer.appendChild(slot);
-                startTime.setMinutes(startTime.getMinutes() + 30);
+                startTime.setMinutes(startTime.getMinutes() + 15);
             }
 
             document.querySelectorAll('.time-slot:not(.disabled)').forEach(slot => {
@@ -575,11 +585,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // จัดการการคลิกปุ่มจองคอร์ส
     document.querySelectorAll('.book-course').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             const courseId = this.getAttribute('data-course-id');
             document.getElementById('courseId').value = courseId;
-            $('#bookingModal').modal('show');
+            var bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+            bookingModal.show();
+        });
+    });
+
+    // จัดการการคลิกที่การ์ดคอร์ส
+    document.querySelectorAll('.card-click-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            e.preventDefault();
+            const courseId = this.closest('.course-card').querySelector('.book-course').getAttribute('data-course-id');
+            window.location.href = 'course-details.php?id=' + courseId;
         });
     });
 });

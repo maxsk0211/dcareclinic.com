@@ -59,30 +59,13 @@ if ($row_users->line_user_id!=null) {
                     <li>
                       <div class="dropdown-divider"></div>
                     </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="ri-user-3-line me-3"></i><span class="align-middle">My Profile</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="ri-settings-4-line me-3"></i><span class="align-middle">Settings</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <span class="d-flex align-items-center align-middle">
-                          <i class="flex-shrink-0 ri-file-text-line me-3"></i>
-                          <span class="flex-grow-1 align-middle">Billing</span>
-                          <span class="flex-shrink-0 badge badge-center rounded-pill bg-danger">4</span>
-                        </span>
-                      </a>
-                    </li>
+
                     <li>
                       <div class="dropdown-divider"></div>
                     </li>
                     <li>
-                      <a class="dropdown-item" href="../logout.php">
+
+                      <a class="dropdown-item btn btn-danger mx-2" href="../logout.php">
                         <i class="ri-shut-down-line me-3"></i>
                         <span class="align-middle">Log Out</span>
                       </a>

@@ -6,21 +6,37 @@ if (!isset($_SESSION['users_id'])) {
     header('Location: ../login.php');
     exit;
 }
-$user_id = mysqli_real_escape_string($conn, $_SESSION['users_id']);
-
-$sql = "SELECT * FROM customer WHERE cus_id = '$user_id'";
-$result = $conn->query($sql);
-$users = mysqli_fetch_object($result);
-
-if ($users->cus_firstname == null || $users->cus_lastname == null || $users->cus_id_card_number == null || $users->cus_birthday == null || $users->cus_title == null || $users->cus_gender == null || $users->cus_tel == null) {
-    $_SESSION['msg_info'] = "กรุณากรอกข้อมูลให้ครบ ก่อนเริ่มใช้งาน";
-    header('Location: user-profile.php');
-    exit();
-}
 
 $user_id = $_SESSION['users_id'];
 
-// Fetch appointments
+// ฟังก์ชันสำหรับแปลงวันที่เป็นภาษาไทยและ พ.ศ.
+function thaiDateTime($datetime) {
+    $thai_months = [
+        1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน', 5 => 'พฤษภาคม', 6 => 'มิถุนายน',
+        7 => 'กรกฎาคม', 8 => 'สิงหาคม', 9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
+    ];
+    $date = new DateTime($datetime);
+    $year = $date->format('Y') + 543;
+    $month = $thai_months[(int)$date->format('n')];
+    $day = $date->format('j');
+    $time = $date->format('H:i');
+    return "$day $month พ.ศ. $year เวลา $time น.";
+}
+
+// ฟังก์ชันสำหรับแปลสถานะเป็นภาษาไทย
+function translateStatus($status) {
+    switch ($status) {
+        case 'pending':
+            return 'รอดำเนินการ';
+        case 'confirmed':
+            return 'ยืนยันแล้ว';
+        case 'cancelled':
+            return 'ยกเลิก';
+        default:
+            return $status;
+    }
+}
+
 $query = "SELECT cb.*, c.course_name, c.course_pic
           FROM course_bookings cb 
           LEFT JOIN order_course oc ON cb.id = oc.course_bookings_id
@@ -40,6 +56,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 ?>
 
+
 <!doctype html>
 
 <html
@@ -56,7 +73,7 @@ $result = $stmt->get_result();
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>User Courses - D Care Clinic System</title>
+    <title>การนัดหมายของคุณ - D Care Clinic System</title>
 
     <meta name="description" content="" />
 
@@ -158,41 +175,40 @@ $result = $stmt->get_result();
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-                    <div class="container-xxl flex-grow-1 container-p-y">
-                        <h4 class="fw-bold py-3 mb-4">Your Appointments</h4>
+            <div class="container-xxl flex-grow-1 container-p-y">
+                <h4 class="fw-bold py-3 mb-4">การนัดหมายของคุณ</h4>
 
-                        <div class="row">
-                            <?php 
-                            if ($result->num_rows > 0) {
-                                while ($row = $result->fetch_assoc()): 
-                            ?>
-                            <div class="col-md-6 col-lg-4">
-                                <div class="card appointment-card">
-                                    <img src="../img/course/<?php echo htmlspecialchars($row['course_pic'] ?? 'default.jpg'); ?>" class="card-img-top appointment-image" alt="<?php echo htmlspecialchars($row['course_name'] ?? 'Course'); ?>">
-                                    <div class="card-body">
-                                        <span class="appointment-status status-<?php echo strtolower($row['status']); ?>"><?php echo ucfirst($row['status']); ?></span>
-                                        <h5 class="card-title appointment-date"><?php echo date('F j, Y', strtotime($row['booking_datetime'])); ?></h5>
-                                        <p class="card-text appointment-time"><i class="mdi mdi-clock-outline"></i> <?php echo date('g:i A', strtotime($row['booking_datetime'])); ?></p>
-                                        <p class="card-text appointment-course"><i class="mdi mdi-book-open-page-variant"></i> <?php echo htmlspecialchars($row['course_name'] ?? 'N/A'); ?></p>
-                                    </div>
-                                </div>
+                <div class="row">
+                    <?php 
+                    if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()): 
+                    ?>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card appointment-card">
+                            <img src="../img/course/<?php echo htmlspecialchars($row['course_pic'] ?? 'default.jpg'); ?>" class="card-img-top appointment-image" alt="<?php echo htmlspecialchars($row['course_name'] ?? 'คอร์ส'); ?>">
+                            <div class="card-body">
+                                <span class="appointment-status status-<?php echo strtolower($row['status']); ?>"><?php echo translateStatus($row['status']); ?></span>
+                                <h5 class="card-title appointment-date"><?php echo thaiDateTime($row['booking_datetime']); ?></h5>
+                                <p class="card-text appointment-course"><i class="mdi mdi-book-open-page-variant"></i> <?php echo htmlspecialchars($row['course_name'] ?? 'ไม่ระบุ'); ?></p>
                             </div>
-                            <?php 
-                                endwhile;
-                            } else {
-                            ?>
-                            <div class="col-12">
-                                <div class="no-appointments">
-                                    <h3><i class="mdi mdi-calendar-blank"></i></h3>
-                                    <p class="lead">You don't have any appointments scheduled.</p>
-                                    <a href="user-courses.php" class="btn btn-primary">Browse Courses</a>
-                                </div>
-                            </div>
-                            <?php
-                            }
-                            ?>
                         </div>
                     </div>
+                    <?php 
+                        endwhile;
+                    } else {
+                    ?>
+                    <div class="col-12">
+                        <div class="no-appointments">
+                            <h3><i class="mdi mdi-calendar-blank"></i></h3>
+                            <p class="lead">คุณยังไม่มีการนัดหมาย</p>
+                            <a href="user-courses.php" class="btn btn-primary">ดูคอร์สที่เปิดให้บริการ</a>
+                        </div>
+                    </div>
+                    <?php
+                    }
+                    ?>
+                </div>
+            </div>
     <!-- / Content -->
 
             <?php   include 'footer.php'; ?>

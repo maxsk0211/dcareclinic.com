@@ -19,6 +19,19 @@ if ($users->cus_firstname == null || $users->cus_lastname == null || $users->cus
     exit();
 }
 
+// ฟังก์ชันสำหรับแปลงวันที่เป็นภาษาไทยและ พ.ศ.
+function thaiDate($date) {
+    $thai_months = [
+        1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน', 5 => 'พฤษภาคม', 6 => 'มิถุนายน',
+        7 => 'กรกฎาคม', 8 => 'สิงหาคม', 9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
+    ];
+    $date = new DateTime($date);
+    $year = $date->format('Y') + 543;
+    $month = $thai_months[(int)$date->format('n')];
+    $day = $date->format('j');
+    return "$day $month พ.ศ. $year";
+}
+
 // Fetch upcoming appointments
 $appointments_query = "SELECT cb.*, c.course_name 
                        FROM course_bookings cb
@@ -38,6 +51,7 @@ $courses_query = "SELECT c.course_name, c.course_pic, oc.order_datetime
                   ORDER BY oc.order_datetime DESC LIMIT 3";
 $courses_result = $conn->query($courses_query);
 ?>
+
 
 <!doctype html>
 
@@ -98,43 +112,62 @@ $courses_result = $conn->query($courses_query);
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
         <style>
         .welcome-banner {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         .welcome-banner h2 {
-            color: #333;
+            font-size: 2.5rem;
             margin-bottom: 10px;
         }
         .info-card {
             background-color: #fff;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease-in-out;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
         .info-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         .info-card h3 {
             color: #4e73df;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
         }
         .appointment-item, .course-item {
-            background-color: #f1f3f9;
-            border-radius: 5px;
-            padding: 10px;
-            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: background-color 0.3s ease;
+        }
+        .appointment-item:hover, .course-item:hover {
+            background-color: #e9ecef;
         }
         .course-image {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             object-fit: cover;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-right: 15px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        .btn-custom {
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-custom:hover {
+            background-color: #2e59d9;
         }
     </style>
   </head>
@@ -153,68 +186,68 @@ $courses_result = $conn->query($courses_query);
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-                    <div class="container-xxl flex-grow-1 container-p-y">
-                        <div class="welcome-banner">
-                            <h2>Welcome, <?php echo htmlspecialchars($users->cus_firstname . ' ' . $users->cus_lastname); ?>!</h2>
-                            <p>Here's an overview of your account and upcoming activities.</p>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-card">
-                                    <h3><i class="mdi mdi-calendar-clock"></i> Upcoming Appointments</h3>
-                                    <?php
-                                    if ($appointments_result->num_rows > 0) {
-                                        while ($appointment = $appointments_result->fetch_assoc()) {
-                                            echo "<div class='appointment-item'>";
-                                            echo "<strong>" . date('F j, Y, g:i a', strtotime($appointment['booking_datetime'])) . "</strong><br>";
-                                            echo "Course: " . htmlspecialchars($appointment['course_name'] ?? 'N/A');
-                                            echo "</div>";
-                                        }
-                                    } else {
-                                        echo "<p>No upcoming appointments.</p>";
-                                    }
-                                    ?>
-                                    <a href="user-appointments.php" class="btn btn-primary mt-3">View All Appointments</a>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-card">
-                                    <h3><i class="mdi mdi-book-open-variant"></i> Your Recent Courses</h3>
-                                    <?php
-                                    if ($courses_result->num_rows > 0) {
-                                        while ($course = $courses_result->fetch_assoc()) {
-                                            echo "<div class='course-item d-flex align-items-center'>";
-                                            echo "<img src='../img/course/" . htmlspecialchars($course['course_pic']) . "' alt='" . htmlspecialchars($course['course_name']) . "' class='course-image'>";
-                                            echo "<div>";
-                                            echo "<strong>" . htmlspecialchars($course['course_name']) . "</strong><br>";
-                                            echo "Enrolled on: " . date('F j, Y', strtotime($course['order_datetime']));
-                                            echo "</div>";
-                                            echo "</div>";
-                                        }
-                                    } else {
-                                        echo "<p>No courses enrolled.</p>";
-                                    }
-                                    ?>
-                                    <a href="user-courses.php" class="btn btn-primary mt-3">View All Courses</a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <div class="info-card">
-                                    <h3><i class="mdi mdi-account-circle"></i> Your Profile Summary</h3>
-                                    <ul class="list-unstyled">
-                                        <li><strong>Email:</strong> <?php echo htmlspecialchars($users->cus_email); ?></li>
-                                        <li><strong>Phone:</strong> <?php echo htmlspecialchars($users->cus_tel); ?></li>
-                                        <li><strong>Line ID:</strong> <?php echo htmlspecialchars($users->line_user_id); ?></li>
-                                    </ul>
-                                    <a href="user-profile.php" class="btn btn-outline-primary">Edit Profile</a>
-                                </div>
-                            </div>
+            <div class="container-xxl flex-grow-1 container-p-y">
+                <div class="welcome-banner">
+                    <h2 class="text-white">ยินดีต้อนรับ, คุณ<?php echo htmlspecialchars($users->cus_firstname . ' ' . $users->cus_lastname); ?>!</h2>
+                    <p>นี่คือภาพรวมบัญชีและกิจกรรมที่กำลังจะมาถึงของคุณ</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <h3><i class="mdi mdi-calendar-clock"></i> การนัดหมายที่กำลังจะมาถึง</h3>
+                            <?php
+                            if ($appointments_result->num_rows > 0) {
+                                while ($appointment = $appointments_result->fetch_assoc()) {
+                                    echo "<div class='appointment-item'>";
+                                    echo "<strong>" . thaiDate($appointment['booking_datetime']) . " เวลา " . date('H:i', strtotime($appointment['booking_datetime'])) . " น.</strong><br>";
+                                    echo "คอร์ส: " . htmlspecialchars($appointment['course_name'] ?? 'ไม่ระบุ');
+                                    echo "</div>";
+                                }
+                            } else {
+                                echo "<p>ไม่มีการนัดหมายที่กำลังจะมาถึง</p>";
+                            }
+                            ?>
+                            <a href="user-appointments.php" class="btn btn-custom mt-3">ดูการนัดหมายทั้งหมด</a>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <h3><i class="mdi mdi-book-open-variant"></i> คอร์สล่าสุดของคุณ</h3>
+                            <?php
+                            if ($courses_result->num_rows > 0) {
+                                while ($course = $courses_result->fetch_assoc()) {
+                                    echo "<div class='course-item d-flex align-items-center'>";
+                                    echo "<img src='../img/course/" . htmlspecialchars($course['course_pic']) . "' alt='" . htmlspecialchars($course['course_name']) . "' class='course-image'>";
+                                    echo "<div>";
+                                    echo "<strong>" . htmlspecialchars($course['course_name']) . "</strong><br>";
+                                    echo "ลงทะเบียนเมื่อ: " . thaiDate($course['order_datetime']);
+                                    echo "</div>";
+                                    echo "</div>";
+                                }
+                            } else {
+                                echo "<p>ยังไม่มีคอร์สที่ลงทะเบียน</p>";
+                            }
+                            ?>
+                            <a href="user-courses.php" class="btn btn-custom mt-3">ดูคอร์สทั้งหมด</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="info-card">
+                            <h3><i class="mdi mdi-account-circle"></i> ข้อมูลโปรไฟล์ของคุณ</h3>
+                            <ul class="list-unstyled">
+                                <li><strong>อีเมล:</strong> <?php echo htmlspecialchars($users->cus_email); ?></li>
+                                <li><strong>เบอร์โทรศัพท์:</strong> <?php echo htmlspecialchars($users->cus_tel); ?></li>
+                                <li><strong>ไลน์ไอดี:</strong> <?php echo htmlspecialchars($users->line_user_id); ?></li>
+                            </ul>
+                            <a href="user-profile.php" class="btn btn-custom">แก้ไขโปรไฟล์</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- / Content -->
 
             <?php   include 'footer.php'; ?>

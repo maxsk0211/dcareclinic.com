@@ -41,7 +41,7 @@
 
 
     // ดึงข้อมูลการจองที่มีอยู่
-    $sql_bookings = "SELECT booking_datetime FROM course_bookings WHERE status = 'confirmed'";
+    $sql_bookings = "SELECT booking_datetime FROM course_bookings WHERE status IN ('pending', 'confirmed')";
     $result_bookings = $conn->query($sql_bookings);
     $booked_slots = [];
     while ($row = $result_bookings->fetch_object()) {
