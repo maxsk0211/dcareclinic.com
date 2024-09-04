@@ -3,23 +3,21 @@ session_start();
 include 'chk-session.php';
 require '../dbcon.php';
 
-// ดึงข้อมูลการจองทั้งหมด
-$sql = "SELECT cb.*, cu.cus_firstname, cu.cus_lastname, u.users_fname, oc.oc_id, oc.order_net_total, oc.order_payment
-        FROM course_bookings cb
-        JOIN customer cu ON cb.cus_id = cu.cus_id
-        JOIN users u ON cb.users_id = u.users_id
-        LEFT JOIN order_course oc ON cb.id = oc.course_bookings_id
-        WHERE cb.branch_id = {$_SESSION['branch_id']}
-        ORDER BY cb.id DESC";
-
-$result_booking = $conn->query($sql);
-
-if (!$result_booking) {
-    die("Error fetching bookings: " . $conn->error);
+// ฟังก์ชันอนุมัติการจอง
+if (isset($_GET['approve']) && $_GET['approve'] == 1) {
+    $booking_id = mysqli_real_escape_string($conn, $_GET['booking_id']);
+    $approve_sql = "UPDATE course_bookings SET status = 'confirmed' WHERE id = '$booking_id'";
+    if (mysqli_query($conn, $approve_sql)) {
+        $_SESSION['msg_ok'] = "อนุมัติการจองเรียบร้อยแล้ว";
+    } else {
+        $_SESSION['msg_error'] = "เกิดข้อผิดพลาดในการอนุมัติการจอง: " . mysqli_error($conn);
+    }
+    header("Location: booking-show.php");
+    exit();
 }
 
 // ฟังก์ชันยกเลิกการจอง
-if (isset($_GET['del']) && $_GET['del'] == 1) {
+if (isset($_GET['cancel']) && $_GET['cancel'] == 1) {
     $booking_id = mysqli_real_escape_string($conn, $_GET['booking_id']);
     $cancel_sql = "UPDATE course_bookings SET status = 'cancelled' WHERE id = '$booking_id'";
     if (mysqli_query($conn, $cancel_sql)) {
@@ -27,8 +25,44 @@ if (isset($_GET['del']) && $_GET['del'] == 1) {
     } else {
         $_SESSION['msg_error'] = "เกิดข้อผิดพลาดในการยกเลิกการจอง: " . mysqli_error($conn);
     }
-    header("Location: booking-detail.php");
+    header("Location: booking-show.php");
     exit();
+}
+
+// ดึงข้อมูลการจองทั้งหมด
+$sql = "SELECT cb.*, cu.cus_id AS customer_id, cu.cus_firstname, cu.cus_lastname, u.users_fname, oc.oc_id, oc.order_net_total, oc.order_payment
+        FROM course_bookings cb
+        JOIN customer cu ON cb.cus_id = cu.cus_id
+        LEFT JOIN users u ON cb.users_id = u.users_id
+        LEFT JOIN order_course oc ON cb.id = oc.course_bookings_id
+        WHERE cb.branch_id = {$_SESSION['branch_id']}
+        ORDER BY cb.booking_datetime DESC";
+
+$result_booking = $conn->query($sql);
+
+if (!$result_booking) {
+    die("Error fetching bookings: " . $conn->error);
+}
+
+function formatOrderId($orderId) {
+    return 'ORDER-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
+}
+
+function convertToThaiDate($date) {
+    $thai_months = [
+        1 => 'ม.ค.', 2 => 'ก.พ.', 3 => 'มี.ค.', 4 => 'เม.ย.', 5 => 'พ.ค.', 6 => 'มิ.ย.',
+        7 => 'ก.ค.', 8 => 'ส.ค.', 9 => 'ก.ย.', 10 => 'ต.ค.', 11 => 'พ.ย.', 12 => 'ธ.ค.'
+    ];
+
+    $date_parts = explode(' ', $date);
+    $time = isset($date_parts[1]) ? $date_parts[1] : '';
+    $date_parts = explode('-', $date_parts[0]);
+    
+    $day = intval($date_parts[2]);
+    $month = $thai_months[intval($date_parts[1])];
+    $year = intval($date_parts[0]) + 543;
+
+    return "$day $month $year" . ($time ? " $time" : "");
 }
 ?>
 
@@ -39,44 +73,88 @@ if (isset($_GET['del']) && $_GET['del'] == 1) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <title>แสดงการจองคอร์ส - D Care Clinic</title>
     <meta name="description" content="" />
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
-
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
-      rel="stylesheet" />
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap" rel="stylesheet" />
+    <!-- Icons -->
     <link rel="stylesheet" href="../assets/vendor/fonts/remixicon/remixicon.css" />
-    <!-- <link rel="stylesheet" href="../assets/vendor/fonts/flag-icons.css" /> -->
-
-    <!-- Menu waves for no-customizer fix -->
-    <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
-
     <!-- Core CSS -->
     <link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" />
     <link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" />
     <link rel="stylesheet" href="../assets/css/demo.css" />
-
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
-
+    <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
     <!-- Page CSS -->
-
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
+        <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
+    <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
     <!-- Helpers -->
     <script src="../assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="../assets/js/config.js"></script>
-    <!-- sweet Alerts 2 -->
-    <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
-
-    <!-- datatables -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-    <script src="../assets/js/config.js"></script>
+<style>
+        .payment-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .payment-cash {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .payment-credit {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .payment-transfer {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .payment-unpaid {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .status-confirmed {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    .dropdown-toggle-z-index {
+        position: relative;
+        z-index: 1000; /* ปรับค่านี้ตามความเหมาะสม */
+    }
+    .dropdown-menu-z-index {
+        z-index: 1001; /* ต้องมากกว่า z-index ของ .dropdown-toggle-z-index */
+    }
+    .dropdown-item-z-index {
+        position: relative;
+        z-index: 1002; /* ต้องมากกว่า z-index ของ .dropdown-menu-z-index */
+    }
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: #f5f5f5;
+    }
+    </style>
 </head>
 
 <body>
@@ -86,66 +164,111 @@ if (isset($_GET['del']) && $_GET['del'] == 1) {
             <div class="layout-page">
                 <div class="content-wrapper">
                     <?php include 'menu.php'; ?>
+                    <!-- Content -->
                     <div class="container-xxl flex-grow-1 container-p-y">
+                        <h4 class="py-3 mb-4"><span class="text-muted fw-light">การจองคอร์ส /</span> รายละเอียดการจอง</h4>
+
+                        <!-- Booking List Table -->
                         <div class="card">
-                            <div class="card-header">
-                                <h4>รายละเอียดการจองคอร์ส</h4>
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">รายการจองคอร์สทั้งหมด</h5>
+                                <a href="booking.php" class="btn btn-primary">
+                                    <i class="ri-add-line me-1"></i> จองคอร์สใหม่
+                                </a>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="bookingsTable" class="table table-striped table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>วันที่จอง</th>
-                                                <th>ชื่อลูกค้า</th>
-                                                <th>ผู้ทำรายการ</th>
-                                                <th>ยอดรวม</th>
-                                                <th>วิธีการชำระเงิน</th>
-                                                <th>สถานะ</th>
-                                                <th>การดำเนินการ</th>
+                            <div class="card-datatable table-responsive">
+                                <table class="datatables-bookings table border-top">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>รหัสการจอง</th>
+                                            <th>ชื่อลูกค้า</th>
+                                            <th>วันที่จอง</th>
+                                            <th>ผู้ทำรายการ</th>
+                                            <th>ยอดรวม</th>
+                                            <th>สถานะการจอง</th>
+                                            <th>สถานะการชำระเงิน</th>
+                                            <th>การดำเนินการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php while ($row_booking = mysqli_fetch_object($result_booking)): ?>
+                                            <tr class="clickable-row" data-customer-id="<?php echo $row_booking->customer_id; ?>">
+                                                <td></td>
+                                                <td><?php echo formatOrderId($row_booking->id); ?></td>
+                                                <td><?php echo htmlspecialchars($row_booking->cus_firstname . ' ' . $row_booking->cus_lastname); ?></td>
+                                                <td><?php echo convertToThaiDate($row_booking->booking_datetime); ?></td>
+                                                <td><?php echo $row_booking->users_fname ?? 'N/A'; ?></td>
+                                                <td><?php echo number_format($row_booking->order_net_total, 2); ?> บาท</td>
+                                                <td>
+                                                    <?php
+                                                    $status_class = '';
+                                                    switch ($row_booking->status) {
+                                                        case 'confirmed':
+                                                            $status_class = 'status-confirmed';
+                                                            $status_text = 'ยืนยันแล้ว';
+                                                            break;
+                                                        case 'cancelled':
+                                                            $status_class = 'status-cancelled';
+                                                            $status_text = 'ยกเลิกแล้ว';
+                                                            break;
+                                                        default:
+                                                            $status_class = 'status-pending';
+                                                            $status_text = 'รอยืนยัน';
+                                                    }
+                                                    echo "<span class='status-badge $status_class'>$status_text</span>";
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    $payment_class = '';
+                                                    switch ($row_booking->order_payment) {
+                                                        case 'เงินสด':
+                                                            $payment_class = 'payment-cash';
+                                                            break;
+                                                        case 'บัตรเครดิต':
+                                                            $payment_class = 'payment-credit';
+                                                            break;
+                                                        case 'โอนเงิน':
+                                                            $payment_class = 'payment-transfer';
+                                                            break;
+                                                        default:
+                                                            $payment_class = 'payment-unpaid';
+                                                    }
+                                                    echo "<span class='payment-status $payment_class'>" . htmlspecialchars($row_booking->order_payment) . "</span>";
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow dropdown-toggle-z-index" data-bs-toggle="dropdown">
+                                                            <i class="ri-more-fill"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-z-index">
+                                                            <a class="dropdown-item dropdown-item-z-index" href="javascript:void(0);" onclick="showOrderDetails(<?php echo $row_booking->oc_id; ?>)">
+                                                                <i class="ri-eye-line me-1"></i> ดูรายละเอียด
+                                                            </a>
+                                                            <?php if ($row_booking->status == 'pending'): ?>
+                                                                <a class="dropdown-item dropdown-item-z-index" href="javascript:void(0);" onclick="confirmApprove('booking-show.php?booking_id=<?php echo $row_booking->id; ?>&approve=1')">
+                                                                    <i class="ri-check-line me-1"></i> อนุมัติ
+                                                                </a>
+                                                            <?php endif; ?>
+                                                            <?php if ($row_booking->status != 'cancelled'): ?>
+                                                                <a class="dropdown-item dropdown-item-z-index" href="javascript:void(0);" onclick="confirmCancel('booking-show.php?booking_id=<?php echo $row_booking->id; ?>&cancel=1')">
+                                                                    <i class="ri-close-line me-1"></i> ยกเลิก
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php 
-                                            $i = 1; 
-                                            while ($row_booking = mysqli_fetch_object($result_booking)): 
-                                            ?>
-                                                <tr>
-                                                    <td><?php echo $i++; ?></td>
-                                                    <td><?php echo (new DateTime($row_booking->booking_datetime))->modify('+543 years')->format('d/m/Y H:i:s'); ?></td>
-                                                    <td><?php echo htmlspecialchars($row_booking->cus_firstname . ' ' . $row_booking->cus_lastname); ?></td>
-                                                    <td><?php echo $row_booking->users_fname; ?></td>
-                                                    <td><?php echo number_format($row_booking->order_net_total, 2); ?> บาท</td>
-                                                    <td><?php echo $row_booking->order_payment; ?></td>
-                                                    <td>
-                                                        <?php
-                                                        switch ($row_booking->status) {
-                                                            case 'confirmed':
-                                                                echo '<span class="badge bg-success">ยืนยันแล้ว</span>';
-                                                                break;
-                                                            case 'cancelled':
-                                                                echo '<span class="badge bg-danger">ยกเลิกแล้ว</span>';
-                                                                break;
-                                                            default:
-                                                                echo '<span class="badge bg-warning">รอยืนยัน</span>';
-                                                        }
-                                                        ?>
-                                                    </td>
-                                                    <td>
-                                                        <button class="btn btn-info btn-sm" onclick="showOrderDetails(<?php echo $row_booking->oc_id; ?>)">รายละเอียด</button>
-                                                        <?php if ($row_booking->status == 'confirmed'): ?>
-                                                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('booking-detail.php?booking_id=<?php echo $row_booking->id; ?>&del=1')">ยกเลิกการจอง</button>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endwhile; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
+                        <!--/ Booking List Table -->
                     </div>
+                    <!-- / Content -->
                     <?php include 'footer.php'; ?>
                     <div class="content-backdrop fade"></div>
                 </div>
@@ -168,116 +291,175 @@ if (isset($_GET['del']) && $_GET['del'] == 1) {
         </div>
     </div>
 
-    <!-- Core JS -->
-    <!-- build:js assets/vendor/js/core.js -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
-    <!-- build:js assets/vendor/js/core.js -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
     <script src="../assets/vendor/js/bootstrap.js"></script>
-    <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/hammer/hammer.js"></script>
-
     <script src="../assets/vendor/js/menu.js"></script>
 
-    <!-- endbuild -->
-
     <!-- Vendors JS -->
+    <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
 
     <!-- Page JS -->
-
-    <!-- datatables -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-
-    <!-- <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script> -->
-    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script> -->
-    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script> -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script> -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script> -->
-    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script> -->
-    <script src="../assets/vendor/libs/cleavejs/cleave.js"></script>
-    <script src="../assets/vendor/libs/cleavejs/cleave-phone.js"></script>
+    <!-- <script src="../assets/js/tables-datatables-basic.js"></script> -->
+    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
 
 
     <script>
-    $(document).ready(function() {
-        $('#bookingsTable').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
-            },
-            "order": [[0, "desc"]]
-        });
+$(document).ready(function() {
+    var table = $('.datatables-bookings').DataTable({
+        dom: '<"card-header flex-column flex-md-row"<"head-label text-center"><"dt-action-buttons text-end pt-3 pt-md-0"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>>t<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+        displayLength: 10,
+        lengthMenu: [ 10, 25, 50, 75, 100],
+        buttons: [], // Export buttons removed
+        responsive: {
+            details: {
+                display: $.fn.dataTable.Responsive.display.modal({
+                    header: function(row) {
+                        var data = row.data();
+                        return 'รายละเอียดการจองของ ' + data[2];
+                    }
+                }),
+                type: 'column',
+                renderer: function(api, rowIdx, columns) {
+                    var data = $.map(columns, function(col, i) {
+                        return col.title !== '' // ? Do not show actions column in modal
+                            ? '<tr data-dt-row="' +
+                                col.rowIndex +
+                                '" data-dt-column="' +
+                                col.columnIndex +
+                                '">' +
+                                '<td>' +
+                                col.title +
+                                ':' +
+                                '</td> ' +
+                                '<td>' +
+                                col.data +
+                                '</td>' +
+                                '</tr>'
+                            : '';
+                    }).join('');
+
+                    return data ? $('<table class="table"/><tbody />').append(data) : false;
+                }
+            }
+        },
+        createdRow: function(row, data, dataIndex) {
+            $(row).addClass('clickable-row');
+            $(row).attr('data-cus-id', data[1]); // Assuming cus_id is the second column (index 1)
+        }
     });
 
-          function confirmDelete(url) {
-           Swal.fire({
-              title: 'คุณแน่ใจหรือไม่ที่จะลบข้อมูล?',
-              text: "การลบจะทำให้ข้อมูลหาย ไม่สามารถกู้คืนมาได้!",
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
-              customClass: {
-                confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
-                cancelButton: 'btn btn-outline-secondary waves-effect'
-              },
-              buttonsStyling: false
-            }).then((result) => {
-              if (result.isConfirmed) {
-                top.location = url;
-              }
-            });
-          };
+    $('div.head-label').html('<h5 class="card-title mb-0">รายการจองคอร์สทั้งหมด</h5>');
 
-    function showOrderDetails(orderId) {
-        $.ajax({
-            url: 'sql/get-order-details.php',
-            type: 'GET',
-            data: { order_id: orderId },
-            success: function(response) {
-                $('#orderDetailsContent').html(response);
-                $('#orderDetailsModal').modal('show');
-            },
-            error: function() {
-                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    // เพิ่ม event listener สำหรับการคลิกที่แถว
+    $('.datatables-bookings tbody').on('click', 'tr', function(e) {
+        // ตรวจสอบว่าคลิกที่ปุ่ม dropdown หรือรายการเมนูหรือไม่
+        if (!$(e.target).closest('.dropdown-toggle, .dropdown-item').length) {
+            var customerId = $(this).data('customer-id');
+            if (customerId) {
+                window.location.href = 'customer-detail.php?id=' + customerId;
             }
-        });
-    }
+        }
+    });
 
-    // [โค้ด JavaScript สำหรับแสดง SweetAlert ยังคงเหมือนเดิม]
-        <?php if(isset($_SESSION['msg_ok'])){ ?>
-            Swal.fire({
-              icon: 'success',
-              title: 'แจ้งเตือน!',
-              text: '<?php echo $_SESSION['msg_ok']; ?>',
-              customClass: {
-                confirmButton: 'btn btn-primary waves-effect waves-light'
-              },
-              buttonsStyling: false
-            });
-        <?php unset($_SESSION['msg_ok']); } ?>
+    // เพิ่ม event listener สำหรับปุ่ม dropdown และรายการเมนู
+    $('.dropdown-toggle, .dropdown-item').on('click', function(e) {
+        e.stopPropagation(); // ป้องกันการ bubble up ของ event
+    });
+});
 
-          // Display error message
-        <?php if(isset($_SESSION['msg_error'])){ ?>
+function showOrderDetails(orderId) {
+    $.ajax({
+        url: 'sql/get-order-details.php',
+        type: 'GET',
+        data: { order_id: orderId },
+        success: function(response) {
+            $('#orderDetailsContent').html(response);
+            $('#orderDetailsModal').modal('show');
+        },
+        error: function() {
             Swal.fire({
-              icon: 'error',
-              title: 'แจ้งเตือน!',
-              text: '<?php echo $_SESSION['msg_error']; ?>',
-              customClass: {
-                confirmButton: 'btn btn-danger waves-effect waves-light'
-              },
-              buttonsStyling: false
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถโหลดข้อมูลรายละเอียดการสั่งซื้อได้',
+                customClass: {
+                    confirmButton: 'btn btn-primary'
+                },
+                buttonsStyling: false
             });
-        <?php unset($_SESSION['msg_error']); } ?>
-    </script>
+        }
+    });
+}
+
+function confirmApprove(url) {
+    Swal.fire({
+        title: 'ยืนยันการอนุมัติ?',
+        text: "คุณต้องการอนุมัติการจองนี้ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, อนุมัติ!',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+            confirmButton: 'btn btn-primary me-3',
+            cancelButton: 'btn btn-label-secondary'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+}
+
+function confirmCancel(url) {
+    Swal.fire({
+        title: 'ยืนยันการยกเลิก?',
+        text: "คุณต้องการยกเลิกการจองนี้ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, ยกเลิก!',
+        cancelButtonText: 'ไม่',
+        customClass: {
+            confirmButton: 'btn btn-danger me-3',
+            cancelButton: 'btn btn-label-secondary'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+}
+
+<?php if(isset($_SESSION['msg_ok'])): ?>
+Swal.fire({
+    icon: 'success',
+    title: 'สำเร็จ!',
+    text: '<?php echo $_SESSION['msg_ok']; ?>',
+    customClass: {
+        confirmButton: 'btn btn-success'
+    },
+    buttonsStyling: false
+});
+<?php unset($_SESSION['msg_ok']); endif; ?>
+
+<?php if(isset($_SESSION['msg_error'])): ?>
+Swal.fire({
+    icon: 'error',
+    title: 'เกิดข้อผิดพลาด!',
+    text: '<?php echo $_SESSION['msg_error']; ?>',
+    customClass: {
+        confirmButton: 'btn btn-danger'
+    },
+    buttonsStyling: false
+});
+<?php unset($_SESSION['msg_error']); endif; ?>
+</script>
 </body>
 </html>

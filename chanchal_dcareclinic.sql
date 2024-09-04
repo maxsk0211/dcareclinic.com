@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 03, 2024 at 06:35 PM
+-- Generation Time: Sep 04, 2024 at 05:35 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 5.6.40
 
@@ -205,7 +205,9 @@ INSERT INTO `course` (`course_id`, `branch_id`, `course_name`, `course_detail`, 
 (19, 1, 'ยกคิ้วด้วยโบท็อกซ์', 'การฉีดโบท็อกซ์เพื่อยกคิ้วและเปิดหางตา', 12000, 1, 1, '2024-04-20', '2025-04-20', '66c9f0beb125d.jpg', 'ช่วยให้ดวงตาดูสดใสขึ้น', 1, 60),
 (20, 1, 'ลดกราม ปรับทรงหน้า', 'การฉีดโบท็อกซ์เพื่อลดขนาดกรามและปรับทรงหน้า', 25000, 1, 1, '2024-04-20', '2025-04-20', '66c9f0beb125d.jpg', 'ให้ใบหน้าดูเรียวขึ้น', 1, 60),
 (21, 1, 'รักษาฝ้า กระ จุดด่างดำ', 'การใช้เลเซอร์และครีมเพื่อรักษาฝ้า กระ และจุดด่างดำ', 30000, 5, 3, '2024-04-20', '2025-04-20', '66c9f0beb125d.jpg', 'ผลลัพธ์ขึ้นอยู่กับความรุนแรงของปัญหาผิว', 1, 60),
-(22, 1, 'ฟื้นฟูผิวด้วยเซลล์ต้นกำเนิด', 'การใช้เซลล์ต้นกำเนิดเพื่อฟื้นฟูผิวให้อ่อนเยาว์', 100000, 3, 3, '2024-04-20', '2025-04-20', '66c9f0beb125d.jpg', 'นวัตกรรมล่าสุดในวงการความงาม', 1, 60);
+(22, 1, 'ฟื้นฟูผิวด้วยเซลล์ต้นกำเนิด', 'การใช้เซลล์ต้นกำเนิดเพื่อฟื้นฟูผิวให้อ่อนเยาว์', 100000, 3, 3, '2024-04-20', '2025-04-20', '66c9f0beb125d.jpg', 'นวัตกรรมล่าสุดในวงการความงาม', 1, 60),
+(23, 2, 'test', 'test', 4989, 1, 1, '2024-08-31', '2025-08-31', '66d83366dac64.png', '..', 1, 60),
+(24, 2, 'test', '31082567', 3490, 1, 2, '2024-08-31', '2025-08-31', '66d833eae7551.jpg', '123', 1, 60);
 
 -- --------------------------------------------------------
 
@@ -219,7 +221,7 @@ CREATE TABLE `course_bookings` (
   `cus_id` int(11) NOT NULL,
   `booking_datetime` datetime NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `users_id` int(11) NOT NULL,
+  `users_id` int(11) NOT NULL DEFAULT 0,
   `status` enum('pending','confirmed','cancelled') NOT NULL DEFAULT 'pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
@@ -235,7 +237,16 @@ INSERT INTO `course_bookings` (`id`, `branch_id`, `cus_id`, `booking_datetime`, 
 (20, 1, 3, '2024-09-10 12:00:00', '2024-09-03 11:34:22', 1, 'confirmed'),
 (21, 1, 5, '2024-09-10 12:30:00', '2024-09-03 11:34:34', 1, 'confirmed'),
 (22, 1, 7, '2024-09-10 14:15:00', '2024-09-03 11:34:49', 1, 'confirmed'),
-(23, 1, 6, '2024-09-10 10:15:00', '2024-09-03 11:35:06', 1, 'confirmed');
+(23, 1, 6, '2024-09-10 10:15:00', '2024-09-03 11:35:06', 1, 'confirmed'),
+(25, 1, 13, '2024-09-10 16:30:00', '2024-09-03 11:47:09', 13, 'pending'),
+(26, 1, 13, '2024-09-10 16:45:00', '2024-09-03 11:47:28', 13, 'pending'),
+(27, 1, 13, '2024-09-10 12:45:00', '2024-09-03 11:58:26', 13, 'pending'),
+(28, 1, 13, '2024-09-10 13:00:00', '2024-09-03 11:58:39', 13, 'pending'),
+(29, 1, 13, '2024-09-10 13:15:00', '2024-09-03 11:59:21', 13, 'pending'),
+(30, 1, 13, '2024-09-10 12:15:00', '2024-09-03 12:33:54', 13, 'pending'),
+(31, 1, 14, '2024-09-10 16:15:00', '2024-09-03 12:49:41', 14, 'pending'),
+(32, 2, 13, '2024-09-10 16:00:00', '2024-09-04 10:16:34', 13, 'pending'),
+(33, 1, 13, '2024-09-10 15:00:00', '2024-09-04 10:29:15', 0, 'pending');
 
 -- --------------------------------------------------------
 
@@ -336,7 +347,8 @@ INSERT INTO `customer` (`cus_id`, `cus_id_card_number`, `cus_birthday`, `cus_fir
 (10, '0123456789012', '1994-10-08', 'สมบูรณ์', 'ใจสู้', 'นาย', 'ชาย', 'บูรณ์', 'somboon@example.com', 'B', '0901234567', NULL, NULL, NULL, '789 หมู่ 3', 'พญาไท', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10400', 'customer.png', 1, NULL, NULL, NULL),
 (11, '1234567890123', '1990-01-01', 'สมชาย', 'ใจดี', 'นาย', 'ชาย', 'ชาย', 'somchai@example.com', 'A', '0812345678', NULL, NULL, NULL, '123 หมู่ 4', 'เมือง', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10100', 'customer.png', 1, NULL, NULL, NULL),
 (12, '4567890123456', '2000-04-10', 'สมพร', 'ใจบุญ', 'นาง', 'หญิง', 'พร', 'somporn@example.com', 'AB', '0845678901', NULL, NULL, 'แพ้ฝุ่น', '101 หมู่ 7', 'จตุจักร', 'กรุงเทพมหานคร', 'กรุงเทพมหานคร', '10900', 'customer.png', 1, NULL, NULL, NULL),
-(13, '1819900489796', '1995-11-02', 'สนธยา', 'แข็งแรง', 'นาย', 'ชาย', 'max', 'asdas@wefw.e', 'O+', '1234234234', '-', '-', '-', '107', 'ไสไทย', 'เมือง', 'กระบี่', '81000', 'customer,png', 1, 'U4ff5ebe11da5e7e2698cd4cb9a6e8786', 'Max', 'https://profile.line-scdn.net/0hL1AsKHJDEx5sCgbSsVptYRxaEHRPe0oMQDsIfQkNRC1ZO1BAFGxdKw0DHSkFaQAdQG9dflFdHy1gGWR4clzvKms6Ti9QPVRAQm9a_A');
+(13, '1819900489796', '1995-11-02', 'สนธยา', 'แข็งแรง', 'นาย', 'ชาย', 'max', 'asdas@wefw.e', 'O+', '1234234234', '-', '-', '-', '107', 'ไสไทย', 'เมือง', 'กระบี่', '81000', 'customer,png', 1, 'U4ff5ebe11da5e7e2698cd4cb9a6e8786', 'Max', 'https://profile.line-scdn.net/0hL1AsKHJDEx5sCgbSsVptYRxaEHRPe0oMQDsIfQkNRC1ZO1BAFGxdKw0DHSkFaQAdQG9dflFdHy1gGWR4clzvKms6Ti9QPVRAQm9a_A'),
+(14, '1819900254181', '1998-01-29', 'สุดชญา', 'เจียวก๊ก', 'นางสาว', 'หญิง', 'ตุ๊กติ๊ก', 'tuktik2901@gmail.com', 'B-', '0928121387', 'ไม่มี', 'ภูมิแพ้', 'ไม่มี', '86', 'ปกาสัย', 'เหนือคลอง', 'กระบี่', '81130', 'customer,png', 1, 'Uefd57d73644282d669338a2bde1231a6', 'Sudchaya.Jeawkok', 'https://profile.line-scdn.net/0h2I5s9Q47bWYYCn498PETGWhabgw7ezR0YThyA30OZ1QtOXg5MGQkByQCNwN1bihgZDwiVH4KZwMUGRoABlyRUh86MFckPSo4Nm8khA');
 
 -- --------------------------------------------------------
 
@@ -448,7 +460,16 @@ INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`,
 (39, 3, 1, 20, '2024-09-03 18:34:22', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1),
 (40, 5, 1, 21, '2024-09-03 18:34:34', 'ยังไม่จ่ายเงิน', 90000, NULL, '', 1),
 (41, 7, 1, 22, '2024-09-03 18:34:49', 'เงินสด', 55000, NULL, '', 1),
-(42, 6, 1, 23, '2024-09-03 18:35:06', 'เงินสด', 35000, NULL, '', 1);
+(42, 6, 1, 23, '2024-09-03 18:35:06', 'เงินสด', 35000, NULL, '', 1),
+(44, 13, 13, 25, '2024-09-03 18:47:09', 'cash', 5000, NULL, '', 1),
+(45, 13, 13, 26, '2024-09-03 18:47:28', 'credit_card', 35000, NULL, '', 1),
+(46, 13, 13, 27, '2024-09-03 18:58:26', 'cash', 15000, NULL, '', 1),
+(47, 13, 13, 28, '2024-09-03 18:58:39', 'cash', 15000, NULL, '', 1),
+(48, 13, 13, 29, '2024-09-03 18:59:21', 'cash', 35000, NULL, '', 1),
+(49, 13, 13, 30, '2024-09-03 19:33:54', 'transfer', 15000, NULL, '49000.jpg', 1),
+(50, 14, 14, 31, '2024-09-03 19:49:41', 'transfer', 5000, NULL, '20240903-194941-P0n34aRQHy.jpeg', 1),
+(51, 13, 13, 32, '2024-09-04 17:16:34', 'ยังไม่จ่ายเงิน', 4989, NULL, '', 1),
+(52, 13, 13, 33, '2024-09-04 17:29:15', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1);
 
 -- --------------------------------------------------------
 
@@ -480,7 +501,16 @@ INSERT INTO `order_detail` (`od_id`, `oc_id`, `course_id`, `od_amount`, `od_pric
 (46, 41, 4, 1, 15000),
 (47, 41, 10, 1, 40000),
 (48, 42, 4, 1, 15000),
-(49, 42, 5, 1, 20000);
+(49, 42, 5, 1, 20000),
+(50, 44, 8, 1, 5000),
+(51, 45, 7, 1, 35000),
+(52, 46, 4, 1, 15000),
+(53, 47, 4, 1, 15000),
+(54, 48, 7, 1, 35000),
+(55, 49, 4, 1, 15000),
+(56, 50, 8, 1, 5000),
+(57, 51, 23, 1, 4989),
+(58, 52, 4, 1, 15000);
 
 -- --------------------------------------------------------
 
@@ -646,7 +676,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`users_id`, `users_username`, `users_password`, `users_fname`, `users_lname`, `users_nickname`, `users_tel`, `position_id`, `users_license`, `branch_id`, `users_status`) VALUES
 (1, 'admin', 'Toshibal_123', 'ผู้ดูแลระบบ', '..', '', '', 1, '', 0, 1),
-(51, '123', '123', '123', '123', '123', '00000', 2, NULL, 1, 1);
+(51, '123', '123', '123', '123', '123', '00000', 2, NULL, 2, 1);
 
 --
 -- Indexes for dumped tables
@@ -731,8 +761,7 @@ ALTER TABLE `drug_type`
 --
 ALTER TABLE `order_course`
   ADD PRIMARY KEY (`oc_id`),
-  ADD KEY `cus_id` (`cus_id`),
-  ADD KEY `users_id` (`users_id`);
+  ADD KEY `cus_id` (`cus_id`);
 
 --
 -- Indexes for table `order_detail`
@@ -816,13 +845,13 @@ ALTER TABLE `clinic_hours`
 -- AUTO_INCREMENT for table `course`
 --
 ALTER TABLE `course`
-  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `course_bookings`
 --
 ALTER TABLE `course_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `course_resources`
@@ -840,7 +869,7 @@ ALTER TABLE `course_type`
 -- AUTO_INCREMENT for table `customer`
 --
 ALTER TABLE `customer`
-  MODIFY `cus_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `cus_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `drug`
@@ -858,13 +887,13 @@ ALTER TABLE `drug_type`
 -- AUTO_INCREMENT for table `order_course`
 --
 ALTER TABLE `order_course`
-  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `order_detail`
 --
 ALTER TABLE `order_detail`
-  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT for table `position`
@@ -911,7 +940,6 @@ ALTER TABLE `course_bookings`
 --
 ALTER TABLE `order_course`
   ADD CONSTRAINT `order_course_ibfk_1` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`),
-  ADD CONSTRAINT `order_course_ibfk_2` FOREIGN KEY (`users_id`) REFERENCES `users` (`users_id`),
   ADD CONSTRAINT `order_course_ibfk_3` FOREIGN KEY (`course_bookings_id`) REFERENCES `course_bookings` (`id`);
 
 --

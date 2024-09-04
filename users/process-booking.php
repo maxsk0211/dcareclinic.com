@@ -85,10 +85,10 @@ try {
     $course_price = $course['course_price'];
 
     // Insert into course_bookings
-    $booking_query = "INSERT INTO course_bookings (branch_id, cus_id, booking_datetime, created_at, users_id, status) 
-                      VALUES (?, ?, ?, NOW(), ?, 'pending')";
+    $booking_query = "INSERT INTO course_bookings (branch_id, cus_id, booking_datetime, created_at, status) 
+                      VALUES (?, ?, ?, NOW(),  'pending')";
     $stmt = mysqli_prepare($conn, $booking_query);
-    mysqli_stmt_bind_param($stmt, "iisi", $branch_id, $user_id, $booking_datetime, $user_id);
+    mysqli_stmt_bind_param($stmt, "iis", $branch_id, $user_id, $booking_datetime);
     if (!mysqli_stmt_execute($stmt)) {
         throw new Exception("Error inserting into course_bookings: " . mysqli_stmt_error($stmt));
     }

@@ -380,7 +380,7 @@ function thaiDate($date) {
                                 <option value="">โปรดเลือกการชำระเงิน</option>
                                 <!-- <option value="cash">Cash</option> -->
                                 <option value="ยังไม่จ่ายเงิน">ยังไม่จ่ายเงิน(จ่ายภายหลัง)</option>
-                                <option value="transfer">โอนผ่านธนาคาร</option>
+                                <option value="โอนเงิน">โอนผ่านธนาคาร</option>
 
                                 <!-- <option value="credit_card">Credit Card</option> -->
                             </select>
