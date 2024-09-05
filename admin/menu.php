@@ -3,6 +3,12 @@
           <ul class="menu-inner">
             <!-- Page -->
             <li class="menu-item">
+                <a href="queue-management.php" class="menu-link">
+                    <i class="menu-icon tf-icons ri-calendar-todo-fill"></i>
+                    <div data-i18n="จัดการคิว">จัดการคิว</div>
+                </a>
+            </li>
+            <li class="menu-item">
               <a href="booking.php" class="menu-link">
                 <i class="menu-icon tf-icons ri-file-line"></i>
                 <div data-i18n="Page 2">การจองคอร์ส</div>
