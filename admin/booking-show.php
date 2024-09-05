@@ -313,7 +313,6 @@ function convertToThaiDate($date) {
     <script>
 $(document).ready(function() {
     var table = $('.datatables-bookings').DataTable({
-        dom: '<"card-header flex-column flex-md-row"<"head-label text-center"><"dt-action-buttons text-end pt-3 pt-md-0"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>>t<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
         displayLength: 10,
         lengthMenu: [ 10, 25, 50, 75, 100],
         buttons: [], // Export buttons removed
@@ -355,7 +354,7 @@ $(document).ready(function() {
         }
     });
 
-    $('div.head-label').html('<h5 class="card-title mb-0">รายการจองคอร์สทั้งหมด</h5>');
+    // $('div.head-label').html('<h5 class="card-title mb-0">รายการจองคอร์สทั้งหมด</h5>');
 
     // เพิ่ม event listener สำหรับการคลิกที่แถว
     $('.datatables-bookings tbody').on('click', 'tr', function(e) {

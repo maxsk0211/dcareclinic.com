@@ -52,14 +52,14 @@ function convertToThaiDate($date) {
                 color: #2c3e50;
                 border-bottom: 2px solid #3498db;
                 padding-bottom: 10px;
-                margin-bottom: 20px;
+/*                margin-bottom: 20px;*/
             }
             .order-details .section {
                 background-color: #f9f9f9;
                 border: 1px solid #e0e0e0;
                 border-radius: 5px;
                 padding: 15px;
-                margin-bottom: 20px;
+/*                margin-bottom: 20px;*/
             }
             .order-details .section h5 {
                 color: #2980b9;

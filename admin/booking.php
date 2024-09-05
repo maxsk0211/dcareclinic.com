@@ -505,6 +505,11 @@
 
 $(document).ready(function() {
     let selectedCourses = [];
+    const $submitButton = $('button[type="submit"][form="orderForm"]');
+
+    function updateSubmitButton() {
+        $submitButton.prop('disabled', selectedCourses.length === 0);
+    }
 
     $('.course-item').on('click', function() {
         const courseId = $(this).data('course-id');
@@ -520,6 +525,7 @@ $(document).ready(function() {
         }
 
         updateOrderList();
+        updateSubmitButton();
     });
 
     function updateOrderList() {
@@ -541,6 +547,7 @@ $(document).ready(function() {
         $('#totalPrice').text(totalPrice.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
         $('#selectedCoursesInput').val(JSON.stringify(selectedCourses));
     }
+    updateSubmitButton();
 });
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -580,7 +587,7 @@ $(document).ready(function() {
             checkSubmitButton();
             
             // Display customer details
-            $('#customerImage').attr('src', '../img/customer/' + data.image);
+            $('#customerImage').attr('src', data.image);
             $('#customerName').text(data.text);
             $('#customerIdCard').text(data.id_card);
             $('#customerEmail').text(data.email);

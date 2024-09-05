@@ -3,7 +3,7 @@ require '../../dbcon.php';
 
 $searchTerm = $_GET['q'];
 
-$sql = "SELECT cus_id, cus_id_card_number, cus_firstname, cus_lastname, cus_email, cus_tel, cus_image 
+$sql = "SELECT cus_id, cus_id_card_number, cus_firstname, cus_lastname, cus_email, cus_tel, line_picture_url 
         FROM customer 
         WHERE cus_id_card_number LIKE '%$searchTerm%' 
            OR cus_firstname LIKE '%$searchTerm%' 
@@ -21,7 +21,7 @@ while ($row = $result->fetch_assoc()) {
         'id_card' => $row['cus_id_card_number'],
         'email' => $row['cus_email'],
         'tel' => $row['cus_tel'],
-        'image' => $row['cus_image']
+        'image' => $row['line_picture_url']
     ];
 }
 
