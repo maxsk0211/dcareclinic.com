@@ -1,26 +1,28 @@
 <?php
 session_start();
-// include 'chk-session.php';
+// include '../chk-session.php';
 require '../../dbcon.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $booking_id = $_POST['booking_id'];
+    $booking_type = $_POST['booking_type'];
     $notes = mysqli_real_escape_string($conn, $_POST['notes']);
+    $branch_id = $_SESSION['branch_id'];
     $today = date('Y-m-d');
 
     // สร้างหมายเลขคิว
-    $sql_count = "SELECT COUNT(*) as count FROM service_queue WHERE queue_date = '$today' AND branch_id = {$_SESSION['branch_id']}";
+    $sql_count = "SELECT COUNT(*) as count FROM service_queue WHERE queue_date = '$today' AND branch_id = $branch_id";
     $result_count = $conn->query($sql_count);
     $row_count = $result_count->fetch_assoc();
     $queue_number = 'Q' . str_pad($row_count['count'] + 1, 3, '0', STR_PAD_LEFT);
 
-    if ($booking_id === 'walk_in') {
+    if ($booking_type === 'walk_in') {
         $cus_id = mysqli_real_escape_string($conn, $_POST['cus_id']);
         $queue_time = mysqli_real_escape_string($conn, $_POST['queue_time']);
         
         $sql_insert = "INSERT INTO service_queue (branch_id, cus_id, queue_number, queue_date, queue_time, notes, service_status) 
-                       VALUES ({$_SESSION['branch_id']}, '$cus_id', '$queue_number', '$today', '$queue_time', '$notes', 'waiting')";
+                       VALUES ($branch_id, '$cus_id', '$queue_number', '$today', '$queue_time', '$notes', 'waiting')";
     } else {
+        $booking_id = mysqli_real_escape_string($conn, $_POST['booking_id']);
         $sql_booking = "SELECT cus_id, booking_datetime FROM course_bookings WHERE id = '$booking_id'";
         $result_booking = $conn->query($sql_booking);
         $booking = $result_booking->fetch_assoc();
@@ -29,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $queue_time = date('H:i:s', strtotime($booking['booking_datetime']));
         
         $sql_insert = "INSERT INTO service_queue (branch_id, cus_id, booking_id, queue_number, queue_date, queue_time, notes, service_status) 
-                       VALUES ({$_SESSION['branch_id']}, '$cus_id', '$booking_id', '$queue_number', '$today', '$queue_time', '$notes', 'waiting')";
+                       VALUES ($branch_id, '$cus_id', '$booking_id', '$queue_number', '$today', '$queue_time', '$notes', 'waiting')";
     }
 
     if ($conn->query($sql_insert) === TRUE) {

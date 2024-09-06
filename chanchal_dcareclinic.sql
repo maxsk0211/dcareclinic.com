@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 05, 2024 at 09:59 PM
+-- Generation Time: Sep 06, 2024 at 10:20 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 5.6.40
 
@@ -152,12 +152,12 @@ CREATE TABLE `clinic_hours` (
 --
 
 INSERT INTO `clinic_hours` (`id`, `day_of_week`, `start_time`, `end_time`, `is_closed`) VALUES
-(43, 'Monday', '09:00:00', '17:00:00', 0),
-(44, 'Tuesday', '09:00:00', '17:00:00', 0),
-(45, 'Wednesday', '09:00:00', '17:00:00', 0),
-(46, 'Thursday', '09:00:00', '17:00:00', 0),
-(47, 'Friday', '09:00:00', '17:00:00', 0),
-(48, 'Saturday', '10:00:00', '20:00:00', 0),
+(43, 'Monday', '09:00:00', '23:00:00', 0),
+(44, 'Tuesday', '09:00:00', '23:00:00', 0),
+(45, 'Wednesday', '09:00:00', '23:00:00', 0),
+(46, 'Thursday', '09:00:00', '23:00:00', 0),
+(47, 'Friday', '09:00:00', '23:00:00', 0),
+(48, 'Saturday', '10:00:00', '23:00:00', 0),
 (49, 'Sunday', '09:00:00', '17:00:00', 1);
 
 -- --------------------------------------------------------
@@ -230,11 +230,17 @@ CREATE TABLE `course_bookings` (
 --
 
 INSERT INTO `course_bookings` (`id`, `branch_id`, `cus_id`, `booking_datetime`, `created_at`, `users_id`, `status`) VALUES
-(1, 1, 13, '2024-09-16 09:15:00', '2024-09-05 13:33:52', 1, 'confirmed'),
+(1, 1, 13, '2024-09-05 09:15:00', '2024-09-05 15:24:09', 1, 'confirmed'),
 (2, 1, 13, '2024-09-16 10:15:00', '2024-09-05 13:34:08', 1, 'confirmed'),
 (3, 1, 14, '2024-09-16 11:30:00', '2024-09-05 13:35:38', 1, 'confirmed'),
 (5, 1, 14, '2024-09-16 12:15:00', '2024-09-05 13:40:15', 1, 'confirmed'),
-(6, 1, 14, '2024-09-16 11:00:00', '2024-09-05 13:46:37', 1, 'confirmed');
+(6, 1, 14, '2024-09-16 11:00:00', '2024-09-05 13:46:37', 1, 'confirmed'),
+(7, 1, 13, '2024-09-06 16:45:00', '2024-09-06 05:56:19', 0, 'pending'),
+(8, 1, 13, '2024-09-06 16:00:00', '2024-09-06 05:56:31', 0, 'pending'),
+(9, 1, 13, '2024-09-06 15:15:00', '2024-09-06 05:56:40', 0, 'pending'),
+(10, 1, 13, '2024-09-06 20:15:00', '2024-09-06 09:37:03', 1, 'confirmed'),
+(11, 1, 13, '2024-09-06 22:45:00', '2024-09-06 12:17:03', 1, 'confirmed'),
+(12, 1, 13, '2024-09-10 10:00:00', '2024-09-06 12:25:10', 1, 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -421,6 +427,34 @@ INSERT INTO `drug_type` (`drug_type_id`, `drug_type_name`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `opd`
+--
+
+CREATE TABLE `opd` (
+  `opd_id` int(11) NOT NULL,
+  `queue_id` int(11) NOT NULL,
+  `cus_id` int(11) NOT NULL,
+  `course_id` int(11) DEFAULT NULL,
+  `nurse_id` int(11) DEFAULT NULL,
+  `Weight` float DEFAULT NULL,
+  `Height` float DEFAULT NULL,
+  `BMI` float DEFAULT NULL,
+  `FBS` float DEFAULT NULL,
+  `Systolic` float DEFAULT NULL,
+  `Pulsation` float DEFAULT NULL,
+  `opd_diagnose` text DEFAULT NULL,
+  `opd_note` text DEFAULT NULL,
+  `opd_smoke` varchar(10) DEFAULT NULL,
+  `opd_alcohol` varchar(10) DEFAULT NULL,
+  `opd_physical` varchar(50) DEFAULT NULL,
+  `opd_status` int(11) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `order_course`
 --
 
@@ -446,7 +480,13 @@ INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`,
 (2, 13, 1, 2, '2024-09-05 20:34:08', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1),
 (3, 14, 1, 3, '2024-09-05 20:35:38', 'เงินสด', 45000, NULL, '', 1),
 (5, 14, 1, 5, '2024-09-05 20:40:15', 'เงินสด', 35000, NULL, '', 1),
-(6, 14, 1, 6, '2024-09-05 20:46:37', 'เงินสด', 35000, NULL, '', 1);
+(6, 14, 1, 6, '2024-09-05 20:46:37', 'เงินสด', 35000, NULL, '', 1),
+(8, 13, 13, 7, '2024-09-06 12:56:19', 'ยังไม่จ่ายเงิน', 5000, NULL, '', 1),
+(9, 13, 13, 8, '2024-09-06 12:56:31', 'ยังไม่จ่ายเงิน', 40000, NULL, '', 1),
+(10, 13, 13, 9, '2024-09-06 12:56:40', 'ยังไม่จ่ายเงิน', 40000, NULL, '', 1),
+(11, 13, 1, 10, '2024-09-06 16:37:03', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1),
+(12, 13, 1, 11, '2024-09-06 19:17:03', 'ยังไม่จ่ายเงิน', 20000, NULL, '', 1),
+(13, 13, 1, 12, '2024-09-06 19:25:10', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1);
 
 -- --------------------------------------------------------
 
@@ -476,7 +516,13 @@ INSERT INTO `order_detail` (`od_id`, `oc_id`, `course_id`, `od_amount`, `od_pric
 (7, 5, 4, 1, 15000),
 (8, 5, 5, 1, 20000),
 (9, 6, 4, 1, 15000),
-(10, 6, 5, 1, 20000);
+(10, 6, 5, 1, 20000),
+(12, 8, 8, 1, 5000),
+(13, 9, 10, 1, 40000),
+(14, 10, 10, 1, 40000),
+(15, 11, 4, 1, 15000),
+(16, 12, 5, 1, 20000),
+(17, 13, 7, 1, 35000);
 
 -- --------------------------------------------------------
 
@@ -499,6 +545,81 @@ INSERT INTO `position` (`position_id`, `position_name`) VALUES
 (3, 'หมอ'),
 (4, 'พยาบาล'),
 (5, 'พนักงานต้อนรับ');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service_nurse_records`
+--
+
+CREATE TABLE `service_nurse_records` (
+  `nurse_record_id` int(11) NOT NULL,
+  `service_id` int(11) NOT NULL,
+  `nurse_id` int(11) NOT NULL,
+  `nurse_df` decimal(10,2) NOT NULL,
+  `nurse_df_type` enum('amount','percent') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service_queue`
+--
+
+CREATE TABLE `service_queue` (
+  `queue_id` int(11) NOT NULL,
+  `branch_id` int(11) NOT NULL,
+  `cus_id` int(11) NOT NULL,
+  `booking_id` int(11) DEFAULT NULL,
+  `queue_number` varchar(10) NOT NULL,
+  `queue_date` date NOT NULL,
+  `queue_time` time NOT NULL,
+  `service_status` enum('waiting','in_progress','completed','cancelled') NOT NULL DEFAULT 'waiting',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `notes` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `service_queue`
+--
+
+INSERT INTO `service_queue` (`queue_id`, `branch_id`, `cus_id`, `booking_id`, `queue_number`, `queue_date`, `queue_time`, `service_status`, `created_at`, `updated_at`, `notes`) VALUES
+(16, 1, 13, 7, 'Q001', '2024-09-06', '16:45:00', 'in_progress', '2024-09-06 09:34:39', '2024-09-06 11:49:22', ''),
+(17, 1, 13, 10, 'Q002', '2024-09-06', '20:15:00', 'in_progress', '2024-09-06 09:37:11', '2024-09-06 09:37:14', ''),
+(18, 1, 13, 11, 'Q003', '2024-09-06', '22:45:00', 'in_progress', '2024-09-06 12:17:14', '2024-09-06 12:17:16', '');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service_records`
+--
+
+CREATE TABLE `service_records` (
+  `service_id` int(11) NOT NULL,
+  `cus_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `doctor_id` int(11) NOT NULL,
+  `doctor_df` decimal(10,2) NOT NULL,
+  `doctor_df_type` enum('amount','percent') NOT NULL,
+  `note` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service_staff_records`
+--
+
+CREATE TABLE `service_staff_records` (
+  `staff_record_id` int(11) NOT NULL,
+  `service_id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `staff_type` enum('doctor','nurse') NOT NULL,
+  `staff_df` decimal(10,2) NOT NULL,
+  `staff_df_type` enum('amount','percent') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -642,7 +763,10 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`users_id`, `users_username`, `users_password`, `users_fname`, `users_lname`, `users_nickname`, `users_tel`, `position_id`, `users_license`, `branch_id`, `users_status`) VALUES
 (1, 'admin', 'Toshibal_123', 'ผู้ดูแลระบบ', '..', '', '', 1, '', 0, 1),
-(51, '123', '123', '123', '123', '123', '00000', 2, NULL, 2, 1);
+(51, '123', '123', '123', '123', '123', '00000', 2, NULL, 2, 1),
+(52, 'แพทย์ 1', 'แพทย์ 1', 'แพทย์ 1 ', 'แพทย์ 1', 'แพทย์ 1', '1234564897', 3, 'ว12345645', 1, 1),
+(53, 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', '1234564897', 3, 'ว12345645', 1, 1),
+(54, 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', '1234564897', 3, 'ว12345645', 1, 1);
 
 --
 -- Indexes for dumped tables
@@ -723,6 +847,16 @@ ALTER TABLE `drug_type`
   ADD PRIMARY KEY (`drug_type_id`);
 
 --
+-- Indexes for table `opd`
+--
+ALTER TABLE `opd`
+  ADD PRIMARY KEY (`opd_id`),
+  ADD KEY `queue_id` (`queue_id`),
+  ADD KEY `cus_id` (`cus_id`),
+  ADD KEY `course_id` (`course_id`),
+  ADD KEY `nurse_id` (`nurse_id`);
+
+--
 -- Indexes for table `order_course`
 --
 ALTER TABLE `order_course`
@@ -742,6 +876,40 @@ ALTER TABLE `order_detail`
 --
 ALTER TABLE `position`
   ADD PRIMARY KEY (`position_id`);
+
+--
+-- Indexes for table `service_nurse_records`
+--
+ALTER TABLE `service_nurse_records`
+  ADD PRIMARY KEY (`nurse_record_id`),
+  ADD KEY `service_id` (`service_id`),
+  ADD KEY `nurse_id` (`nurse_id`);
+
+--
+-- Indexes for table `service_queue`
+--
+ALTER TABLE `service_queue`
+  ADD PRIMARY KEY (`queue_id`),
+  ADD KEY `branch_id` (`branch_id`),
+  ADD KEY `cus_id` (`cus_id`),
+  ADD KEY `booking_id` (`booking_id`);
+
+--
+-- Indexes for table `service_records`
+--
+ALTER TABLE `service_records`
+  ADD PRIMARY KEY (`service_id`),
+  ADD KEY `cus_id` (`cus_id`),
+  ADD KEY `course_id` (`course_id`),
+  ADD KEY `doctor_id` (`doctor_id`);
+
+--
+-- Indexes for table `service_staff_records`
+--
+ALTER TABLE `service_staff_records`
+  ADD PRIMARY KEY (`staff_record_id`),
+  ADD KEY `service_id` (`service_id`),
+  ADD KEY `staff_id` (`staff_id`);
 
 --
 -- Indexes for table `stock_transactions`
@@ -817,7 +985,7 @@ ALTER TABLE `course`
 -- AUTO_INCREMENT for table `course_bookings`
 --
 ALTER TABLE `course_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `course_resources`
@@ -850,22 +1018,52 @@ ALTER TABLE `drug_type`
   MODIFY `drug_type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `opd`
+--
+ALTER TABLE `opd`
+  MODIFY `opd_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `order_course`
 --
 ALTER TABLE `order_course`
-  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `order_detail`
 --
 ALTER TABLE `order_detail`
-  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `position`
 --
 ALTER TABLE `position`
   MODIFY `position_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'รหัสตำแหน่ง', AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `service_nurse_records`
+--
+ALTER TABLE `service_nurse_records`
+  MODIFY `nurse_record_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `service_queue`
+--
+ALTER TABLE `service_queue`
+  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `service_records`
+--
+ALTER TABLE `service_records`
+  MODIFY `service_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `service_staff_records`
+--
+ALTER TABLE `service_staff_records`
+  MODIFY `staff_record_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `stock_transactions`
@@ -889,7 +1087,7 @@ ALTER TABLE `unit`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `users_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `users_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- Constraints for dumped tables
@@ -900,6 +1098,15 @@ ALTER TABLE `users`
 --
 ALTER TABLE `course_bookings`
   ADD CONSTRAINT `course_bookings_ibfk_2` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`);
+
+--
+-- Constraints for table `opd`
+--
+ALTER TABLE `opd`
+  ADD CONSTRAINT `opd_ibfk_1` FOREIGN KEY (`queue_id`) REFERENCES `service_queue` (`queue_id`),
+  ADD CONSTRAINT `opd_ibfk_2` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`),
+  ADD CONSTRAINT `opd_ibfk_3` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`),
+  ADD CONSTRAINT `opd_ibfk_4` FOREIGN KEY (`nurse_id`) REFERENCES `users` (`users_id`);
 
 --
 -- Constraints for table `order_course`
@@ -914,6 +1121,36 @@ ALTER TABLE `order_course`
 ALTER TABLE `order_detail`
   ADD CONSTRAINT `order_detail_ibfk_1` FOREIGN KEY (`oc_id`) REFERENCES `order_course` (`oc_id`),
   ADD CONSTRAINT `order_detail_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`);
+
+--
+-- Constraints for table `service_nurse_records`
+--
+ALTER TABLE `service_nurse_records`
+  ADD CONSTRAINT `service_nurse_records_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service_records` (`service_id`),
+  ADD CONSTRAINT `service_nurse_records_ibfk_2` FOREIGN KEY (`nurse_id`) REFERENCES `users` (`users_id`);
+
+--
+-- Constraints for table `service_queue`
+--
+ALTER TABLE `service_queue`
+  ADD CONSTRAINT `service_queue_ibfk_1` FOREIGN KEY (`branch_id`) REFERENCES `branch` (`branch_id`),
+  ADD CONSTRAINT `service_queue_ibfk_2` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`),
+  ADD CONSTRAINT `service_queue_ibfk_3` FOREIGN KEY (`booking_id`) REFERENCES `course_bookings` (`id`);
+
+--
+-- Constraints for table `service_records`
+--
+ALTER TABLE `service_records`
+  ADD CONSTRAINT `service_records_ibfk_1` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`),
+  ADD CONSTRAINT `service_records_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`),
+  ADD CONSTRAINT `service_records_ibfk_3` FOREIGN KEY (`doctor_id`) REFERENCES `users` (`users_id`);
+
+--
+-- Constraints for table `service_staff_records`
+--
+ALTER TABLE `service_staff_records`
+  ADD CONSTRAINT `service_staff_records_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service_records` (`service_id`),
+  ADD CONSTRAINT `service_staff_records_ibfk_2` FOREIGN KEY (`staff_id`) REFERENCES `users` (`users_id`);
 
 --
 -- Constraints for table `stock_transactions`
