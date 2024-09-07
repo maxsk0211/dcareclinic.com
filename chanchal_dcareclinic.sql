@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 06, 2024 at 10:20 PM
+-- Generation Time: Sep 07, 2024 at 02:00 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 5.6.40
 
@@ -240,7 +240,8 @@ INSERT INTO `course_bookings` (`id`, `branch_id`, `cus_id`, `booking_datetime`, 
 (9, 1, 13, '2024-09-06 15:15:00', '2024-09-06 05:56:40', 0, 'pending'),
 (10, 1, 13, '2024-09-06 20:15:00', '2024-09-06 09:37:03', 1, 'confirmed'),
 (11, 1, 13, '2024-09-06 22:45:00', '2024-09-06 12:17:03', 1, 'confirmed'),
-(12, 1, 13, '2024-09-10 10:00:00', '2024-09-06 12:25:10', 1, 'confirmed');
+(12, 1, 13, '2024-09-10 10:00:00', '2024-09-06 12:25:10', 1, 'confirmed'),
+(13, 1, 13, '2024-09-10 13:00:00', '2024-09-07 01:56:16', 1, 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -455,6 +456,19 @@ CREATE TABLE `opd` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `opd_drawings`
+--
+
+CREATE TABLE `opd_drawings` (
+  `id` int(11) NOT NULL,
+  `opd_id` int(11) DEFAULT NULL,
+  `image_path` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `order_course`
 --
 
@@ -486,7 +500,8 @@ INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`,
 (10, 13, 13, 9, '2024-09-06 12:56:40', 'ยังไม่จ่ายเงิน', 40000, NULL, '', 1),
 (11, 13, 1, 10, '2024-09-06 16:37:03', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1),
 (12, 13, 1, 11, '2024-09-06 19:17:03', 'ยังไม่จ่ายเงิน', 20000, NULL, '', 1),
-(13, 13, 1, 12, '2024-09-06 19:25:10', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1);
+(13, 13, 1, 12, '2024-09-06 19:25:10', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1),
+(14, 13, 1, 13, '2024-09-07 08:56:16', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1);
 
 -- --------------------------------------------------------
 
@@ -522,7 +537,8 @@ INSERT INTO `order_detail` (`od_id`, `oc_id`, `course_id`, `od_amount`, `od_pric
 (14, 10, 10, 1, 40000),
 (15, 11, 4, 1, 15000),
 (16, 12, 5, 1, 20000),
-(17, 13, 7, 1, 35000);
+(17, 13, 7, 1, 35000),
+(18, 14, 4, 1, 15000);
 
 -- --------------------------------------------------------
 
@@ -587,7 +603,8 @@ CREATE TABLE `service_queue` (
 INSERT INTO `service_queue` (`queue_id`, `branch_id`, `cus_id`, `booking_id`, `queue_number`, `queue_date`, `queue_time`, `service_status`, `created_at`, `updated_at`, `notes`) VALUES
 (16, 1, 13, 7, 'Q001', '2024-09-06', '16:45:00', 'in_progress', '2024-09-06 09:34:39', '2024-09-06 11:49:22', ''),
 (17, 1, 13, 10, 'Q002', '2024-09-06', '20:15:00', 'in_progress', '2024-09-06 09:37:11', '2024-09-06 09:37:14', ''),
-(18, 1, 13, 11, 'Q003', '2024-09-06', '22:45:00', 'in_progress', '2024-09-06 12:17:14', '2024-09-06 12:17:16', '');
+(18, 1, 13, 11, 'Q003', '2024-09-06', '22:45:00', 'in_progress', '2024-09-06 12:17:14', '2024-09-06 12:17:16', ''),
+(19, 1, 13, NULL, 'Q001', '2024-09-07', '08:54:00', 'in_progress', '2024-09-07 01:54:38', '2024-09-07 01:54:42', '');
 
 -- --------------------------------------------------------
 
@@ -857,6 +874,13 @@ ALTER TABLE `opd`
   ADD KEY `nurse_id` (`nurse_id`);
 
 --
+-- Indexes for table `opd_drawings`
+--
+ALTER TABLE `opd_drawings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `opd_id` (`opd_id`);
+
+--
 -- Indexes for table `order_course`
 --
 ALTER TABLE `order_course`
@@ -985,7 +1009,7 @@ ALTER TABLE `course`
 -- AUTO_INCREMENT for table `course_bookings`
 --
 ALTER TABLE `course_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `course_resources`
@@ -1024,16 +1048,22 @@ ALTER TABLE `opd`
   MODIFY `opd_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `opd_drawings`
+--
+ALTER TABLE `opd_drawings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
 -- AUTO_INCREMENT for table `order_course`
 --
 ALTER TABLE `order_course`
-  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `order_detail`
 --
 ALTER TABLE `order_detail`
-  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `position`
@@ -1051,7 +1081,7 @@ ALTER TABLE `service_nurse_records`
 -- AUTO_INCREMENT for table `service_queue`
 --
 ALTER TABLE `service_queue`
-  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `service_records`
@@ -1107,6 +1137,12 @@ ALTER TABLE `opd`
   ADD CONSTRAINT `opd_ibfk_2` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`),
   ADD CONSTRAINT `opd_ibfk_3` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`),
   ADD CONSTRAINT `opd_ibfk_4` FOREIGN KEY (`nurse_id`) REFERENCES `users` (`users_id`);
+
+--
+-- Constraints for table `opd_drawings`
+--
+ALTER TABLE `opd_drawings`
+  ADD CONSTRAINT `opd_drawings_ibfk_1` FOREIGN KEY (`opd_id`) REFERENCES `opd` (`opd_id`);
 
 --
 -- Constraints for table `order_course`

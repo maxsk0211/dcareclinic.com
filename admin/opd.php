@@ -42,7 +42,7 @@ if ($result_check_opd === false) {
 
 $opd_data = $result_check_opd->num_rows > 0 ? $result_check_opd->fetch_assoc() : null;
 
-
+$background_images = glob("../img/drawing/default/*");
 ?>
 
 <!DOCTYPE html>
@@ -156,21 +156,292 @@ $opd_data = $result_check_opd->num_rows > 0 ? $result_check_opd->fetch_assoc() :
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
             background-color: rgba(0,0,0,0.9);
         }
-        #drawingCanvas {
-            display: block;
-            margin: auto;
-            border: 1px solid #ddd;
-            background-color: white;
+
+        .drawing-container {
+            display: flex;
+            height: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
         }
+
         .drawing-tools {
-            text-align: center;
-            margin-top: 10px;
+            width: 200px;
+            background-color: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
-        .drawing-tools button {
-            margin: 0 5px;
+        .drawing-tools h4, #backgroundSelector h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .drawing-tools h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .color-btn, .action-btn {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-btn:hover, .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .black-btn { background-color: #333; color: white; }
+        .red-btn { background-color: #ff4136; color: white; }
+        .blue-btn { background-color: #0074d9; color: white; }
+
+        .clear-btn { background-color: #ff851b; color: white; }
+        .save-btn { background-color: #2ecc40; color: white; }
+        .close-btn { background-color: #aaaaaa; color: white; }
+        .upload-btn { background-color: #3498db; color: white; width: 100%; }
+
+        .canvas-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+        }
+
+        #drawingCanvas {
+            border: 1px solid #ddd;
+        }
+
+        #backgroundSelector {
+            width: 200px;
+            background-color: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .background-images-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        #backgroundSelector img {
+            width: 100%;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        #backgroundSelector img:hover {
+            transform: scale(1.05);
+        }
+
+        #backgroundSelector img.selected {
+            border-color: #0074d9;
+        }
+        .upload-btn {
+            background-color: #3498db;
+            color: white;
+        }
+            .position-relative {
+        position: relative;
+        }
+        .position-absolute {
+            position: absolute;
+        }
+        .top-0 {
+            top: 0;
+        }
+        .end-0 {
+            right: 0;
+        }
+        .drawing-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: flex-start;
+        }
+
+        .drawing-item {
+            position: relative;
+            width: 150px;
+            height: 180px; /* เพิ่มความสูงเพื่อรองรับข้อความวันที่ */
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawing-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .drawing-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .drawing-item:hover img {
+            transform: scale(1.1);
+        }
+        .drawing-datetime {
+            padding: 5px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            background-color: #f8f8f8;
+        }
+
+        .modal-datetime {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawing-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background-color: rgba(220, 53, 69, 1);
+        }
+
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .image-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .modal-content img {
+            display: block;
+            max-width: 100%;
+            max-height: calc(90vh - 40px); /* 40px for padding */
+            margin: 0 auto;
+            object-fit: contain;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            line-height: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .prev-btn {
+            left: 10px;
+        }
+
+        .next-btn {
+            right: 10px;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content img {
+            display: block;
+            max-width: 100%;
+            max-height: calc(90vh - 100px); /* 100px for padding and datetime */
+            margin: 0 auto;
+            object-fit: contain;
+        }
+        .color-btn.active {
+            border: 2px solid #fff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -215,7 +486,8 @@ $opd_data = $result_check_opd->num_rows > 0 ? $result_check_opd->fetch_assoc() :
                             </div>
                         </div>
 
-                        <form id="opdForm" method="post" action="sql/save-opd.php">
+                        <!-- ส่วนแรกของฟอร์ม -->
+                        <form id="opdFormPart1" method="post">
                             <input type="hidden" name="queue_id" value="<?php echo $queue_id; ?>">
                             <input type="hidden" name="cus_id" value="<?php echo $queue_data['cus_id']; ?>">
                             <input type="hidden" name="course_id" value="<?php echo $queue_data['course_id']; ?>">
@@ -256,51 +528,45 @@ $opd_data = $result_check_opd->num_rows > 0 ? $result_check_opd->fetch_assoc() :
                                 </div>
                             </div>
 
-                            <div class="form-section">
-                                <h3>ข้อมูลสุขภาพเพิ่มเติม</h3>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="opd_smoke" class="form-label">สูบบุหรี่</label>
-                                        <select class="form-select" id="opd_smoke" name="opd_smoke" required>
-                                            <option value="">เลือก</option>
-                                            <option value="ไม่สูบ" <?php echo ($opd_data['opd_smoke'] ?? '') == 'ไม่สูบ' ? 'selected' : ''; ?>>ไม่สูบ</option>
-                                            <option value="สูบ" <?php echo ($opd_data['opd_smoke'] ?? '') == 'สูบ' ? 'selected' : ''; ?>>สูบ</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="opd_alcohol" class="form-label">ดื่มสุรา</label>
-                                        <select class="form-select" id="opd_alcohol" name="opd_alcohol" required>
-                                            <option value="">เลือก</option>
-                                            <option value="ไม่ดื่ม" <?php echo ($opd_data['opd_alcohol'] ?? '') == 'ไม่ดื่ม' ? 'selected' : ''; ?>>ไม่ดื่ม</option>
-                                            <option value="ดื่ม" <?php echo ($opd_data['opd_alcohol'] ?? '') == 'ดื่ม' ? 'selected' : ''; ?>>ดื่ม</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="opd_physical" class="form-label">การตรวจร่างกาย</label>
-                                    <button type="button" class="btn btn-primary" onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
-                                    <input type="hidden" id="opd_physical" name="opd_physical" value="<?php echo $opd_data['opd_physical'] ?? ''; ?>">
-                                </div>
-                            </div>
-
-                            <div class="form-section">
-                                <h3>การวินิจฉัยและหมายเหตุ</h3>
-                                <div class="mb-3">
-                                    <label for="opd_diagnose" class="form-label">วินิจฉัย</label>
-                                    <textarea class="form-control" id="opd_diagnose" name="opd_diagnose" rows="3" required><?php echo $opd_data['opd_diagnose'] ?? ''; ?></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="opd_note" class="form-label">หมายเหตุ</label>
-                                    <textarea class="form-control" id="opd_note" name="opd_note" rows="3"><?php echo $opd_data['opd_note'] ?? ''; ?></textarea>
-                                </div>
-                            </div>
-
-                            // ในส่วนท้ายของฟอร์ม opd.php
                             <div class="text-center">
-                                <button type="submit" class="btn btn-submit">บันทึกข้อมูล</button>
-                                <a href="service.php?hn=<?php echo 'HN-' . str_pad($queue_data['cus_id'], 6, '0', STR_PAD_LEFT); ?>" class="btn btn-primary">ไปยังหน้าบริการ</a>
+                                <button type="submit" class="btn btn-primary" id="savePartOne">บันทึกข้อมูลเบื้องต้น</button>
                             </div>
                         </form>
+
+                        <!-- ส่วนที่สองของฟอร์ม (ซ่อนไว้ก่อน) -->
+                        <div id="opdFormPart2" style="display: none;">
+                            <form id="opdFormPart2Form" method="post">
+                                <input type="hidden" name="opd_id" id="opd_id" value="">
+                                
+                                <div class="form-section">
+                                    <h3>การตรวจร่างกาย</h3>
+                                    <div class="mb-3">
+                                        <label for="opd_physical" class="form-label">การตรวจร่างกาย</label>
+                                        <button type="button" class="btn btn-primary" onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
+                                        <div id="savedDrawings" class="mt-3">
+                                            <!-- รูปภาพที่บันทึกแล้วจะแสดงที่นี่ -->
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="saved_drawings" name="saved_drawings" value="">
+                                </div>
+
+                                <div class="form-section">
+                                    <h3>การวินิจฉัยและหมายเหตุ</h3>
+                                    <div class="mb-3">
+                                        <label for="opd_diagnose" class="form-label">วินิจฉัย</label>
+                                        <textarea class="form-control" id="opd_diagnose" name="opd_diagnose" rows="3" required></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="opd_note" class="form-label">หมายเหตุ</label>
+                                        <textarea class="form-control" id="opd_note" name="opd_note" rows="3"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-submit">บันทึกข้อมูลทั้งหมด</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                     <!-- / Content -->
 
@@ -314,16 +580,33 @@ $opd_data = $result_check_opd->num_rows > 0 ? $result_check_opd->fetch_assoc() :
         </div>
     </div>
     <!-- / Layout wrapper -->
+
+    <!-- Modal สำหรับการวาดภาพ -->
     <div id="drawingModal">
-        <div class="drawing-tools">
-            <button onclick="changeColor('black')">สีดำ</button>
-            <button onclick="changeColor('red')">สีแดง</button>
-            <button onclick="changeColor('blue')">สีน้ำเงิน</button>
-            <button onclick="clearCanvas()">ล้าง</button>
-            <button onclick="saveDrawing()">บันทึก</button>
-            <button onclick="closeDrawingModal()">ปิด</button>
+        <div class="drawing-container">
+            <div id="backgroundSelector">
+                <h4>เลือกพื้นหลัง:</h4>
+                <div class="background-images-container">
+                    <?php foreach($background_images as $index => $image): ?>
+                        <img src="<?php echo $image; ?>" onclick="selectBackground('<?php echo $image; ?>', this)" alt="Background <?php echo $index + 1; ?>">
+                    <?php endforeach; ?>
+                </div>
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                <button onclick="document.getElementById('imageUpload').click();" class="action-btn upload-btn">อัปโหลดรูป</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="drawingCanvas"></canvas>
+            </div>
+            <div class="drawing-tools">
+                <h4>เครื่องมือวาด</h4>
+                <button onclick="changeColor('black')" class="color-btn black-btn">สีดำ</button>
+                <button onclick="changeColor('red')" class="color-btn red-btn">สีแดง</button>
+                <button onclick="changeColor('blue')" class="color-btn blue-btn">สีน้ำเงิน</button>
+                <button onclick="clearCanvas()" class="action-btn clear-btn">ล้าง</button>
+                <button onclick="saveDrawing()" class="action-btn save-btn">บันทึก</button>
+                <button onclick="closeDrawingModal()" class="action-btn close-btn">ปิด</button>
+            </div>
         </div>
-        <canvas id="drawingCanvas"></canvas>
     </div>
     <!-- Core JS -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
@@ -338,100 +621,370 @@ $opd_data = $result_check_opd->num_rows > 0 ? $result_check_opd->fetch_assoc() :
     <script src="../assets/js/main.js"></script>
 
     <!-- Page JS -->
-    <script>
+<script>
+let currentImages = []; // ตัวแปร global สำหรับเก็บข้อมูลรูปภาพทั้งหมด
+let canvas, ctx;
+let isDrawing = false;
+let currentColor = 'black'; // กำหนดสีเริ่มต้นเป็นสีดำ
+let backgroundImage = new Image();
 
-
-    $(document).ready(function() {
-        // คำนวณ BMI อัตโนมัติ
-        function calculateBMI() {
-            var weight = parseFloat($('#weight').val());
-            var height = parseFloat($('#height').val()) / 100; // แปลงเซนติเมตรเป็นเมตร
-            if (weight && height) {
-                var bmi = weight / (height * height);
-                $('#bmi').val(bmi.toFixed(2));
-            }
+$(document).ready(function() {
+    // คำนวณ BMI อัตโนมัติ
+    function calculateBMI() {
+        var weight = parseFloat($('#weight').val());
+        var height = parseFloat($('#height').val()) / 100; // แปลงเซนติเมตรเป็นเมตร
+        if (weight && height) {
+            var bmi = weight / (height * height);
+            $('#bmi').val(bmi.toFixed(2));
         }
+    }
 
-        $('#weight, #height').on('input', calculateBMI);
+    $('#weight, #height').on('input', calculateBMI);
+
+    // จัดการการส่งฟอร์มส่วนแรก
+    $('#opdFormPart1').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: 'sql/save-opd-part1.php',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert('บันทึกข้อมูลเบื้องต้นสำเร็จ');
+                    $('#opd_id').val(response.opd_id);
+                    $('#opdFormPart1').hide();
+                    $('#opdFormPart2').show();
+                    loadSavedDrawings(response.opd_id);
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+            }
+        });
     });
 
- let canvas, ctx, isDrawing = false, currentColor = 'black';
+    // จัดการการส่งฟอร์มส่วนที่สอง
+    $('#opdFormPart2Form').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: 'sql/save-opd-part2.php',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert('บันทึกข้อมูลทั้งหมดสำเร็จ');
+                    window.location.href = 'queue-management.php';
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+            }
+        });
+    });
 
-    function openDrawingModal() {
-        document.getElementById('drawingModal').style.display = 'block';
-        canvas = document.getElementById('drawingCanvas');
-        ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth * 0.8;
-        canvas.height = window.innerHeight * 0.8;
+    // เพิ่ม event listener สำหรับปุ่มสี
+    const colorButtons = document.querySelectorAll('.color-btn');
+    colorButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const color = this.classList[1].replace('-btn', '');
+            changeColor(color);
+        });
+    });
+});
 
-        // โหลดภาพพื้นหลัง (ถ้ามี)
-        const backgroundImage = new Image();
-        backgroundImage.onload = function() {
-            ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-        };
-        backgroundImage.src = '../img/drawing/face-treatment.jpg'; // ตั้งค่าพาธของภาพพื้นหลังตามที่คุณต้องการ
+function loadSavedDrawings(opdId) {
+    fetch('sql/get-saved-drawings.php?opd_id=' + opdId)
+    .then(response => response.json())
+    .then(data => {
+        const savedDrawingsContainer = document.getElementById('savedDrawings');
+        const savedDrawingsInput = document.getElementById('saved_drawings');
+        const savedDrawings = [];
 
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
+        savedDrawingsContainer.innerHTML = '';
+        savedDrawingsContainer.className = 'drawing-gallery';
+
+        currentImages = data; // เก็บข้อมูลรูปภาพทั้งหมด
+
+        data.forEach((drawing, index) => {
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'drawing-item';
+
+            const img = document.createElement('img');
+            img.src = '../img/drawing/' + drawing.image_path;
+            img.alt = 'Patient Drawing';
+            img.onclick = () => viewImage(index);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteImage(drawing.id, imgContainer);
+            };
+
+            const dateTime = document.createElement('div');
+            dateTime.className = 'drawing-datetime';
+            dateTime.textContent = drawing.created_at;
+
+            imgContainer.appendChild(img);
+            imgContainer.appendChild(deleteBtn);
+            imgContainer.appendChild(dateTime);
+            savedDrawingsContainer.appendChild(imgContainer);
+
+            savedDrawings.push(drawing.image_path);
+        });
+
+        savedDrawingsInput.value = JSON.stringify(savedDrawings);
+    })
+    .catch(error => console.error('Error loading saved drawings:', error));
+}
+
+function viewImage(index) {
+    const modal = document.createElement('div');
+    modal.className = 'image-modal';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+
+    const img = document.createElement('img');
+    img.src = '../img/drawing/' + currentImages[index].image_path;
+    img.alt = 'Full size patient drawing';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.className = 'close-modal';
+    closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        closeModal();
+    };
+
+    const dateTime = document.createElement('div');
+    dateTime.className = 'modal-datetime';
+    dateTime.textContent = 'Created: ' + currentImages[index].created_at;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '&#10094;';
+    prevBtn.className = 'nav-btn prev-btn';
+    prevBtn.onclick = (e) => {
+        e.stopPropagation();
+        changeImage(-1);
+    };
+
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = '&#10095;';
+    nextBtn.className = 'nav-btn next-btn';
+    nextBtn.onclick = (e) => {
+        e.stopPropagation();
+        changeImage(1);
+    };
+
+    modalContent.appendChild(img);
+    modalContent.appendChild(closeBtn);
+    modalContent.appendChild(dateTime);
+    modalContent.appendChild(prevBtn);
+    modalContent.appendChild(nextBtn);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    setTimeout(() => modal.classList.add('active'), 10);
+
+    let currentIndex = index;
+
+    function closeModal() {
+        modal.classList.remove('active');
+        setTimeout(() => document.body.removeChild(modal), 300);
     }
 
-    function startDrawing(e) {
-        isDrawing = true;
-        draw(e);
+    function changeImage(direction) {
+        currentIndex = (currentIndex + direction + currentImages.length) % currentImages.length;
+        img.src = '../img/drawing/' + currentImages[currentIndex].image_path;
+        dateTime.textContent = 'Created: ' + currentImages[currentIndex].created_at;
     }
 
-    function draw(e) {
-        if (!isDrawing) return;
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = currentColor;
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    };
+}
 
-        ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
-    }
-
-    function stopDrawing() {
-        isDrawing = false;
-        ctx.beginPath();
-    }
-
-    function changeColor(color) {
-        currentColor = color;
-    }
-
-    function clearCanvas() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function closeDrawingModal() {
-        document.getElementById('drawingModal').style.display = 'none';
-    }
-
-    function saveDrawing() {
-        const imageData = canvas.toDataURL('image/png');
-        document.getElementById('opd_physical').value = imageData;
-
-        // ส่งข้อมูลภาพไปยังเซิร์ฟเวอร์เพื่อบันทึก
-        fetch('sql/save-drawing.php', {
+function deleteImage(imageId, imgContainer) {
+    if (confirm('คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้?')) {
+        fetch('sql/delete-drawing.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: 'image=' + encodeURIComponent(imageData)
+            body: 'id=' + imageId
         })
-        .then(response => response.text())
+        .then(response => response.json())
         .then(data => {
-            console.log(data);
-            closeDrawingModal();
+            if (data.success) {
+                imgContainer.remove();
+                // Update hidden input
+                const savedDrawingsInput = document.getElementById('saved_drawings');
+                let savedDrawings = JSON.parse(savedDrawingsInput.value);
+                savedDrawings = savedDrawings.filter(path => !path.includes(data.deleted_file));
+                savedDrawingsInput.value = JSON.stringify(savedDrawings);
+            } else {
+                alert('เกิดข้อผิดพลาดในการลบรูปภาพ: ' + data.message);
+            }
         })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
+        .catch(error => console.error('Error:', error));
     }
-    </script>
+}
+
+function openDrawingModal() {
+    document.getElementById('drawingModal').style.display = 'block';
+    canvas = document.getElementById('drawingCanvas');
+    ctx = canvas.getContext('2d');
+    
+    // ปรับขนาด canvas ให้พอดีกับ container
+    const container = document.querySelector('.canvas-container');
+    canvas.width = container.clientWidth - 40; // ลบ padding
+    canvas.height = container.clientHeight - 40; // ลบ padding
+
+    // กำหนดสีเริ่มต้นเป็นสีดำ
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    // เพิ่ม event listener สำหรับการปรับขนาดหน้าต่าง
+    window.addEventListener('resize', resizeCanvas);
+
+    // ตั้งค่าสีเริ่มต้นเป็นสีดำ
+    changeColor('black');
+}
+
+function resizeCanvas() {
+    const container = document.querySelector('.canvas-container');
+    canvas.width = container.clientWidth - 40;
+    canvas.height = container.clientHeight - 40;
+    // วาดภาพพื้นหลังใหม่ (ถ้ามี)
+    if (backgroundImage.src) {
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    }
+}
+
+function selectBackground(imageSrc, element) {
+    if (element) {
+        // Remove 'selected' class from all images
+        document.querySelectorAll('#backgroundSelector img').forEach(img => img.classList.remove('selected'));
+        // Add 'selected' class to clicked image
+        element.classList.add('selected');
+    }
+
+    backgroundImage = new Image();
+    backgroundImage.onload = function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    };
+    backgroundImage.src = imageSrc;
+}
+
+function startDrawing(e) {
+    isDrawing = true;
+    draw(e);
+}
+
+function draw(e) {
+    if (!isDrawing || !isDrawingModalOpen()) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+}
+
+function stopDrawing() {
+    isDrawing = false;
+    ctx.beginPath();
+}
+
+function changeColor(color) {
+    currentColor = color;
+    if (canvas && ctx) {
+        ctx.strokeStyle = currentColor;
+    }
+    
+    // อัปเดตสถานะปุ่มสี
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const activeButton = document.querySelector(`.${color}-btn`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+}
+
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (backgroundImage.src) {
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    }
+    ctx.beginPath();
+}
+
+function closeDrawingModal() {
+    document.getElementById('drawingModal').style.display = 'none';
+}
+
+function saveDrawing() {
+    const imageData = canvas.toDataURL('image/png');
+    const opd_id = document.getElementById('opd_id').value;
+    
+    fetch('sql/save-drawing.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'image=' + encodeURIComponent(imageData) + '&opd_id=' + opd_id
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadSavedDrawings(opd_id);
+            closeDrawingModal();
+        } else {
+            console.error('Error saving drawing:', data.message);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
+
+function isDrawingModalOpen() {
+    return document.getElementById('drawingModal').style.display === 'block';
+}
+
+// Event listener สำหรับการอัปโหลดรูปภาพ
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            selectBackground(event.target.result);
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+</script>
 </body>
 </html>
