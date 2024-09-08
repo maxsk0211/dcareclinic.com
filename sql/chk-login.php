@@ -5,7 +5,9 @@ require_once '../dbcon.php';
 // Define constants if not already defined in config.php
 if (!defined('ADMIN_POSITION')) define('ADMIN_POSITION', 1);
 if (!defined('MANAGER_POSITION')) define('MANAGER_POSITION', 2);
-if (!defined('STAFF_POSITION')) define('STAFF_POSITION', 3);
+if (!defined('DOCTOR_POSITION')) define('DOCTOR_POSITION', 3);
+if (!defined('NURSE_POSITION')) define('NURSE_POSITION', 4);
+if (!defined('RECEPTIONIST_POSITION')) define('RECEPTIONIST_POSITION', 5);
 if (!defined('USER_STATUS_ACTIVE')) define('USER_STATUS_ACTIVE', 1);
 if (!defined('MAX_LOGIN_ATTEMPTS')) define('MAX_LOGIN_ATTEMPTS', 5);
 
@@ -58,10 +60,14 @@ function setUserSession($user) {
     if ($user->position_id != ADMIN_POSITION) {
         $_SESSION['branch_id'] = $user->branch_id;
     }
+    
+    // Set permissions for OPD page
+    $_SESSION['can_edit_opd_part1'] = in_array($user->position_id, [ADMIN_POSITION, MANAGER_POSITION, DOCTOR_POSITION, NURSE_POSITION]);
+    $_SESSION['can_edit_opd_part2'] = in_array($user->position_id, [ADMIN_POSITION, MANAGER_POSITION, DOCTOR_POSITION]);
 }
 
 function redirectBasedOnPosition($positionId) {
-    if ($positionId == ADMIN_POSITION || $positionId == MANAGER_POSITION || $positionId == STAFF_POSITION) {
+    if (in_array($positionId, [ADMIN_POSITION, MANAGER_POSITION, DOCTOR_POSITION, NURSE_POSITION, RECEPTIONIST_POSITION])) {
         header("Location: ../admin/index.php");
     } else {
         // Handle other positions if needed

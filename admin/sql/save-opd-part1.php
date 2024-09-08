@@ -1,8 +1,15 @@
 <?php
 session_start();
 require '../../dbcon.php';
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// ตรวจสอบสิทธิ์
+$canEditPart1 = in_array($_SESSION['position_id'], [1, 2, 3, 4]); // สำหรับ save-opd-part1.php
+$canEditPart2 = in_array($_SESSION['position_id'], [1, 2, 3]); // สำหรับ save-opd-part2.php
+
+if (!$canEditPart1) { // หรือ $canEditPart2 สำหรับ save-opd-part2.php
+    echo json_encode(['success' => false, 'message' => 'คุณไม่มีสิทธิ์ในการบันทึกข้อมูลนี้']);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $queue_id = $_POST['queue_id'];
     $cus_id = $_POST['cus_id'];
@@ -13,6 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $fbs = floatval($_POST['fbs']);
     $systolic = floatval($_POST['systolic']);
     $pulsation = floatval($_POST['pulsation']);
+    $smoking = mysqli_real_escape_string($conn, $_POST['smoking']);
+    $alcohol = mysqli_real_escape_string($conn, $_POST['alcohol']);
+    $drug_allergy = mysqli_real_escape_string($conn, $_POST['drug_allergy']);
+    $food_allergy = mysqli_real_escape_string($conn, $_POST['food_allergy']);
 
     // ตรวจสอบว่ามีข้อมูล OPD อยู่แล้วหรือไม่
     $check_sql = "SELECT opd_id FROM opd WHERE queue_id = ?";
@@ -25,14 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // อัพเดตข้อมูลที่มีอยู่
         $row = $result->fetch_assoc();
         $opd_id = $row['opd_id'];
-        $sql = "UPDATE opd SET Weight = ?, Height = ?, BMI = ?, FBS = ?, Systolic = ?, Pulsation = ? WHERE opd_id = ?";
+        $sql = "UPDATE opd SET Weight = ?, Height = ?, BMI = ?, FBS = ?, Systolic = ?, Pulsation = ?, opd_smoke = ?, opd_alcohol = ?, drug_allergy = ?, food_allergy = ? WHERE opd_id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ddddddi", $weight, $height, $bmi, $fbs, $systolic, $pulsation, $opd_id);
+        $stmt->bind_param("ddddddssssi", $weight, $height, $bmi, $fbs, $systolic, $pulsation, $smoking, $alcohol, $drug_allergy, $food_allergy, $opd_id);
     } else {
         // เพิ่มข้อมูลใหม่
-        $sql = "INSERT INTO opd (queue_id, cus_id, Weight, Height, BMI, FBS, Systolic, Pulsation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO opd (queue_id, cus_id,  Weight, Height, BMI, FBS, Systolic, Pulsation, opd_smoke, opd_alcohol, drug_allergy, food_allergy) VALUES (?,  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iidddddd", $queue_id, $cus_id, $weight, $height, $bmi, $fbs, $systolic, $pulsation);
+        $stmt->bind_param("iidddddsssss", $queue_id, $cus_id,  $weight, $height, $bmi, $fbs, $systolic, $pulsation, $smoking, $alcohol, $drug_allergy, $food_allergy);
     }
 
     if ($stmt->execute()) {
@@ -47,4 +58,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
 }
 
-$conn->close(); 
+$conn->close();
+?>

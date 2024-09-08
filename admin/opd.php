@@ -3,6 +3,9 @@ session_start();
 include 'chk-session.php';
 require '../dbcon.php';
 
+$canEditPart1 = $_SESSION['can_edit_opd_part1'] ?? false;
+$canEditPart2 = $_SESSION['can_edit_opd_part2'] ?? false;
+
 $queue_id = isset($_GET['queue_id']) ? $_GET['queue_id'] : null;
 
 if (!$queue_id) {
@@ -42,7 +45,15 @@ if ($result_check_opd === false) {
 
 $opd_data = $result_check_opd->num_rows > 0 ? $result_check_opd->fetch_assoc() : null;
 
+// เพิ่มการกำหนดค่าเริ่มต้นสำหรับฟิลด์เหล่านี้
+$smoking = $opd_data['opd_smoke'] ?? '';
+$alcohol = $opd_data['opd_alcohol'] ?? '';
+$drug_allergy = $opd_data['drug_allergy'] ?? '';
+$food_allergy = $opd_data['food_allergy'] ?? '';
+
+
 $background_images = glob("../img/drawing/default/*");
+
 ?>
 
 <!DOCTYPE html>
@@ -80,370 +91,320 @@ $background_images = glob("../img/drawing/default/*");
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="../assets/js/config.js"></script>
-        <style>
-        .opd-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .opd-header h2 {
-            margin: 0;
-            font-size: 28px;
-        }
-        .opd-info {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-        .opd-info span {
-            font-size: 18px;
-        }
-        .form-section {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        .form-section h3 {
-            color: #333;
-            border-bottom: 2px solid #764ba2;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            font-size: 22px;
-        }
-        .form-label {
-            font-size: 18px;
-            font-weight: 500;
-            color: #333;
-        }
-        .form-control, .form-select {
-            font-size: 18px;
-            padding: 12px;
-            border: 2px solid #ced4da;
-            border-radius: 8px;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #764ba2;
-            box-shadow: 0 0 0 0.2rem rgba(118, 75, 162, 0.25);
-        }
-        .btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            font-size: 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        textarea.form-control {
-            min-height: 120px;
-        }
-        #drawingModal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-        }
-
-        .drawing-container {
-            display: flex;
-            height: 100%;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        .drawing-tools {
-            width: 200px;
-            background-color: #f0f0f0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .drawing-tools h4, #backgroundSelector h4 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .drawing-tools h4 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .color-btn, .action-btn {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .color-btn:hover, .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .black-btn { background-color: #333; color: white; }
-        .red-btn { background-color: #ff4136; color: white; }
-        .blue-btn { background-color: #0074d9; color: white; }
-
-        .clear-btn { background-color: #ff851b; color: white; }
-        .save-btn { background-color: #2ecc40; color: white; }
-        .close-btn { background-color: #aaaaaa; color: white; }
-        .upload-btn { background-color: #3498db; color: white; width: 100%; }
-
-        .canvas-container {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #fff;
-        }
-
-        #drawingCanvas {
-            border: 1px solid #ddd;
-        }
-
-        #backgroundSelector {
-            width: 200px;
-            background-color: #f0f0f0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-        .background-images-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 20px;
-        }
-        #backgroundSelector img {
-            width: 100%;
-            margin-bottom: 10px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        #backgroundSelector img:hover {
-            transform: scale(1.05);
-        }
-
-        #backgroundSelector img.selected {
-            border-color: #0074d9;
-        }
-        .upload-btn {
-            background-color: #3498db;
-            color: white;
-        }
-            .position-relative {
+<style>
+    .opd-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .opd-header h2 {
+        margin: 0;
+        font-size: 28px;
+    }
+    .opd-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+    .opd-info span {
+        font-size: 18px;
+    }
+    .form-section {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .form-section h3 {
+        color: #007bff;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        font-size: 24px;
+    }
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+    .form-control, .form-select {
+        font-size: 16px;
+        padding: 10px;
+        border: 2px solid #ced4da;
+        border-radius: 8px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        background-color: #f8f9fa;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .form-control:disabled, .form-select:disabled {
+        background-color: #e9ecef;
+        opacity: 1;
+        color: #6c757d;
+        border-color: #ced4da;
+    }
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        font-size: 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    textarea.form-control {
+        min-height: 120px;
+    }
+    #drawingModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.9);
+    }
+    .drawing-container {
+        display: flex;
+        height: 100%;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+    .drawing-tools {
+        width: 200px;
+        background-color: #f0f0f0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+    .drawing-tools h4, #backgroundSelector h4 {
+        margin-bottom: 15px;
+        color: #333;
+    }
+    .color-btn, .action-btn {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .color-btn:hover, .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .black-btn { background-color: #333; color: white; }
+    .red-btn { background-color: #ff4136; color: white; }
+    .blue-btn { background-color: #0074d9; color: white; }
+    .clear-btn { background-color: #ff851b; color: white; }
+    .save-btn { background-color: #2ecc40; color: white; }
+    .close-btn { background-color: #aaaaaa; color: white; }
+    .upload-btn { background-color: #3498db; color: white; width: 100%; }
+    .canvas-container {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #fff;
+    }
+    #drawingCanvas {
+        border: 1px solid #ddd;
+    }
+    #backgroundSelector {
+        width: 200px;
+        background-color: #f0f0f0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+    }
+    .background-images-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-bottom: 20px;
+    }
+    #backgroundSelector img {
+        width: 100%;
+        margin-bottom: 10px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    #backgroundSelector img:hover {
+        transform: scale(1.05);
+    }
+    #backgroundSelector img.selected {
+        border-color: #0074d9;
+    }
+    .drawing-gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: flex-start;
+        margin-top: 20px; /* เพิ่มระยะห่างด้านบน */
+    }
+    .drawing-item {
         position: relative;
-        }
-        .position-absolute {
-            position: absolute;
-        }
-        .top-0 {
-            top: 0;
-        }
-        .end-0 {
-            right: 0;
-        }
-        .drawing-gallery {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: flex-start;
-        }
-
-        .drawing-item {
-            position: relative;
-            width: 150px;
-            height: 180px; /* เพิ่มความสูงเพื่อรองรับข้อความวันที่ */
-            overflow: hidden;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .drawing-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .drawing-item img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .drawing-item:hover img {
-            transform: scale(1.1);
-        }
-        .drawing-datetime {
-            padding: 5px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            background-color: #f8f8f8;
-        }
-
-        .modal-datetime {
-            margin-top: 10px;
-            text-align: center;
-            font-size: 14px;
-            color: #666;
-        }
-        .delete-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: rgba(220, 53, 69, 0.8);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            font-size: 16px;
-            line-height: 1;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .drawing-item:hover .delete-btn {
-            opacity: 1;
-        }
-
-        .delete-btn:hover {
-            background-color: rgba(220, 53, 69, 1);
-        }
-
-        .image-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .image-modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            max-width: 90%;
-            max-height: 90%;
-            background-color: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        .modal-content img {
-            display: block;
-            max-width: 100%;
-            max-height: calc(90vh - 40px); /* 40px for padding */
-            margin: 0 auto;
-            object-fit: contain;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            font-size: 20px;
-            line-height: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .close-modal:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-        .nav-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            padding: 16px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .nav-btn:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-
-        .prev-btn {
-            left: 10px;
-        }
-
-        .next-btn {
-            right: 10px;
-        }
-
-        .modal-content {
-            position: relative;
-            max-width: 90%;
-            max-height: 90%;
-            background-color: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .modal-content img {
-            display: block;
-            max-width: 100%;
-            max-height: calc(90vh - 100px); /* 100px for padding and datetime */
-            margin: 0 auto;
-            object-fit: contain;
-        }
-        .color-btn.active {
-            border: 2px solid #fff;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
-    </style>
+        width: 150px;
+        margin-bottom: 15px; /* เพิ่มระยะห่างด้านล่าง */
+    }
+    .drawing-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    .drawing-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+    .drawing-item:hover img {
+        transform: scale(1.05);
+    }
+    .drawing-datetime {
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+        margin-top: 5px;
+    }
+    .delete-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background-color: rgba(220, 53, 69, 0.8);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        font-size: 16px;
+        line-height: 25px;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        display: none; /* ซ่อนปุ่มลบเริ่มต้น */
+        z-index: 2500;
+    }
+    .drawing-item:hover .delete-btn {
+        display: block; /* แสดงปุ่มลบเมื่อ hover */
+    }
+    .delete-btn:hover {
+        background-color: rgba(220, 53, 69, 1);
+    }
+    .image-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .image-modal.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    .modal-content {
+        max-width: 90%;
+        max-height: 90%;
+        background-color: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        box-sizing: border-box;
+        position: relative;
+    }
+    .modal-content img {
+        display: block;
+        max-width: 100%;
+        max-height: calc(90vh - 100px);
+        margin: 0 auto;
+        object-fit: contain;
+    }
+    .close-modal {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        font-size: 20px;
+        line-height: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .close-modal:hover {
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+    .nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        padding: 16px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .nav-btn:hover {
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+    .prev-btn {
+        left: 10px;
+    }
+    .next-btn {
+        right: 10px;
+    }
+    .modal-datetime {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 14px;
+        color: #666;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover, .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .color-btn.active {
+        border: 2px solid #fff;
+        box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+</style>
 </head>
 <body>
     <!-- Layout wrapper -->
@@ -488,6 +449,10 @@ $background_images = glob("../img/drawing/default/*");
 
                         <!-- ส่วนแรกของฟอร์ม -->
                         <form id="opdFormPart1" method="post">
+                        <div class="alert <?php echo $canEditPart1 ? 'alert-info' : 'alert-warning'; ?> mb-4">
+                            <strong>สถานะ:</strong> 
+                            <?php echo $canEditPart1 ? 'คุณสามารถแก้ไขข้อมูลในส่วนนี้ได้' : 'คุณสามารถดูข้อมูลเท่านั้น'; ?>
+                        </div>
                             <input type="hidden" name="queue_id" value="<?php echo $queue_id; ?>">
                             <input type="hidden" name="cus_id" value="<?php echo $queue_data['cus_id']; ?>">
                             <input type="hidden" name="course_id" value="<?php echo $queue_data['course_id']; ?>">
@@ -527,14 +492,53 @@ $background_images = glob("../img/drawing/default/*");
                                     </div>
                                 </div>
                             </div>
-
+                             <div class="form-section">
+                                <h3>ข้อมูลพฤติกรรมเสี่ยงและการแพ้</h3>
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label for="smoking" class="form-label">สูบบุหรี่</label>
+                                        <select class="form-select" id="smoking" name="smoking" required>
+                                            <option value="">เลือก</option>
+                                            <option value="ไม่สูบ" <?php echo ($smoking == 'ไม่สูบ') ? 'selected' : ''; ?>>ไม่สูบ</option>
+                                            <option value="สูบ" <?php echo ($smoking == 'สูบ') ? 'selected' : ''; ?>>สูบ</option>
+                                            <option value="เคยสูบแต่เลิกแล้ว" <?php echo ($smoking == 'เคยสูบแต่เลิกแล้ว') ? 'selected' : ''; ?>>เคยสูบแต่เลิกแล้ว</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="alcohol" class="form-label">ดื่มสุรา</label>
+                                        <select class="form-select" id="alcohol" name="alcohol" required>
+                                            <option value="">เลือก</option>
+                                            <option value="ไม่ดื่ม" <?php echo ($alcohol == 'ไม่ดื่ม') ? 'selected' : ''; ?>>ไม่ดื่ม</option>
+                                            <option value="ดื่ม" <?php echo ($alcohol == 'ดื่ม') ? 'selected' : ''; ?>>ดื่ม</option>
+                                            <option value="เคยดื่มแต่เลิกแล้ว" <?php echo ($alcohol == 'เคยดื่มแต่เลิกแล้ว') ? 'selected' : ''; ?>>เคยดื่มแต่เลิกแล้ว</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="drug_allergy" class="form-label">แพ้ยา</label>
+                                        <textarea class="form-control" id="drug_allergy" name="drug_allergy" rows="2"><?php echo htmlspecialchars($drug_allergy); ?></textarea>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="food_allergy" class="form-label">แพ้อาหาร</label>
+                                        <textarea class="form-control" id="food_allergy" name="food_allergy" rows="2"><?php echo htmlspecialchars($food_allergy); ?></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                                <input type="hidden" id="opd_id" name="opd_id" value="<?php echo $opd_data['opd_id'] ?? ''; ?>">
+                            <?php if ($canEditPart1): ?>
                             <div class="text-center">
                                 <button type="submit" class="btn btn-primary" id="savePartOne">บันทึกข้อมูลเบื้องต้น</button>
                             </div>
+                            <?php endif; ?>
+                            <button type="button" class="btn btn-secondary" id="showPartTwo">ถัดไป</button>
                         </form>
 
                         <!-- ส่วนที่สองของฟอร์ม (ซ่อนไว้ก่อน) -->
+
                         <div id="opdFormPart2" style="display: none;">
+                        <div class="alert <?php echo $canEditPart1 ? 'alert-info' : 'alert-warning'; ?> mb-4">
+                            <strong>สถานะ:</strong> 
+                            <?php echo $canEditPart2 ? 'คุณสามารถแก้ไขข้อมูลในส่วนนี้ได้' : 'คุณสามารถดูข้อมูลเท่านั้น'; ?>
+                        </div>
                             <form id="opdFormPart2Form" method="post">
                                 <input type="hidden" name="opd_id" id="opd_id" value="">
                                 
@@ -543,9 +547,9 @@ $background_images = glob("../img/drawing/default/*");
                                     <div class="mb-3">
                                         <label for="opd_physical" class="form-label">การตรวจร่างกาย</label>
                                         <button type="button" class="btn btn-primary" onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
-                                        <div id="savedDrawings" class="mt-3">
-                                            <!-- รูปภาพที่บันทึกแล้วจะแสดงที่นี่ -->
-                                        </div>
+                                    </div>
+                                    <div id="savedDrawings" class="drawing-gallery">
+                                        <!-- รูปภาพที่บันทึกแล้วจะแสดงที่นี่ -->
                                     </div>
                                     <input type="hidden" id="saved_drawings" name="saved_drawings" value="">
                                 </div>
@@ -561,9 +565,12 @@ $background_images = glob("../img/drawing/default/*");
                                         <textarea class="form-control" id="opd_note" name="opd_note" rows="3"></textarea>
                                     </div>
                                 </div>
-
+                                <button type="button" class="btn btn-secondary" id="backToPartOne">ย้อนกลับ</button>
                                 <div class="text-center">
+                                <?php if ($canEditPart2): ?>
+                                    <input type="hidden" id="opd_id" name="opd_id" value="<?php echo $opd_data['opd_id'] ?? ''; ?>">
                                     <button type="submit" class="btn btn-submit">บันทึกข้อมูลทั้งหมด</button>
+                                <?php endif; ?>
                                 </div>
                             </form>
                         </div>
@@ -622,13 +629,34 @@ $background_images = glob("../img/drawing/default/*");
 
     <!-- Page JS -->
 <script>
+
 let currentImages = []; // ตัวแปร global สำหรับเก็บข้อมูลรูปภาพทั้งหมด
 let canvas, ctx;
 let isDrawing = false;
 let currentColor = 'black'; // กำหนดสีเริ่มต้นเป็นสีดำ
 let backgroundImage = new Image();
 
+// เพิ่มตัวแปรสำหรับเก็บสถานะสิทธิ์
+const canEditPart1 = <?php echo json_encode($canEditPart1); ?>;
+const canEditPart2 = <?php echo json_encode($canEditPart2); ?>;
+
 $(document).ready(function() {
+    $('#showPartTwo').on('click', function() {
+        const opdId = $('#opd_id').val();
+        if (opdId) {
+            loadOPDData(opdId, 2);  // เพิ่มพารามิเตอร์ 2 เพื่อระบุว่าเป็นส่วนที่ 2
+        } else {
+            console.error('ไม่พบ OPD ID');
+        }
+        $('#opdFormPart1').hide();
+        $('#opdFormPart2').show();
+    });
+
+    $('#backToPartOne').on('click', function() {
+        $('#opdFormPart2').hide();
+        $('#opdFormPart1').show();
+    });
+
     // คำนวณ BMI อัตโนมัติ
     function calculateBMI() {
         var weight = parseFloat($('#weight').val());
@@ -642,51 +670,65 @@ $(document).ready(function() {
     $('#weight, #height').on('input', calculateBMI);
 
     // จัดการการส่งฟอร์มส่วนแรก
-    $('#opdFormPart1').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: 'sql/save-opd-part1.php',
-            type: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    alert('บันทึกข้อมูลเบื้องต้นสำเร็จ');
-                    $('#opd_id').val(response.opd_id);
-                    $('#opdFormPart1').hide();
-                    $('#opdFormPart2').show();
-                    loadSavedDrawings(response.opd_id);
-                } else {
-                    alert('เกิดข้อผิดพลาด: ' + response.message);
+    if (canEditPart1) {
+        $('#opdFormPart1').on('submit', function(e) {
+            e.preventDefault();
+            console.log('Submitting Part 1 form');
+            $.ajax({
+                url: 'sql/save-opd-part1.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Part 1 submission response:', response);
+                    if (response.success) {
+                        alert('บันทึกข้อมูลเบื้องต้นสำเร็จ');
+                        $('#opd_id').val(response.opd_id);
+                        $('input[name="opd_id"]').val(response.opd_id); // อัพเดตค่า opd_id ในทุกฟอร์ม
+                        $('#opdFormPart1').hide();
+                        $('#opdFormPart2').show();
+                        loadSavedDrawings(response.opd_id);
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + response.message);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('AJAX error:', textStatus, errorThrown);
+                    alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
                 }
-            },
-            error: function() {
-                alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
-            }
+            });
         });
-    });
+    } else {
+        $('#opdFormPart1 input, #opdFormPart1 select, #opdFormPart1 textarea').prop('disabled', true);
+    }
 
     // จัดการการส่งฟอร์มส่วนที่สอง
-    $('#opdFormPart2Form').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: 'sql/save-opd-part2.php',
-            type: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    alert('บันทึกข้อมูลทั้งหมดสำเร็จ');
-                    window.location.href = 'queue-management.php';
-                } else {
-                    alert('เกิดข้อผิดพลาด: ' + response.message);
+    if (canEditPart2) {
+        $('#opdFormPart2Form').on('submit', function(e) {
+            e.preventDefault();
+            var opdId = $('#opd_id').val(); // ดึงค่า opd_id ที่อัพเดตล่าสุด
+            var formData = $(this).serialize() + '&opd_id=' + opdId; // เพิ่ม opd_id ลงในข้อมูลที่จะส่ง
+            $.ajax({
+                url: 'sql/save-opd-part2.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        alert('บันทึกข้อมูลทั้งหมดสำเร็จ');
+                        window.location.href = 'service.php?queue_id=' + response.queue_id;
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
                 }
-            },
-            error: function() {
-                alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
-            }
+            });
         });
-    });
+    } else {
+        $('#opdFormPart2Form input, #opdFormPart2Form select, #opdFormPart2Form textarea').prop('disabled', true);
+    }
 
     // เพิ่ม event listener สำหรับปุ่มสี
     const colorButtons = document.querySelectorAll('.color-btn');
@@ -696,56 +738,118 @@ $(document).ready(function() {
             changeColor(color);
         });
     });
+
+    // โหลดข้อมูล OPD ที่บันทึกไว้
+function loadOPDData(opdId, part = 1) {
+    console.log('Loading OPD data for ID:', opdId, 'Part:', part);
+    $.ajax({
+        url: 'sql/get-opd-data.php',
+        type: 'GET',
+        data: { opd_id: opdId },
+        dataType: 'json',
+        success: function(response) {
+            console.log('OPD data received:', response);
+            if (response.success) {
+                if (part === 1 || part === undefined) {
+                    $('#weight').val(response.data.Weight);
+                    $('#height').val(response.data.Height);
+                    $('#bmi').val(response.data.BMI);
+                    $('#fbs').val(response.data.FBS);
+                    $('#systolic').val(response.data.Systolic);
+                    $('#pulsation').val(response.data.Pulsation);
+                    
+                    // เพิ่มการกำหนดค่าให้กับ select fields
+                    setSelectedOption('smoking', response.data.opd_smoke);
+                    setSelectedOption('alcohol', response.data.opd_alcohol);
+                    
+                    // กำหนดค่าให้กับ textarea fields
+                    $('#drug_allergy').val(response.data.drug_allergy);
+                    $('#food_allergy').val(response.data.food_allergy);
+                }
+                if (part === 2) {
+                    $('#opd_diagnose').val(response.data.opd_diagnose);
+                    $('#opd_note').val(response.data.opd_note);
+                    loadSavedDrawings(opdId);
+                }
+                console.log('Form updated with OPD data');
+            } else {
+                console.error('Failed to load OPD data:', response.message);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error:', textStatus, errorThrown);
+        }
+    });
+}
+
+    function setSelectedOption(selectId, value) {
+        if (value) {
+            $(`#${selectId} option`).removeAttr('selected');
+            $(`#${selectId} option[value="${value}"]`).prop('selected', true);
+        }
+    }
+
+    // เรียกใช้ฟังก์ชันโหลดข้อมูลเมื่อหน้าเว็บโหลดเสร็จ
+    var opdId = $('#opd_id').val();
+    console.log('Initial OPD ID:', opdId);
+    if (opdId) {
+        loadOPDData(opdId);
+    } else {
+        console.log('No OPD ID found, skipping data load');
+    }
 });
 
 function loadSavedDrawings(opdId) {
-    fetch('sql/get-saved-drawings.php?opd_id=' + opdId)
-    .then(response => response.json())
-    .then(data => {
-        const savedDrawingsContainer = document.getElementById('savedDrawings');
-        const savedDrawingsInput = document.getElementById('saved_drawings');
-        const savedDrawings = [];
+    return fetch('sql/get-saved-drawings.php?opd_id=' + opdId)
+        .then(response => response.json())
+        .then(data => {
+            const savedDrawingsContainer = document.getElementById('savedDrawings');
+            const savedDrawingsInput = document.getElementById('saved_drawings');
+            savedDrawingsContainer.innerHTML = '';
+            
+            if (data.length > 0) {
+                data.forEach((drawing, index) => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.className = 'drawing-item';
 
-        savedDrawingsContainer.innerHTML = '';
-        savedDrawingsContainer.className = 'drawing-gallery';
+                    const img = document.createElement('img');
+                    img.src = '../img/drawing/' + drawing.image_path;
+                    img.alt = 'Patient Drawing';
+                    img.onclick = () => viewImage(index, data);
 
-        currentImages = data; // เก็บข้อมูลรูปภาพทั้งหมด
+                    // เพิ่มเงื่อนไขการแสดงปุ่มลบตามสิทธิ์
+                    if (canEditPart2) {
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.innerHTML = '&times;';
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            deleteImage(drawing.id, imgContainer);
+                        };
+                        imgContainer.appendChild(deleteBtn);
+                    }
 
-        data.forEach((drawing, index) => {
-            const imgContainer = document.createElement('div');
-            imgContainer.className = 'drawing-item';
+                    const dateTime = document.createElement('div');
+                    dateTime.className = 'drawing-datetime';
+                    dateTime.textContent = drawing.created_at;
 
-            const img = document.createElement('img');
-            img.src = '../img/drawing/' + drawing.image_path;
-            img.alt = 'Patient Drawing';
-            img.onclick = () => viewImage(index);
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.innerHTML = '&times;';
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.onclick = (e) => {
-                e.stopPropagation();
-                deleteImage(drawing.id, imgContainer);
-            };
-
-            const dateTime = document.createElement('div');
-            dateTime.className = 'drawing-datetime';
-            dateTime.textContent = drawing.created_at;
-
-            imgContainer.appendChild(img);
-            imgContainer.appendChild(deleteBtn);
-            imgContainer.appendChild(dateTime);
-            savedDrawingsContainer.appendChild(imgContainer);
-
-            savedDrawings.push(drawing.image_path);
+                    imgContainer.appendChild(img);
+                    imgContainer.appendChild(dateTime);
+                    savedDrawingsContainer.appendChild(imgContainer);
+                });
+                savedDrawingsInput.value = JSON.stringify(data.map(d => d.image_path));
+            } else {
+                savedDrawingsContainer.innerHTML = '<p>ไม่มีภาพวาด</p>';
+            }
+            return data;
+        })
+        .catch(error => {
+            console.error('Error loading saved drawings:', error);
+            return [];
         });
-
-        savedDrawingsInput.value = JSON.stringify(savedDrawings);
-    })
-    .catch(error => console.error('Error loading saved drawings:', error));
 }
 
-function viewImage(index) {
+function viewImage(index, images) {
     const modal = document.createElement('div');
     modal.className = 'image-modal';
 
@@ -753,7 +857,7 @@ function viewImage(index) {
     modalContent.className = 'modal-content';
 
     const img = document.createElement('img');
-    img.src = '../img/drawing/' + currentImages[index].image_path;
+    img.src = '../img/drawing/' + images[index].image_path;
     img.alt = 'Full size patient drawing';
 
     const closeBtn = document.createElement('button');
@@ -766,7 +870,7 @@ function viewImage(index) {
 
     const dateTime = document.createElement('div');
     dateTime.className = 'modal-datetime';
-    dateTime.textContent = 'Created: ' + currentImages[index].created_at;
+    dateTime.textContent = 'Created: ' + images[index].created_at;
 
     const prevBtn = document.createElement('button');
     prevBtn.innerHTML = '&#10094;';
@@ -802,9 +906,9 @@ function viewImage(index) {
     }
 
     function changeImage(direction) {
-        currentIndex = (currentIndex + direction + currentImages.length) % currentImages.length;
-        img.src = '../img/drawing/' + currentImages[currentIndex].image_path;
-        dateTime.textContent = 'Created: ' + currentImages[currentIndex].created_at;
+        currentIndex = (currentIndex + direction + images.length) % images.length;
+        img.src = '../img/drawing/' + images[currentIndex].image_path;
+        dateTime.textContent = 'Created: ' + images[currentIndex].created_at;
     }
 
     modal.onclick = (e) => {
@@ -841,6 +945,10 @@ function deleteImage(imageId, imgContainer) {
 }
 
 function openDrawingModal() {
+    if (!canEditPart2) {
+        alert('คุณไม่มีสิทธิ์ในการวาดภาพ');
+        return;
+    }
     document.getElementById('drawingModal').style.display = 'block';
     canvas = document.getElementById('drawingCanvas');
     ctx = canvas.getContext('2d');
@@ -945,6 +1053,10 @@ function closeDrawingModal() {
 }
 
 function saveDrawing() {
+    if (!canEditPart2) {
+        alert('คุณไม่มีสิทธิ์ในการบันทึกภาพ');
+        return;
+    }
     const imageData = canvas.toDataURL('image/png');
     const opd_id = document.getElementById('opd_id').value;
     
@@ -975,6 +1087,10 @@ function isDrawingModalOpen() {
 
 // Event listener สำหรับการอัปโหลดรูปภาพ
 document.getElementById('imageUpload').addEventListener('change', function(e) {
+    if (!canEditPart2) {
+        alert('คุณไม่มีสิทธิ์ในการอัปโหลดภาพ');
+        return;
+    }
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
@@ -983,6 +1099,38 @@ document.getElementById('imageUpload').addEventListener('change', function(e) {
         }
         reader.readAsDataURL(file);
     }
+});
+
+// ฟังก์ชันสำหรับการตรวจสอบสิทธิ์
+function checkPermission(action) {
+    switch(action) {
+        case 'editPart1':
+            return canEditPart1;
+        case 'editPart2':
+            return canEditPart2;
+        default:
+            return false;
+    }
+}
+
+// ปรับปรุงการแสดงผลและการทำงานตามสิทธิ์
+function updateUIBasedOnPermissions() {
+    if (!canEditPart1) {
+        $('#opdFormPart1 input, #opdFormPart1 select, #opdFormPart1 textarea').prop('disabled', true);
+        $('#savePartOne').hide();
+    }
+    if (!canEditPart2) {
+        $('#opdFormPart2Form input, #opdFormPart2Form select, #opdFormPart2Form textarea').prop('disabled', true);
+        $('.btn-submit').hide();
+        $('.delete-btn').hide();
+    }
+    // แสดงปุ่ม "ถัดไป" สำหรับทุกคน
+    $('#showPartTwo').show();
+}
+
+// เรียกใช้ฟังก์ชันเมื่อโหลดหน้าเว็บ
+$(document).ready(function() {
+    updateUIBasedOnPermissions();
 });
 
 </script>

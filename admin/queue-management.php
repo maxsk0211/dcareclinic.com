@@ -116,9 +116,19 @@ $result_bookings = $conn->query($sql_bookings);
     }
 
     .modal .select2-container .select2-selection--single {
-        height: 38px;
+        height: 38px !important;
         line-height: 38px;
     }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 38px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+    }
+    .select2-search__field {
+        width: 100% !important;
+    }
+
 
     .modal .select2-container--bootstrap-5 .select2-selection {
         border: 1px solid #ced4da;
@@ -214,10 +224,14 @@ $result_bookings = $conn->query($sql_bookings);
                                                 <td><?php echo $row['booking_datetime'] ? date('H:i', strtotime($row['booking_datetime'])) : ($row['queue_time'] ? date('H:i', strtotime($row['queue_time'])) : 'ไม่ระบุ'); ?></td>
                                                 <td><span class="queue-status status-badge status-<?php echo $row['service_status']; ?>"><?php echo getStatusText($row['service_status']); ?></span></td>
                                                 <td class="action-buttons">
+
                                                     <?php if($row['service_status'] == 'waiting'): ?>
                                                         <button class="btn btn-sm btn-primary" onclick="updateStatus(<?php echo $row['queue_id']; ?>, 'in_progress')">เริ่มให้บริการ</button>
                                                     <?php elseif($row['service_status'] == 'in_progress'): ?>
-                                                        <a href="opd.php?queue_id=<?php echo $row['queue_id']; ?>" class="btn btn-sm btn-info">OPD</a>
+                                                            <a href="opd.php?queue_id=<?php echo $row['queue_id']; ?>" 
+                                                               id="opd-btn-<?php echo $row['queue_id']; ?>" 
+                                                               class="btn btn-sm btn-info opd-btn" 
+                                                               data-queue-id="<?php echo $row['queue_id']; ?>">OPD</a>
                                                     <?php endif; ?>
                                                     <?php if($row['service_status'] != 'cancelled'): ?>
                                                         <button class="btn btn-sm btn-danger" onclick="updateStatus(<?php echo $row['queue_id']; ?>, 'cancelled')">ยกเลิก</button>
@@ -260,7 +274,7 @@ $result_bookings = $conn->query($sql_bookings);
                 <form id="addQueueForm">
                     <div class="mb-3">
                         <label for="booking_type" class="form-label">ประเภทการจอง</label>
-                        <select class="form-select" id="booking_type" name="booking_type">
+                        <select class="form-select" id="booking_type" name="booking_type" required>
                             <option value="booked">การจองล่วงหน้า</option>
                             <option value="walk_in">Walk-in</option>
                         </select>
@@ -268,7 +282,7 @@ $result_bookings = $conn->query($sql_bookings);
                     <div id="bookedFields">
                         <div class="mb-3">
                             <label for="booking_id" class="form-label">เลือกการจอง</label>
-                            <select class="form-select" id="booking_id" name="booking_id">
+                            <select class="form-select" id="booking_id" name="booking_id" required>
                                 <option value="">เลือกการจอง</option>
                                 <!-- ตัวเลือกการจองจะถูกเพิ่มด้วย JavaScript -->
                             </select>
@@ -283,7 +297,7 @@ $result_bookings = $conn->query($sql_bookings);
                         </div>
                         <div class="mb-3">
                             <label for="queue_time" class="form-label">เวลาคิว</label>
-                            <input type="time" class="form-control" id="queue_time" name="queue_time" step="60" required>
+                            <input type="time" class="form-control" id="queue_time" name="queue_time" required>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -323,6 +337,177 @@ $result_bookings = $conn->query($sql_bookings);
 
     <!-- Page JS -->
 <script>
+$(document).ready(function() {
+    console.log('Document ready');
+
+    var table = $('.datatables-bookings').DataTable({
+        displayLength: 10,
+        lengthMenu: [ 10, 25, 50, 75, 100],
+        buttons: [],
+        responsive: {
+            details: {
+                display: $.fn.dataTable.Responsive.display.modal({
+                    header: function(row) {
+                        var data = row.data();
+                        return 'รายละเอียดการจองของ ' + data[2];
+                    }
+                }),
+                type: 'column',
+                renderer: function(api, rowIdx, columns) {
+                    var data = $.map(columns, function(col, i) {
+                        return col.title !== ''
+                            ? '<tr data-dt-row="' +
+                                col.rowIndex +
+                                '" data-dt-column="' +
+                                col.columnIndex +
+                                '">' +
+                                '<td>' +
+                                col.title +
+                                ':' +
+                                '</td> ' +
+                                '<td>' +
+                                col.data +
+                                '</td>' +
+                                '</tr>'
+                            : '';
+                    }).join('');
+
+                    return data ? $('<table class="table"/><tbody />').append(data) : false;
+                }
+            }
+        },
+        createdRow: function(row, data, dataIndex) {
+            $(row).addClass('clickable-row');
+            $(row).attr('data-cus-id', data[1]);
+        }
+    });
+
+    $('.datatables-bookings tbody').on('click', 'tr', function(e) {
+        if (!$(e.target).closest('.dropdown-toggle, .dropdown-item').length) {
+            var customerId = $(this).data('customer-id');
+            if (customerId) {
+                window.location.href = 'customer-detail.php?id=' + customerId;
+            }
+        }
+    });
+
+    $('.dropdown-toggle, .dropdown-item').on('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // สำหรับการเลือกลูกค้า
+$('#cus_id').select2({
+    theme: 'bootstrap-5',
+    dropdownParent: $('#addQueueModal'),
+    ajax: {
+        url: 'sql/get-customers.php',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return {
+                search: params.term
+            };
+        },
+        processResults: function (data) {
+            return {
+                results: data
+            };
+        },
+        cache: true
+    },
+    placeholder: 'ค้นหาลูกค้า...',
+    minimumInputLength: 1,
+    language: {
+        inputTooShort: function() {
+            return "กรุณาพิมพ์อย่างน้อย 1 ตัวอักษร";
+        },
+        noResults: function() {
+            return "ไม่พบข้อมูลลูกค้า";
+        },
+        searching: function() {
+            return "กำลังค้นหา...";
+        }
+    }
+}).on('select2:open', function(e) {
+    setTimeout(function() {
+        $('.select2-search__field').get(0).focus();
+    }, 10);
+});
+
+    // สำหรับการเลือกการจอง
+    $('#booking_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'เลือกการจอง'
+    }).on('select2:open', function (e) {
+        console.log('Booking Select2 opened');
+    });
+
+    // เปลี่ยนประเภทการจอง
+    $('#booking_type').change(function() {
+        if ($(this).val() === 'walk_in') {
+            $('#bookedFields').hide();
+            $('#walkInFields').show();
+            setCurrentTime();
+        } else {
+            $('#bookedFields').show();
+            $('#walkInFields').hide();
+        }
+    });
+    function setCurrentTime() {
+        var now = new Date();
+        var hours = now.getHours().toString().padStart(2, '0');
+        var minutes = now.getMinutes().toString().padStart(2, '0');
+        $('#queue_time').val(hours + ':' + minutes);
+    }
+
+
+    // เรียกใช้ฟังก์ชันเมื่อเปิด Modal
+    $('#addQueueModal').on('show.bs.modal', function () {
+        if ($('#booking_type').val() === 'walk_in') {
+            setCurrentTime();
+        }
+    });
+
+    updateAllOPDButtons();
+    setInterval(updateAllOPDButtons, 30000);
+
+    // อัพเดทเวลาทุกวินาที
+    setInterval(updateDateTime, 1000);
+
+    // เรียกใช้ฟังก์ชันครั้งแรกเพื่อแสดงเวลาทันที
+    updateDateTime();
+
+    // เรียกใช้ refreshQueueTable ทุก 30 วินาที
+    setInterval(refreshQueueTable, 30000);
+});
+
+function checkOPDStatus(queueId) {
+    $.ajax({
+        url: 'sql/check-opd-status.php',
+        type: 'GET',
+        data: { queue_id: queueId },
+        dataType: 'json',
+        success: function(response) {
+            var btn = $('#opd-btn-' + queueId);
+            if (response.opd_completed) {
+                btn.removeClass('btn-info').addClass('btn-success');
+            } else {
+                btn.removeClass('btn-success').addClass('btn-info');
+            }
+        },
+        error: function() {
+            console.error('Failed to check OPD status for queue ID:', queueId);
+        }
+    });
+}
+
+function updateAllOPDButtons() {
+    $('.opd-btn').each(function() {
+        var queueId = $(this).data('queue-id');
+        checkOPDStatus(queueId);
+    });
+}
+
 function updateStatus(queueId, newStatus) {
     $.ajax({
         url: 'sql/update-queue-status.php',
@@ -334,15 +519,9 @@ function updateStatus(queueId, newStatus) {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                // อัพเดทสถานะในตารางโดยไม่ต้องรีโหลดหน้า
-                const statusCell = $(`tr[data-queue-id="${queueId}"] .queue-status`);
-                statusCell.removeClass().addClass(`queue-status status-badge status-${newStatus}`);
-                statusCell.text(getStatusText(newStatus));
+                updateQueueRow(queueId, newStatus);
+                checkOPDStatus(queueId);
                 
-                // อัพเดทปุ่มการดำเนินการ
-                updateActionButtons(queueId, newStatus);
-
-                // แสดงข้อความแจ้งเตือน
                 Swal.fire({
                     icon: 'success',
                     title: 'สำเร็จ',
@@ -371,6 +550,34 @@ function updateStatus(queueId, newStatus) {
     });
 }
 
+function updateQueueRow(queueId, newStatus) {
+    const row = $(`tr[data-queue-id="${queueId}"]`);
+    if (row.length) {
+        const statusCell = row.find('.queue-status');
+        statusCell.removeClass().addClass(`queue-status status-badge status-${newStatus}`);
+        statusCell.text(getStatusText(newStatus));
+        
+        const actionCell = row.find('.action-buttons');
+        let actionButtons = '';
+        if (newStatus === 'in_progress') {
+            actionButtons = `<a href="opd.php?queue_id=${queueId}" id="opd-btn-${queueId}" class="btn btn-sm btn-info opd-btn" data-queue-id="${queueId}">OPD</a>`;
+        } else if (newStatus !== 'completed' && newStatus !== 'cancelled') {
+            actionButtons = `
+                <button class="btn btn-sm btn-primary" onclick="updateStatus(${queueId}, 'in_progress')">เริ่มให้บริการ</button>
+                <button class="btn btn-sm btn-success" onclick="updateStatus(${queueId}, 'completed')">เสร็จสิ้น</button>
+            `;
+        }
+        if (newStatus !== 'cancelled') {
+            actionButtons += `<button class="btn btn-sm btn-danger" onclick="updateStatus(${queueId}, 'cancelled')">ยกเลิก</button>`;
+        }
+        actionCell.html(actionButtons);
+
+        if (newStatus === 'in_progress') {
+            checkOPDStatus(queueId);
+        }
+    }
+}
+
 function getStatusText(status) {
     switch(status) {
         case 'waiting': return 'รอดำเนินการ';
@@ -381,79 +588,65 @@ function getStatusText(status) {
     }
 }
 
-function updateActionButtons(queueId, currentStatus) {
-    const actionCell = $(`tr[data-queue-id="${queueId}"] .action-buttons`);
-    let buttons = '';
-
-    if (currentStatus !== 'completed' && currentStatus !== 'cancelled') {
-        buttons += `<button class="btn btn-sm btn-primary" onclick="updateStatus(${queueId}, 'in_progress')">เริ่มให้บริการ</button>`;
-        buttons += `<button class="btn btn-sm btn-success" onclick="updateStatus(${queueId}, 'completed')">เสร็จสิ้น</button>`;
-    }
-    
-    if (currentStatus !== 'cancelled') {
-        buttons += `<button class="btn btn-sm btn-danger" onclick="updateStatus(${queueId}, 'cancelled')">ยกเลิก</button>`;
-    }
-
-    actionCell.html(buttons);
-}
-
-function showAlert(type, message) {
-    Swal.fire({
-        icon: type,
-        title: type === 'success' ? 'สำเร็จ' : 'ข้อผิดพลาด',
-        text: message,
-        timer: 2000,
-        showConfirmButton: false
-    });
-}
-
- function addQueue() {
-    const formData = new FormData(document.getElementById('addQueueForm'));
-
-    // ตรวจสอบและปรับแต่งเวลาก่อนส่ง
-    const queueTime = formData.get('queue_time');
-    if (queueTime) {
-        const [hours, minutes] = queueTime.split(':');
-        const formattedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:00`;
-        formData.set('queue_time', formattedTime);
-    }
-    
+function showOrderDetails(orderId) {
     $.ajax({
-        url: 'sql/add-queue-process.php',
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        dataType: 'json',
+        url: 'sql/get-order-details.php',
+        type: 'GET',
+        data: { order_id: orderId },
         success: function(response) {
-            $('#addQueueModal').modal('hide');
-            if (response.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'สำเร็จ',
-                    text: 'เพิ่มคิวสำเร็จ',
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    $('#addQueueModal').modal('hide');
-                    refreshQueueTable();
-                    updateBookingList();
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: response.message
-                });
-            }
+            $('#orderDetailsContent').html(response);
+            $('#orderDetailsModal').modal('show');
         },
         error: function() {
-            $('#addQueueModal').modal('hide');
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
-                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
+                text: 'ไม่สามารถโหลดข้อมูลรายละเอียดการสั่งซื้อได้',
+                customClass: {
+                    confirmButton: 'btn btn-primary'
+                },
+                buttonsStyling: false
             });
+        }
+    });
+}
+
+function confirmApprove(url) {
+    Swal.fire({
+        title: 'ยืนยันการอนุมัติ?',
+        text: "คุณต้องการอนุมัติการจองนี้ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, อนุมัติ!',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+            confirmButton: 'btn btn-primary me-3',
+            cancelButton: 'btn btn-label-secondary'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+}
+
+function confirmCancel(url) {
+    Swal.fire({
+        title: 'ยืนยันการยกเลิก?',
+        text: "คุณต้องการยกเลิกการจองนี้ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, ยกเลิก!',
+        cancelButtonText: 'ไม่',
+        customClass: {
+            confirmButton: 'btn btn-danger me-3',
+            cancelButton: 'btn btn-label-secondary'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
         }
     });
 }
@@ -473,7 +666,7 @@ function refreshQueueTable() {
                     if (row.service_status == 'waiting') {
                         actionButtons = `<button class="btn btn-sm btn-primary" onclick="updateStatus(${row.queue_id}, 'in_progress')">เริ่มให้บริการ</button>`;
                     } else if (row.service_status == 'in_progress') {
-                        actionButtons = `<a href="opd.php?queue_id=${row.queue_id}" class="btn btn-sm btn-info">OPD</a>`;
+                        actionButtons = `<a href="opd.php?queue_id=${row.queue_id}" id="opd-btn-${row.queue_id}" class="btn btn-sm btn-info opd-btn" data-queue-id="${row.queue_id}">OPD</a>`;
                     }
                     if (row.service_status != 'cancelled' && row.service_status != 'completed') {
                         actionButtons += `<button class="btn btn-sm btn-danger" onclick="updateStatus(${row.queue_id}, 'cancelled')">ยกเลิก</button>`;
@@ -495,6 +688,7 @@ function refreshQueueTable() {
                 tableBody = '<tr><td colspan="5" class="text-center">ยังไม่มีคิวในวันนี้</td></tr>';
             }
             $('.queue-table tbody').html(tableBody);
+            updateAllOPDButtons();
         },
         error: function() {
             Swal.fire({
@@ -506,161 +700,7 @@ function refreshQueueTable() {
     });
 }
 
-$(document).ready(function() {
-    console.log('Document ready');
-    $('#cus_id').on('select2:open', function (e) {
-        console.log('Select2 opened');
-    });
-
-    $('#cus_id').on('select2:closing', function (e) {
-        console.log('Select2 closing');
-    });
-
-    $('#cus_id').on('select2:select', function (e) {
-        console.log('Select2 selected:', e.params.data);
-    });
-
-    // เริ่มต้น Select2 สำหรับการเลือกลูกค้า
-    $('#cus_id').select2({
-    theme: 'bootstrap-5',
-    placeholder: 'ค้นหาลูกค้าด้วย ชื่อ, เบอร์โทร, HN หรือเลขบัตรประชาชน',
-    width: '100%',
-    dropdownParent: $('#addQueueModal'),
-    ajax: {
-        url: 'sql/get-customers.php',
-        dataType: 'json',
-        delay: 250,
-        data: function (params) {
-            return {
-                search: params.term
-            };
-        },
-        processResults: function (data) {
-            return {
-                results: data
-            };
-        },
-        cache: true
-    },
-    minimumInputLength: 1,
-    language: {
-        inputTooShort: function() {
-            return "กรุณาพิมพ์อย่างน้อย 1 ตัวอักษร";
-        },
-        noResults: function() {
-            return "ไม่พบข้อมูลลูกค้า";
-        },
-        searching: function() {
-            return "กำลังค้นหา...";
-        }
-    },
-    templateResult: formatCustomer,
-    templateSelection: formatCustomerSelection
-});
-    function formatCustomer(customer) {
-        if (customer.loading) {
-            return customer.text;
-        }
-        var $container = $(
-            "<div class='select2-result-customer'>" +
-                "<div class='select2-result-customer__name'>" + customer.text + "</div>" +
-            "</div>"
-        );
-        return $container;
-    }
-
-    function formatCustomerSelection(customer) {
-        return customer.text || customer.id;
-    }
-
-    console.log('Select2 initialized');
-
-    // เพิ่ม event listener สำหรับการเลือกลูกค้า
-    $('#cus_id').on('select2:select', function (e) {
-        var data = e.params.data;
-        console.log('เลือกลูกค้า:', data);
-    });
-
-    // เพิ่ม event listener สำหรับการเปลี่ยนประเภทการจอง
-    $('#booking_type').change(function() {
-        if ($(this).val() === 'walk_in') {
-            $('#bookedFields').hide();
-            $('#walkInFields').show();
-            $('#cus_id').prop('required', true);
-            $('#queue_time').prop('required', true);
-            $('#booking_id').prop('required', false);
-        } else {
-            $('#bookedFields').show();
-            $('#walkInFields').hide();
-            $('#cus_id').prop('required', false);
-            $('#queue_time').prop('required', false);
-            $('#booking_id').prop('required', true);
-        }
-    });
-    // ฟังก์ชันสำหรับรับเวลาปัจจุบันในรูปแบบ HH:MM
-    function getCurrentTime() {
-        var now = new Date();
-        var hours = now.getHours().toString().padStart(2, '0');
-        var minutes = now.getMinutes().toString().padStart(2, '0');
-        return hours + ':' + minutes;
-    }
-
-    // ตั้งค่าเริ่มต้นของ queue_time เป็นเวลาปัจจุบัน
-    $('#queue_time').val(getCurrentTime());
-
-    // อัพเดทเวลาทุกนาที
-    setInterval(function() {
-        $('#queue_time').val(getCurrentTime());
-    }, 60000);
-
-    // เมื่อ modal เปิด ให้อัพเดทเวลาเป็นเวลาปัจจุบัน
-    $('#addQueueModal').on('shown.bs.modal', function() {
-        $('#queue_time').val(getCurrentTime());
-    });
-
-    $('#addQueueModal').on('show.bs.modal', function () {
-        updateBookingList();
-    });
-
-    function updateBookingList() {
-        $.ajax({
-            url: 'sql/get-available-bookings.php',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                var $select = $('#booking_id');
-                $select.find('option:not(:first, :last)').remove(); // ลบตัวเลือกเดิมยกเว้นตัวแรกและตัวสุดท้าย
-                $.each(data, function(index, booking) {
-                    $select.append($('<option>', {
-                        value: booking.id,
-                        text: booking.cus_firstname + ' ' + booking.cus_lastname + ' - ' + booking.time
-                    }));
-                });
-            },
-            error: function() {
-                console.error('ไม่สามารถโหลดรายการการจองได้');
-            }
-        });
-    }
-
-    // ตรวจสอบและแก้ไขรูปแบบเวลาเมื่อมีการเปลี่ยนแปลง
-    $('#queue_time').on('change', function() {
-        var timeValue = $(this).val();
-        if (timeValue) {
-            // แยกชั่วโมงและนาที
-            var [hours, minutes] = timeValue.split(':');
-            // แปลงเป็นตัวเลขและตรวจสอบช่วง
-            hours = Math.min(Math.max(parseInt(hours, 10), 0), 23);
-            minutes = Math.min(Math.max(parseInt(minutes, 10), 0), 59);
-            // รวมกลับเป็นรูปแบบ HH:MM
-            $(this).val(hours.toString().padStart(2, '0') + ':' + minutes.toString().padStart(2, '0'));
-        }
-    });
-
-    // รีเฟรชตารางทุก 1 นาที
-    setInterval(refreshQueueTable, 60000);
-    
-    function updateDateTime() {
+function updateDateTime() {
     const now = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const dateString = now.toLocaleDateString('th-TH', options);
@@ -670,11 +710,110 @@ $(document).ready(function() {
     document.getElementById('currentTime').textContent = timeString;
 }
 
-// อัพเดทเวลาทุกวินาที
-setInterval(updateDateTime, 1000);
+function loadBookings() {
+    $.ajax({
+        url: 'sql/get-available-bookings.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            var select = $('#booking_id');
+            select.empty();
+            select.append('<option value="">เลือกการจอง</option>');
+            $.each(data, function(index, booking) {
+                select.append('<option value="' + booking.id + '">' + booking.cus_firstname + ' ' + booking.cus_lastname + ' - ' + booking.time + '</option>');
+            });
+        },
+error: function() {
+            console.error('ไม่สามารถโหลดข้อมูลการจองได้');
+        }
+    });
+}
 
-// เรียกฟังก์ชันครั้งแรกเพื่อแสดงเวลาทันที
-updateDateTime();
+function addQueue() {
+    var formData = new FormData(document.getElementById('addQueueForm'));
+    
+    $.ajax({
+        url: 'sql/add-queue-process.php',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'เพิ่มคิวสำเร็จ',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    $('#addQueueModal').modal('hide');
+                    refreshQueueTable();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
+            });
+        }
+    });
+}
+
+// ฟังก์ชันสำหรับการตั้งค่าเริ่มต้นของ Modal เพิ่มคิวใหม่
+function resetAddQueueModal() {
+    $('#addQueueForm')[0].reset();
+    $('#booking_type').val('booked').trigger('change');
+    $('#booking_id').val(null).trigger('change');
+    $('#cus_id').val(null).trigger('change');
+    if ($('#booking_type').val() === 'walk_in') {
+        setCurrentTime();
+    }
+}
+
+// เพิ่ม event listener สำหรับการเปิด Modal
+$('#addQueueModal').on('show.bs.modal', function (e) {
+    resetAddQueueModal();
+    loadBookings();
+});
+
+// เพิ่ม event listener สำหรับการปิด Modal
+$('#addQueueModal').on('hidden.bs.modal', function (e) {
+    resetAddQueueModal();
+});
+
+// เพิ่ม event listener สำหรับปุ่มบันทึกคิว
+$('#saveQueueBtn').on('click', function() {
+    addQueue();
+});
+
+function updateCurrentTime() {
+    if ($('#booking_type').val() === 'walk_in' && $('#addQueueModal').is(':visible')) {
+        setCurrentTime();
+    }
+}
+
+setInterval(updateCurrentTime, 60000);
+$('#queue_time').on('change', function() {
+    var timeValue = $(this).val();
+    if (timeValue) {
+        // แยกชั่วโมงและนาที
+        var [hours, minutes] = timeValue.split(':');
+        // แปลงเป็นตัวเลขและตรวจสอบช่วง
+        hours = Math.min(Math.max(parseInt(hours, 10), 0), 23);
+        minutes = Math.min(Math.max(parseInt(minutes, 10), 0), 59);
+        // รวมกลับเป็นรูปแบบ HH:MM
+        $(this).val(hours.toString().padStart(2, '0') + ':' + minutes.toString().padStart(2, '0'));
+    }
 });
 </script>
 </body>

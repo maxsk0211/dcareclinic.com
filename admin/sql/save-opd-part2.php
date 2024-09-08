@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $saved_drawings = json_decode($_POST['saved_drawings'], true);
 
     // อัพเดตข้อมูล OPD
-    $sql = "UPDATE opd SET opd_diagnose = ?, opd_note = ? WHERE opd_id = ?";
+    $sql = "UPDATE opd SET opd_diagnose = ?, opd_note = ?, opd_status = 1 WHERE opd_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssi", $opd_diagnose, $opd_note, $opd_id);
 
@@ -25,14 +25,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $drawing_stmt->close();
         }
 
-        // อัพเดตสถานะคิวเป็น 'completed'
-        $update_queue_sql = "UPDATE service_queue SET service_status = 'completed' WHERE queue_id = (SELECT queue_id FROM opd WHERE opd_id = ?)";
+        // ดึง queue_id จาก opd
+        $queue_sql = "SELECT queue_id FROM opd WHERE opd_id = ?";
+        $queue_stmt = $conn->prepare($queue_sql);
+        $queue_stmt->bind_param("i", $opd_id);
+        $queue_stmt->execute();
+        $queue_result = $queue_stmt->get_result();
+        $queue_row = $queue_result->fetch_assoc();
+        $queue_id = $queue_row['queue_id'];
+
+        // อัพเดตสถานะคิวเป็น 'in_progress' (ไม่เปลี่ยนเป็น 'completed')
+        $update_queue_sql = "UPDATE service_queue SET service_status = 'in_progress' WHERE queue_id = ?";
         $update_queue_stmt = $conn->prepare($update_queue_sql);
-        $update_queue_stmt->bind_param("i", $opd_id);
+        $update_queue_stmt->bind_param("i", $queue_id);
         $update_queue_stmt->execute();
         $update_queue_stmt->close();
 
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => true, 'queue_id' => $queue_id]);
     } else {
         echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $conn->error]);
     }
