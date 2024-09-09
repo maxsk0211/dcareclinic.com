@@ -232,6 +232,10 @@ $result_bookings = $conn->query($sql_bookings);
                                                                id="opd-btn-<?php echo $row['queue_id']; ?>" 
                                                                class="btn btn-sm btn-info opd-btn" 
                                                                data-queue-id="<?php echo $row['queue_id']; ?>">OPD</a>
+                                                            <a href="service.php?queue_id=<?php echo $row['queue_id']; ?>" 
+                                                               id="service-btn-<?php echo $row['queue_id']; ?>" 
+                                                               class="btn btn-sm btn-success service-btn" 
+                                                               style="display: none;">บริการ</a>
                                                     <?php endif; ?>
                                                     <?php if($row['service_status'] != 'cancelled'): ?>
                                                         <button class="btn btn-sm btn-danger" onclick="updateStatus(<?php echo $row['queue_id']; ?>, 'cancelled')">ยกเลิก</button>
@@ -488,15 +492,21 @@ function checkOPDStatus(queueId) {
         data: { queue_id: queueId },
         dataType: 'json',
         success: function(response) {
-            var btn = $('#opd-btn-' + queueId);
+            var opdBtn = $('#opd-btn-' + queueId);
+            var serviceBtn = $('#service-btn-' + queueId);
+            console.log("OPD Status Response for queue " + queueId + ":", response);
             if (response.opd_completed) {
-                btn.removeClass('btn-info').addClass('btn-success');
+                opdBtn.removeClass('btn-info').addClass('btn-success');
+                serviceBtn.show();
+                console.log("Queue " + queueId + ": OPD completed, showing service button");
             } else {
-                btn.removeClass('btn-success').addClass('btn-info');
+                opdBtn.removeClass('btn-success').addClass('btn-info');
+                serviceBtn.hide();
+                console.log("Queue " + queueId + ": OPD not completed, hiding service button");
             }
         },
-        error: function() {
-            console.error('Failed to check OPD status for queue ID:', queueId);
+        error: function(xhr, status, error) {
+            console.error('Failed to check OPD status for queue ID:', queueId, 'Error:', error);
         }
     });
 }
@@ -560,21 +570,20 @@ function updateQueueRow(queueId, newStatus) {
         const actionCell = row.find('.action-buttons');
         let actionButtons = '';
         if (newStatus === 'in_progress') {
-            actionButtons = `<a href="opd.php?queue_id=${queueId}" id="opd-btn-${queueId}" class="btn btn-sm btn-info opd-btn" data-queue-id="${queueId}">OPD</a>`;
-        } else if (newStatus !== 'completed' && newStatus !== 'cancelled') {
+            actionButtons = `
+                <a href="opd.php?queue_id=${queueId}" id="opd-btn-${queueId}" class="btn btn-sm btn-info opd-btn" data-queue-id="${queueId}">OPD</a>
+                <a href="service.php?queue_id=${queueId}" id="service-btn-${queueId}" class="btn btn-sm btn-success service-btn" style="display: none;">บริการ</a>
+            `;
+            checkOPDStatus(queueId);
+        } else if (newStatus === 'waiting') {
             actionButtons = `
                 <button class="btn btn-sm btn-primary" onclick="updateStatus(${queueId}, 'in_progress')">เริ่มให้บริการ</button>
-                <button class="btn btn-sm btn-success" onclick="updateStatus(${queueId}, 'completed')">เสร็จสิ้น</button>
             `;
         }
-        if (newStatus !== 'cancelled') {
+        if (newStatus !== 'cancelled' && newStatus !== 'completed') {
             actionButtons += `<button class="btn btn-sm btn-danger" onclick="updateStatus(${queueId}, 'cancelled')">ยกเลิก</button>`;
         }
         actionCell.html(actionButtons);
-
-        if (newStatus === 'in_progress') {
-            checkOPDStatus(queueId);
-        }
     }
 }
 
@@ -666,7 +675,10 @@ function refreshQueueTable() {
                     if (row.service_status == 'waiting') {
                         actionButtons = `<button class="btn btn-sm btn-primary" onclick="updateStatus(${row.queue_id}, 'in_progress')">เริ่มให้บริการ</button>`;
                     } else if (row.service_status == 'in_progress') {
-                        actionButtons = `<a href="opd.php?queue_id=${row.queue_id}" id="opd-btn-${row.queue_id}" class="btn btn-sm btn-info opd-btn" data-queue-id="${row.queue_id}">OPD</a>`;
+                        actionButtons = `
+                            <a href="opd.php?queue_id=${row.queue_id}" id="opd-btn-${row.queue_id}" class="btn btn-sm btn-info opd-btn" data-queue-id="${row.queue_id}">OPD</a>
+                            <a href="service.php?queue_id=${row.queue_id}" id="service-btn-${row.queue_id}" class="btn btn-sm btn-success service-btn" style="display: none;">บริการ</a>
+                        `;
                     }
                     if (row.service_status != 'cancelled' && row.service_status != 'completed') {
                         actionButtons += `<button class="btn btn-sm btn-danger" onclick="updateStatus(${row.queue_id}, 'cancelled')">ยกเลิก</button>`;
@@ -688,7 +700,11 @@ function refreshQueueTable() {
                 tableBody = '<tr><td colspan="5" class="text-center">ยังไม่มีคิวในวันนี้</td></tr>';
             }
             $('.queue-table tbody').html(tableBody);
-            updateAllOPDButtons();
+            data.forEach(function(row) {
+                if (row.service_status == 'in_progress') {
+                    checkOPDStatus(row.queue_id);
+                }
+            });
         },
         error: function() {
             Swal.fire({

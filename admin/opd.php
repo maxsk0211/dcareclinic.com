@@ -623,6 +623,7 @@ $background_images = glob("../img/drawing/default/*");
     <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/hammer/hammer.js"></script>
     <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
@@ -639,6 +640,40 @@ let backgroundImage = new Image();
 // เพิ่มตัวแปรสำหรับเก็บสถานะสิทธิ์
 const canEditPart1 = <?php echo json_encode($canEditPart1); ?>;
 const canEditPart2 = <?php echo json_encode($canEditPart2); ?>;
+
+
+
+function msg_ok(message,url){
+        Swal.fire({
+        icon: 'success',
+        title: 'แจ้งเตือน!!',
+        text: message,
+        customClass: {
+            confirmButton: 'btn btn-primary waves-effect waves-light'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (url) {
+            window.location.href = url; 
+        }
+        }
+    });
+}
+
+function msg_error(messageทช){
+      Swal.fire({
+         icon: 'error',
+         title: 'แจ้งเตือน!!',
+         text: message,
+         customClass: {
+              confirmButton: 'btn btn-danger waves-effect waves-light'
+            },
+         buttonsStyling: false
+
+      })
+}
+
 
 $(document).ready(function() {
     $('#showPartTwo').on('click', function() {
@@ -673,28 +708,32 @@ $(document).ready(function() {
     if (canEditPart1) {
         $('#opdFormPart1').on('submit', function(e) {
             e.preventDefault();
-            console.log('Submitting Part 1 form');
+            // console.log('Submitting Part 1 form');
             $.ajax({
                 url: 'sql/save-opd-part1.php',
                 type: 'POST',
                 data: $(this).serialize(),
                 dataType: 'json',
                 success: function(response) {
-                    console.log('Part 1 submission response:', response);
+                    // console.log('Part 1 submission response:', response);
                     if (response.success) {
-                        alert('บันทึกข้อมูลเบื้องต้นสำเร็จ');
+                        // alert('บันทึกข้อมูลเบื้องต้นสำเร็จ');
+                        msg_ok('บันทึกข้อมูลเบื้องต้นสำเร็จ');
                         $('#opd_id').val(response.opd_id);
                         $('input[name="opd_id"]').val(response.opd_id); // อัพเดตค่า opd_id ในทุกฟอร์ม
                         $('#opdFormPart1').hide();
                         $('#opdFormPart2').show();
                         loadSavedDrawings(response.opd_id);
+                        loadOPDData(response.opd_id, 2);
                     } else {
-                        alert('เกิดข้อผิดพลาด: ' + response.message);
+                        // alert('เกิดข้อผิดพลาด: ' + response.message);
+                        msg_error('เกิดข้อผิดพลาด'+response.message);
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    console.error('AJAX error:', textStatus, errorThrown);
-                    alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+                    // console.error('AJAX error:', textStatus, errorThrown);
+                    // alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+                    msg_error('เกิดข้อผิดพลาดในการส่งข้อมูล')   
                 }
             });
         });
@@ -715,14 +754,17 @@ $(document).ready(function() {
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        alert('บันทึกข้อมูลทั้งหมดสำเร็จ');
-                        window.location.href = 'service.php?queue_id=' + response.queue_id;
+                        // alert('บันทึกข้อมูลทั้งหมดสำเร็จ');
+                        // window.location.href = 'service.php?queue_id=' + response.queue_id;
+                        // window.location.href = 'queue-management.php';
+                        msg_ok('บันทึกข้อมูลทั้งหมดสำเร็จ','queue-management.php')
                     } else {
-                        alert('เกิดข้อผิดพลาด: ' + response.message);
+                        // alert('เกิดข้อผิดพลาด: ' + response.message);
+                        msg_ok('เกิดข้อผิดพลาด: ' + response.message)
                     }
                 },
                 error: function() {
-                    alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+                    msg_error('เกิดข้อผิดพลาดในการส่งข้อมูล');
                 }
             });
         });
@@ -748,7 +790,7 @@ function loadOPDData(opdId, part = 1) {
         data: { opd_id: opdId },
         dataType: 'json',
         success: function(response) {
-            console.log('OPD data received:', response);
+            // console.log('OPD data received:', response);
             if (response.success) {
                 if (part === 1 || part === undefined) {
                     $('#weight').val(response.data.Weight);
@@ -937,7 +979,7 @@ function deleteImage(imageId, imgContainer) {
                 savedDrawings = savedDrawings.filter(path => !path.includes(data.deleted_file));
                 savedDrawingsInput.value = JSON.stringify(savedDrawings);
             } else {
-                alert('เกิดข้อผิดพลาดในการลบรูปภาพ: ' + data.message);
+                msg_error('เกิดข้อผิดพลาดในการลบรูปภาพ: ' + data.message);
             }
         })
         .catch(error => console.error('Error:', error));
@@ -946,7 +988,7 @@ function deleteImage(imageId, imgContainer) {
 
 function openDrawingModal() {
     if (!canEditPart2) {
-        alert('คุณไม่มีสิทธิ์ในการวาดภาพ');
+        msg_error('คุณไม่มีสิทธิ์ในการวาดภาพ');
         return;
     }
     document.getElementById('drawingModal').style.display = 'block';
@@ -1054,7 +1096,7 @@ function closeDrawingModal() {
 
 function saveDrawing() {
     if (!canEditPart2) {
-        alert('คุณไม่มีสิทธิ์ในการบันทึกภาพ');
+        msg_error('คุณไม่มีสิทธิ์ในการบันทึกภาพ');
         return;
     }
     const imageData = canvas.toDataURL('image/png');
@@ -1088,7 +1130,7 @@ function isDrawingModalOpen() {
 // Event listener สำหรับการอัปโหลดรูปภาพ
 document.getElementById('imageUpload').addEventListener('change', function(e) {
     if (!canEditPart2) {
-        alert('คุณไม่มีสิทธิ์ในการอัปโหลดภาพ');
+        msg_error('คุณไม่มีสิทธิ์ในการอัปโหลดภาพ');
         return;
     }
     const file = e.target.files[0];
