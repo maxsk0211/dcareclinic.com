@@ -171,6 +171,14 @@ $result_bookings = $conn->query($sql_bookings);
         font-size: 1.8rem;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
+    .queue-table .queue-number {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .queue-table .customer-name {
+        font-size: 17px;
+    }
 </style>
 </head>
 <body>
@@ -205,7 +213,7 @@ $result_bookings = $conn->query($sql_bookings);
                             </div>
                             <div class="card-body">
                                 <!-- ในส่วนของตาราง -->
-                                <table class="table table-striped queue-table">
+                                <table class="table table-striped queue-table">                 
                                     <thead>
                                         <tr>
                                             <th>หมายเลขคิว</th>
@@ -219,8 +227,8 @@ $result_bookings = $conn->query($sql_bookings);
                                         <?php if ($result->num_rows > 0): ?>
                                             <?php while($row = $result->fetch_assoc()): ?>
                                             <tr data-queue-id="<?php echo $row['queue_id']; ?>">
-                                                <td><?php echo $row['queue_number']; ?></td>
-                                                <td><?php echo $row['cus_firstname'] . ' ' . $row['cus_lastname']; ?></td>
+                                                <td class="queue-number"><?php echo $row['queue_number']; ?></td>
+                                                <td class="customer-name"><?php echo $row['cus_firstname'] . ' ' . $row['cus_lastname']; ?></td>
                                                 <td><?php echo $row['booking_datetime'] ? date('H:i', strtotime($row['booking_datetime'])) : ($row['queue_time'] ? date('H:i', strtotime($row['queue_time'])) : 'ไม่ระบุ'); ?></td>
                                                 <td><span class="queue-status status-badge status-<?php echo $row['service_status']; ?>"><?php echo getStatusText($row['service_status']); ?></span></td>
                                                 <td class="action-buttons">
@@ -228,17 +236,16 @@ $result_bookings = $conn->query($sql_bookings);
                                                     <?php if($row['service_status'] == 'waiting'): ?>
                                                         <button class="btn btn-sm btn-primary" onclick="updateStatus(<?php echo $row['queue_id']; ?>, 'in_progress')">เริ่มให้บริการ</button>
                                                     <?php elseif($row['service_status'] == 'in_progress'): ?>
-                                                            <a href="opd.php?queue_id=<?php echo $row['queue_id']; ?>" 
-                                                               id="opd-btn-<?php echo $row['queue_id']; ?>" 
-                                                               class="btn btn-sm btn-info opd-btn" 
-                                                               data-queue-id="<?php echo $row['queue_id']; ?>">OPD</a>
-                                                            <a href="service.php?queue_id=<?php echo $row['queue_id']; ?>" 
-                                                               id="service-btn-<?php echo $row['queue_id']; ?>" 
-                                                               class="btn btn-sm btn-success service-btn" 
-                                                               style="display: none;">บริการ</a>
+                                                        <a href="opd.php?queue_id=<?php echo $row['queue_id']; ?>" 
+                                                           id="opd-btn-<?php echo $row['queue_id']; ?>" 
+                                                           class="btn btn-sm btn-info opd-btn" 
+                                                           data-queue-id="<?php echo $row['queue_id']; ?>">OPD</a>
+                                                        <a href="service.php?queue_id=<?php echo $row['queue_id']; ?>" 
+                                                           id="service-btn-<?php echo $row['queue_id']; ?>" 
+                                                           class="btn btn-sm btn-info service-btn d-none" >บริการ</a>
                                                     <?php endif; ?>
                                                     <?php if($row['service_status'] != 'cancelled'): ?>
-                                                        <button class="btn btn-sm btn-danger" onclick="updateStatus(<?php echo $row['queue_id']; ?>, 'cancelled')">ยกเลิก</button>
+                                                        <button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(<?php echo $row['queue_id']; ?>, 'cancelled')">ยกเลิก</button>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
@@ -340,9 +347,14 @@ $result_bookings = $conn->query($sql_bookings);
     <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
 
     <!-- Page JS -->
+
 <script>
 $(document).ready(function() {
-    console.log('Document ready');
+    // เรียกใช้ checkOPDStatus สำหรับคิวที่มีสถานะ 'in_progress'
+    $('.opd-btn').each(function() {
+        var queueId = $(this).data('queue-id');
+        checkOPDStatus(queueId);
+    });
 
     var table = $('.datatables-bookings').DataTable({
         displayLength: 10,
@@ -400,43 +412,43 @@ $(document).ready(function() {
     });
 
     // สำหรับการเลือกลูกค้า
-$('#cus_id').select2({
-    theme: 'bootstrap-5',
-    dropdownParent: $('#addQueueModal'),
-    ajax: {
-        url: 'sql/get-customers.php',
-        dataType: 'json',
-        delay: 250,
-        data: function (params) {
-            return {
-                search: params.term
-            };
+    $('#cus_id').select2({
+        theme: 'bootstrap-5',
+        dropdownParent: $('#addQueueModal'),
+        ajax: {
+            url: 'sql/get-customers.php',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    search: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data
+                };
+            },
+            cache: true
         },
-        processResults: function (data) {
-            return {
-                results: data
-            };
-        },
-        cache: true
-    },
-    placeholder: 'ค้นหาลูกค้า...',
-    minimumInputLength: 1,
-    language: {
-        inputTooShort: function() {
-            return "กรุณาพิมพ์อย่างน้อย 1 ตัวอักษร";
-        },
-        noResults: function() {
-            return "ไม่พบข้อมูลลูกค้า";
-        },
-        searching: function() {
-            return "กำลังค้นหา...";
+        placeholder: 'ค้นหาลูกค้า...',
+        minimumInputLength: 1,
+        language: {
+            inputTooShort: function() {
+                return "กรุณาพิมพ์อย่างน้อย 1 ตัวอักษร";
+            },
+            noResults: function() {
+                return "ไม่พบข้อมูลลูกค้า";
+            },
+            searching: function() {
+                return "กำลังค้นหา...";
+            }
         }
-    }
-}).on('select2:open', function(e) {
-    setTimeout(function() {
-        $('.select2-search__field').get(0).focus();
-    }, 10);
-});
+    }).on('select2:open', function(e) {
+        setTimeout(function() {
+            $('.select2-search__field').get(0).focus();
+        }, 10);
+    });
 
     // สำหรับการเลือกการจอง
     $('#booking_id').select2({
@@ -457,13 +469,6 @@ $('#cus_id').select2({
             $('#walkInFields').hide();
         }
     });
-    function setCurrentTime() {
-        var now = new Date();
-        var hours = now.getHours().toString().padStart(2, '0');
-        var minutes = now.getMinutes().toString().padStart(2, '0');
-        $('#queue_time').val(hours + ':' + minutes);
-    }
-
 
     // เรียกใช้ฟังก์ชันเมื่อเปิด Modal
     $('#addQueueModal').on('show.bs.modal', function () {
@@ -495,14 +500,20 @@ function checkOPDStatus(queueId) {
             var opdBtn = $('#opd-btn-' + queueId);
             var serviceBtn = $('#service-btn-' + queueId);
             console.log("OPD Status Response for queue " + queueId + ":", response);
-            if (response.opd_completed) {
-                opdBtn.removeClass('btn-info').addClass('btn-success');
-                serviceBtn.show();
-                console.log("Queue " + queueId + ": OPD completed, showing service button");
+            if (response.has_opd) {
+                if (response.opd_status === 1) {
+                    opdBtn.removeClass('btn-info').addClass('btn-success');
+                    serviceBtn.removeClass('d-none');
+                    // serviceBtn.show();
+                } else {
+                    opdBtn.removeClass('btn-success').addClass('btn-info');
+                    serviceBtn.addClass('d-none');
+                    // serviceBtn.hide();
+                }
             } else {
                 opdBtn.removeClass('btn-success').addClass('btn-info');
-                serviceBtn.hide();
-                console.log("Queue " + queueId + ": OPD not completed, hiding service button");
+                serviceBtn.addClass('d-none');
+                // serviceBtn.hide();
             }
         },
         error: function(xhr, status, error) {
@@ -532,10 +543,15 @@ function updateStatus(queueId, newStatus) {
                 updateQueueRow(queueId, newStatus);
                 checkOPDStatus(queueId);
                 
+                let message = 'อัพเดทสถานะสำเร็จ';
+                if (newStatus === 'cancelled') {
+                    message = 'ยกเลิกคิวสำเร็จ';
+                }
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'สำเร็จ',
-                    text: 'อัพเดทสถานะสำเร็จ',
+                    text: message,
                     showConfirmButton: false,
                     timer: 1500
                 });
@@ -572,19 +588,43 @@ function updateQueueRow(queueId, newStatus) {
         if (newStatus === 'in_progress') {
             actionButtons = `
                 <a href="opd.php?queue_id=${queueId}" id="opd-btn-${queueId}" class="btn btn-sm btn-info opd-btn" data-queue-id="${queueId}">OPD</a>
-                <a href="service.php?queue_id=${queueId}" id="service-btn-${queueId}" class="btn btn-sm btn-success service-btn" style="display: none;">บริการ</a>
+                <a href="service.php?queue_id=${queueId}" id="service-btn-${queueId}" class="btn btn-sm btn-info service-btn d-none">บริการ</a>
             `;
-            checkOPDStatus(queueId);
         } else if (newStatus === 'waiting') {
             actionButtons = `
                 <button class="btn btn-sm btn-primary" onclick="updateStatus(${queueId}, 'in_progress')">เริ่มให้บริการ</button>
             `;
         }
         if (newStatus !== 'cancelled' && newStatus !== 'completed') {
-            actionButtons += `<button class="btn btn-sm btn-danger" onclick="updateStatus(${queueId}, 'cancelled')">ยกเลิก</button>`;
+            actionButtons += `<button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(${queueId})">ยกเลิก</button>`;
         }
         actionCell.html(actionButtons);
+
+        if (newStatus === 'in_progress') {
+            checkOPDStatus(queueId);
+        }
     }
+}
+function confirmCancelQueue(queueId) {
+    Swal.fire({
+        title: 'ยืนยันการยกเลิก?',
+        text: "คุณแน่ใจหรือไม่ที่จะยกเลิกคิวนี้?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ยกเลิก!',
+        cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ',
+          customClass: {
+            confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
+            cancelButton: 'btn btn-outline-secondary waves-effect'
+          },
+              buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            updateStatus(queueId, 'cancelled');
+        }
+    });
 }
 
 function getStatusText(status) {
@@ -620,45 +660,6 @@ function showOrderDetails(orderId) {
     });
 }
 
-function confirmApprove(url) {
-    Swal.fire({
-        title: 'ยืนยันการอนุมัติ?',
-        text: "คุณต้องการอนุมัติการจองนี้ใช่หรือไม่?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'ใช่, อนุมัติ!',
-        cancelButtonText: 'ยกเลิก',
-        customClass: {
-            confirmButton: 'btn btn-primary me-3',
-            cancelButton: 'btn btn-label-secondary'
-        },
-        buttonsStyling: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = url;
-        }
-    });
-}
-
-function confirmCancel(url) {
-    Swal.fire({
-        title: 'ยืนยันการยกเลิก?',
-        text: "คุณต้องการยกเลิกการจองนี้ใช่หรือไม่?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'ใช่, ยกเลิก!',
-        cancelButtonText: 'ไม่',
-        customClass: {
-            confirmButton: 'btn btn-danger me-3',
-            cancelButton: 'btn btn-label-secondary'
-        },
-        buttonsStyling: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = url;
-        }
-    });
-}
 
 function refreshQueueTable() {
     $.ajax({
@@ -677,11 +678,11 @@ function refreshQueueTable() {
                     } else if (row.service_status == 'in_progress') {
                         actionButtons = `
                             <a href="opd.php?queue_id=${row.queue_id}" id="opd-btn-${row.queue_id}" class="btn btn-sm btn-info opd-btn" data-queue-id="${row.queue_id}">OPD</a>
-                            <a href="service.php?queue_id=${row.queue_id}" id="service-btn-${row.queue_id}" class="btn btn-sm btn-success service-btn" style="display: none;">บริการ</a>
+                            <a href="service.php?queue_id=${row.queue_id}" id="service-btn-${row.queue_id}" class="btn btn-sm btn-info service-btn d-none" >บริการ</a>
                         `;
                     }
                     if (row.service_status != 'cancelled' && row.service_status != 'completed') {
-                        actionButtons += `<button class="btn btn-sm btn-danger" onclick="updateStatus(${row.queue_id}, 'cancelled')">ยกเลิก</button>`;
+                        actionButtons += `<button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(${row.queue_id}, 'cancelled')">ยกเลิก</button>`;
                     }
                     
                     tableBody += `
@@ -706,7 +707,7 @@ function refreshQueueTable() {
                 }
             });
         },
-        error: function() {
+error: function() {
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
@@ -739,7 +740,7 @@ function loadBookings() {
                 select.append('<option value="' + booking.id + '">' + booking.cus_firstname + ' ' + booking.cus_lastname + ' - ' + booking.time + '</option>');
             });
         },
-error: function() {
+        error: function() {
             console.error('ไม่สามารถโหลดข้อมูลการจองได้');
         }
     });
@@ -785,7 +786,6 @@ function addQueue() {
     });
 }
 
-// ฟังก์ชันสำหรับการตั้งค่าเริ่มต้นของ Modal เพิ่มคิวใหม่
 function resetAddQueueModal() {
     $('#addQueueForm')[0].reset();
     $('#booking_type').val('booked').trigger('change');
@@ -796,18 +796,15 @@ function resetAddQueueModal() {
     }
 }
 
-// เพิ่ม event listener สำหรับการเปิด Modal
 $('#addQueueModal').on('show.bs.modal', function (e) {
     resetAddQueueModal();
     loadBookings();
 });
 
-// เพิ่ม event listener สำหรับการปิด Modal
 $('#addQueueModal').on('hidden.bs.modal', function (e) {
     resetAddQueueModal();
 });
 
-// เพิ่ม event listener สำหรับปุ่มบันทึกคิว
 $('#saveQueueBtn').on('click', function() {
     addQueue();
 });
@@ -819,18 +816,23 @@ function updateCurrentTime() {
 }
 
 setInterval(updateCurrentTime, 60000);
+
 $('#queue_time').on('change', function() {
     var timeValue = $(this).val();
     if (timeValue) {
-        // แยกชั่วโมงและนาที
         var [hours, minutes] = timeValue.split(':');
-        // แปลงเป็นตัวเลขและตรวจสอบช่วง
         hours = Math.min(Math.max(parseInt(hours, 10), 0), 23);
         minutes = Math.min(Math.max(parseInt(minutes, 10), 0), 59);
-        // รวมกลับเป็นรูปแบบ HH:MM
         $(this).val(hours.toString().padStart(2, '0') + ':' + minutes.toString().padStart(2, '0'));
     }
 });
+
+function setCurrentTime() {
+    var now = new Date();
+    var hours = now.getHours().toString().padStart(2, '0');
+    var minutes = now.getMinutes().toString().padStart(2, '0');
+    $('#queue_time').val(hours + ':' + minutes);
+}
 </script>
 </body>
 </html>

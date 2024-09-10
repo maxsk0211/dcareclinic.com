@@ -3,44 +3,54 @@ session_start();
 include 'chk-session.php';
 require '../dbcon.php';
 
-$hn = isset($_GET['hn']) ? $_GET['hn'] : '';
-$cus_id = substr($hn, 3); // ตัด HN- ออกเพื่อให้เหลือแค่ตัวเลข
+// เพิ่ม error reporting เพื่อ debug
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// ดึงข้อมูลลูกค้า
-$sql_customer = "SELECT * FROM customer WHERE cus_id = '$cus_id'";
-$result_customer = $conn->query($sql_customer);
-$customer = $result_customer->fetch_assoc();
+$queue_id = isset($_GET['queue_id']) ? intval($_GET['queue_id']) : 0;
+
+if (!$queue_id) {
+    die("ไม่พบข้อมูลคิว");
+}
+
+// ดึงข้อมูลคิวและลูกค้า
+$sql = "SELECT sq.*, c.*, cb.booking_datetime
+        FROM service_queue sq
+        LEFT JOIN customer c ON sq.cus_id = c.cus_id
+        LEFT JOIN course_bookings cb ON sq.booking_id = cb.id
+        WHERE sq.queue_id = $queue_id";
+$result = $conn->query($sql);
+
+if ($result === false) {
+    die("เกิดข้อผิดพลาดในการค้นหาข้อมูล: " . $conn->error);
+}
+
+if ($result->num_rows == 0) {
+    die("ไม่พบข้อมูลคิวที่ระบุ");
+}
+
+$queue_data = $result->fetch_assoc();
+
+$cus_id = $queue_data['cus_id'];
 
 // ดึงข้อมูลคอร์สที่เคยจอง
-$sql_courses = "SELECT DISTINCT od.course_id, c.course_name, c.course_price, cb.booking_datetime
+$sql_courses = "SELECT DISTINCT od.od_id, od.course_id, c.course_name, c.course_price, cb.booking_datetime,
+                       CASE WHEN cu.id IS NOT NULL THEN 1 ELSE 0 END AS is_used,
+                       cu.queue_id AS used_queue_id, cu.used_date
                 FROM course_bookings cb
                 JOIN order_course oc ON cb.id = oc.course_bookings_id
                 JOIN order_detail od ON oc.oc_id = od.oc_id
                 JOIN course c ON od.course_id = c.course_id
+                LEFT JOIN course_usage cu ON od.od_id = cu.od_id
                 WHERE cb.cus_id = '$cus_id'
                 AND cb.booking_datetime >= CURDATE()
                 AND cb.status = 'confirmed'
                 ORDER BY cb.booking_datetime ASC";
 $result_courses = $conn->query($sql_courses);
 
-// สร้าง JSON ของข้อมูลแพทย์
-$sql_doctors = "SELECT * FROM users WHERE position_id = 3"; // สมมติว่า position_id 3 คือแพทย์
-$result_doctors = $conn->query($sql_doctors);
-$doctors = array();
-$result_doctors->data_seek(0);
-while($doctor = $result_doctors->fetch_assoc()) {
-    $doctors[] = array(
-        'id' => $doctor['users_id'],
-        'name' => $doctor['users_fname'] . ' ' . $doctor['users_lname']
-    );
-}
-$doctors_json = json_encode($doctors);
 
-
-// ดึงข้อมูลพยาบาล
-$sql_nurses = "SELECT * FROM users WHERE position_id = 4"; // สมมติว่า position_id 4 คือพยาบาล
-$result_nurses = $conn->query($sql_nurses);
-
+// รีเซ็ตตัวชี้ข้อมูลกลับไปที่จุดเริ่มต้น
+$result_courses->data_seek(0);
 ?>
 
 <!DOCTYPE html>
@@ -226,6 +236,131 @@ $result_nurses = $conn->query($sql_nurses);
             margin-bottom: 15px;
             border-radius: 5px;
         }
+        .course-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .course-item.used {
+            background-color: #f8f9fa;
+            opacity: 0.7;
+        }
+        .course-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .course-date {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        .badge-used {
+            background-color: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+        .customer-info {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .customer-info h5 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .customer-info p {
+            margin-bottom: 10px;
+        }
+        .customer-info strong {
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .service-details .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .service-details .card-title {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .used-courses-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .used-course-item {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .used-course-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .used-course-item .course-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .used-course-item .course-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .used-course-item .course-price {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .used-course-item .usage-date {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .used-course-item .usage-date i {
+            margin-right: 5px;
+        }
+
+        .no-courses {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            color: #6c757d;
+        }
+        .total-price {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            text-align: right;
+            font-size: 1.1em;
+        }
+
+        .total-price strong {
+            margin-right: 10px;
+        }
+
+        .total-price span {
+            color: #28a745;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -256,22 +391,35 @@ $result_nurses = $conn->query($sql_nurses);
                                     </div>
                                     <div class="card-body">
                                         <?php if ($result_courses->num_rows > 0): ?>
-                                            <ul class="list-group">
+                                            <form id="courseSelectionForm">
                                                 <?php while($course = $result_courses->fetch_assoc()): ?>
-                                                    <li class="list-group-item">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" value="<?php echo $course['course_id']; ?>" id="course_<?php echo $course['course_id']; ?>">
-                                                            <label class="form-check-label" for="course_<?php echo $course['course_id']; ?>">
-                                                                <?php echo $course['course_name']; ?> - 
-                                                                <?php echo number_format($course['course_price'], 2); ?> บาท
-                                                                <small class="text-muted ml-2">
-                                                                    (วันที่จอง: <?php echo date('d/m/Y H:i', strtotime($course['booking_datetime'])); ?>)
-                                                                </small>
-                                                            </label>
+                                                    <div class="course-item <?php echo $course['is_used'] ? 'used' : ''; ?>">
+                                                        <div class="course-info">
+                                                            <div>
+                                                                <input class="form-check-input" type="checkbox" 
+                                                                       name="selected_courses[]" 
+                                                                       value="<?php echo $course['od_id']; ?>" 
+                                                                       id="course_<?php echo $course['od_id']; ?>" 
+                                                                       <?php echo $course['is_used'] ? 'disabled checked' : ''; ?>>
+                                                                <label class="form-check-label" for="course_<?php echo $course['od_id']; ?>">
+                                                                    <?php echo $course['course_name']; ?> - 
+                                                                    <?php echo number_format($course['course_price'], 2); ?> บาท
+                                                                </label>
+                                                            </div>
+                                                            <?php if ($course['is_used']): ?>
+                                                                <span class="badge-used">ใช้งานแล้ว</span>
+                                                            <?php endif; ?>
                                                         </div>
-                                                    </li>
+                                                        <div class="course-date">
+                                                            วันที่จอง: <?php echo date('d/m/Y H:i', strtotime($course['booking_datetime'])); ?>
+                                                            <?php if ($course['is_used']): ?>
+                                                                <br>วันที่ใช้บริการ: <?php echo date('d/m/Y H:i', strtotime($course['used_date'])); ?>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
                                                 <?php endwhile; ?>
-                                            </ul>
+                                                <button type="submit" class="btn btn-primary mt-3">บันทึกการใช้บริการ</button>
+                                            </form>
                                         <?php else: ?>
                                             <p class="text-muted">ไม่พบคอร์สที่จองไว้สำหรับวันนี้หรือในอนาคต</p>
                                         <?php endif; ?>
@@ -281,46 +429,72 @@ $result_nurses = $conn->query($sql_nurses);
                             <div class="col-md-6">
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        <h5 class="card-title">ข้อมูลลูกค้า</h5>
+                                        <h5 class="card-title"><i class="ri-user-fill mr-2"></i> ข้อมูลลูกค้า</h5>
                                     </div>
                                     <div class="card-body">
-                                        <p><strong>HN:</strong> <?php echo $hn; ?></p>
-                                        <p><strong>ชื่อ-นามสกุล:</strong> <?php echo $customer['cus_firstname'] . ' ' . $customer['cus_lastname']; ?></p>
-                                        <p><strong>เบอร์โทร:</strong> <?php echo $customer['cus_tel']; ?></p>
-                                        <!-- เพิ่มข้อมูลลูกค้าอื่นๆ ตามต้องการ -->
+                                        <div class="customer-info">
+                                            <h5>ข้อมูลส่วนตัว</h5>
+                                            <p><strong>รหัสลูกค้า (HN):</strong> <?php echo 'HN-' . str_pad($queue_data['cus_id'], 6, '0', STR_PAD_LEFT); ?></p>
+                                            <p><strong>ชื่อ-นามสกุล:</strong> <?php echo $queue_data['cus_firstname'] . ' ' . $queue_data['cus_lastname']; ?></p>
+                                            <p><strong>ชื่อเล่น:</strong> <?php echo $queue_data['cus_nickname']; ?></p>
+                                            <p><strong>เพศ:</strong> <?php echo $queue_data['cus_gender']; ?></p>
+                                            <p><strong>วันเกิด:</strong> <?php echo date('d/m/Y', strtotime($queue_data['cus_birthday'])); ?></p>
+                                            <p><strong>เลขบัตรประชาชน:</strong> <?php echo $queue_data['cus_id_card_number']; ?></p>
+                                            <p><strong>กรุ๊ปเลือด:</strong> <?php echo $queue_data['cus_blood']; ?></p>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="card-title"><i class="ri-file-list-3-fill mr-2"></i> รายละเอียดบริการ</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4 service-details">
+                                    <div class="card-header">
+                                        <h5 class="card-title"><i class="ri-file-list-3-line mr-2"></i> รายละเอียดบริการ</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6 class="mb-3">คอร์สที่ใช้บริการในครั้งนี้:</h6>
+                                        <?php
+                                        $sql_used_courses = "SELECT c.course_name, c.course_price, cu.used_date
+                                                             FROM course_usage cu
+                                                             JOIN order_detail od ON cu.od_id = od.od_id
+                                                             JOIN course c ON od.course_id = c.course_id
+                                                             WHERE cu.queue_id = $queue_id";
+                                        $result_used_courses = $conn->query($sql_used_courses);
+                                        if ($result_used_courses->num_rows > 0): ?>
+                                            <div class="used-courses-list">
+                                                <?php while($used_course = $result_used_courses->fetch_assoc()): ?>
+                                                    <div class="used-course-item">
+                                                        <div class="course-info">
+                                                            <span class="course-name"><?php echo $used_course['course_name']; ?></span>
+                                                            <span class="course-price"><?php echo number_format($used_course['course_price'], 2); ?> บาท</span>
+                                                        </div>
+                                                        <div class="usage-date">
+                                                            <i class="ri-time-line"></i> <?php echo date('d/m/Y H:i', strtotime($used_course['used_date'])); ?>
+                                                        </div>
+                                                    </div>
+                                                <?php endwhile; ?>
+                                                <?php
+                                                    $total_price = 0;
+                                                    $result_used_courses->data_seek(0); // รีเซ็ตตัวชี้ข้อมูล
+                                                    while($used_course = $result_used_courses->fetch_assoc()) {
+                                                        $total_price += $used_course['course_price'];
+                                                    }
+                                                    ?>
+                                                    <div class="total-price">
+                                                        <strong>ราคารวม:</strong> <span><?php echo number_format($total_price, 2); ?> บาท</span>
+                                                    </div>
+                                            </div>
+                                        <?php else: ?>
+                                            <p class="text-muted no-courses">ยังไม่มีการใช้บริการคอร์สในครั้งนี้</p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <form id="serviceForm">
-                                    <div id="selectedCourses" class="mb-4">
-                                        <h6 class="mb-3">คอร์สที่เลือก:</h6>
-                                        <!-- รายการคอร์สที่เลือกจะถูกเพิ่มที่นี่ด้วย JavaScript -->
-                                    </div>
-                                    <div id="doctorContainer" class="mb-4">
-                                        <h6 class="mb-3">แพทย์:</h6>
-                                        <!-- ส่วนของแพทย์จะถูกเพิ่มที่นี่ด้วย JavaScript -->
-                                    </div>
-                                    <button type="button" class="btn btn-secondary mb-3" id="addDoctor"><i class="ri-user-add-fill mr-1"></i> เพิ่มแพทย์</button>
-                                    <div id="nurseContainer" class="mb-4">
-                                        <h6 class="mb-3">พยาบาล:</h6>
-                                        <!-- ส่วนของพยาบาลจะถูกเพิ่มที่นี่ด้วย JavaScript -->
-                                    </div>
-                                    <button type="button" class="btn btn-secondary mb-3" id="addNurse"><i class="ri-nurse-fill mr-1"></i> เพิ่มพยาบาล</button>
-                                    <div class="mb-3">
-                                        <label for="note" class="form-label">หมายเหตุ</label>
-                                        <textarea class="form-control" id="note" name="note" rows="3"></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary"><i class="ri-save-fill mr-1"></i> บันทึกข้อมูล</button>
-                                </form>
-                            </div>
+                            <div class="col-md-6"></div>
                         </div>
+                        
                     <!-- / Content -->
 
                     <!-- Footer -->
@@ -348,115 +522,43 @@ $result_nurses = $conn->query($sql_nurses);
 
     <!-- Page JS -->
 <script>
-    var doctors = <?php echo $doctors_json; ?>;
+ 
 
-$(document).ready(function() {
-    // เพิ่มคอร์สที่เลือกลงในรายการ
-    $('input[type="checkbox"]').change(function() {
-        updateSelectedCourses();
-    });
-
-    // เพิ่มแพทย์
-    $('#addDoctor').click(function() {
-        addDoctorField();
-    });
-
-    // เพิ่มพยาบาล
-    $('#addNurse').click(function() {
-        addNurseField();
-    });
-
-    // บันทึกข้อมูล
-    $('#serviceForm').submit(function(e) {
+  document.getElementById('courseSelectionForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        // ทำการบันทึกข้อมูลที่นี่
-        console.log('บันทึกข้อมูล');
-    });
-
-    function updateSelectedCourses() {
-        var selectedCourses = '';
-        $('input[type="checkbox"]:checked').each(function() {
-            var courseId = $(this).val();
-            var courseName = $(this).next('label').text();
-            selectedCourses += '<div class="mb-3">' + courseName + '</div>';
-        });
-        $('#selectedCourses').html(selectedCourses);
-    }
-
-    function addDoctorField() {
-            var doctorHtml = `
-                <div class="mb-3 doctor-field">
-                    <label class="form-label">แพทย์</label>
-                    <select class="form-select doctor-select" name="doctor[]">
-                        <option value="">เลือกแพทย์</option>
-                        ${doctors.map(doctor => `<option value="${doctor.id}">${doctor.name}</option>`).join('')}
-                    </select>
-                    <div class="input-group mt-2">
-                        <input type="number" class="form-control doctor-df" name="doctor_df[]" min="0" max="100" placeholder="DF">
-                        <select class="form-select doctor-df-type" name="doctor_df_type[]">
-                            <option value="amount">บาท</option>
-                            <option value="percent">%</option>
-                        </select>
-                        <button type="button" class="btn btn-danger remove-doctor">ลบ</button>
-                    </div>
-                </div>
-            `;
-            $('#doctorContainer').append(doctorHtml);
+        var selectedCourses = Array.from(document.querySelectorAll('input[name="selected_courses[]"]:checked'))
+                                   .map(el => el.value);
+        
+        if (selectedCourses.length === 0) {
+            alert('กรุณาเลือกคอร์สอย่างน้อยหนึ่งรายการ');
+            return;
         }
 
-     // เพิ่มแพทย์
-        $('#addDoctor').click(function() {
-            addDoctorField();
+        // ส่งข้อมูลไปยัง server ด้วย AJAX
+        fetch('sql/update-course-usage.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                queue_id: <?php echo $queue_id; ?>,
+                selected_courses: selectedCourses
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('บันทึกการใช้บริการสำเร็จ');
+                location.reload(); // รีโหลดหน้าเพื่อแสดงสถานะใหม่
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         });
-
-        // ลบแพทย์
-        $(document).on('click', '.remove-doctor', function() {
-            $(this).closest('.doctor-field').remove();
-        });
-
-        // เพิ่มแพทย์เริ่มต้นหนึ่งคน
-        // addDoctorField();
-
-    function addNurseField() {
-        var nurseHtml = `
-            <div class="mb-3 nurse-field">
-                <label class="form-label">พยาบาล</label>
-                <select class="form-select nurse-select" name="nurse[]">
-                    <option value="">เลือกพยาบาล</option>
-                    <?php 
-                    $result_nurses->data_seek(0);
-                    while($nurse = $result_nurses->fetch_assoc()): 
-                    ?>
-                        <option value="<?php echo $nurse['users_id']; ?>"><?php echo $nurse['users_fname'] . ' ' . $nurse['users_lname']; ?></option>
-                    <?php endwhile; ?>
-                </select>
-                <div class="input-group mt-2">
-                    <input type="number" class="form-control nurse-df" name="nurse_df[]" min="0" max="100" placeholder="DF">
-                    <select class="form-select nurse-df-type" name="nurse_df_type[]">
-                        <option value="amount">บาท</option>
-                        <option value="percent">%</option>
-                    </select>
-                    <button type="button" class="btn btn-danger remove-nurse">ลบ</button>
-                </div>
-            </div>
-        `;
-        $('#nurseContainer').append(nurseHtml);
-    }
-
-    // ลบแพทย์
-    $(document).on('click', '.remove-doctor', function() {
-        $(this).closest('.doctor-field').remove();
     });
-
-    // ลบพยาบาล
-    $(document).on('click', '.remove-nurse', function() {
-        $(this).closest('.nurse-field').remove();
-    });
-
-    // เพิ่มแพทย์และพยาบาลเริ่มต้นหนึ่งคน
-    addDoctorField();
-    addNurseField();
-});
 </script>
 </body>
 </html>

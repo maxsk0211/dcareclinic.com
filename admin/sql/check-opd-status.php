@@ -13,10 +13,9 @@ if (isset($_GET['queue_id'])) {
     
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        $opd_completed = ($row['opd_status'] == 1);
-        echo json_encode(['opd_completed' => $opd_completed]);
+        echo json_encode(['has_opd' => true, 'opd_status' => $row['opd_status']]);
     } else {
-        echo json_encode(['opd_completed' => false]);
+        echo json_encode(['has_opd' => false, 'opd_status' => 0]);
     }
     
     $stmt->close();
