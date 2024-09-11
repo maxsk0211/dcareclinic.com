@@ -138,7 +138,6 @@ $result_details = $conn->query($sql_details);
 
                     <div class="container-xxl flex-grow-1 container-p-y">
                         <h4 class="fw-bold py-3 mb-4">แก้ไขคำสั่งซื้อ #<?php echo $order_id; ?></h4>
-                        
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="card mb-4">
@@ -154,12 +153,12 @@ $result_details = $conn->query($sql_details);
                                             
                                             <div class="mb-3">
                                                 <label class="form-label">วันที่นัดรับบริการ</label>
-                                                <input type="datetime-local" class="form-control" name="booking_datetime" value="<?php echo date('Y-m-d\TH:i', strtotime($order['booking_datetime'])); ?>">
+                                                <input type="datetime-local" class="form-control" name="booking_datetime" id="booking_datetime" value="<?php echo date('Y-m-d\TH:i', strtotime($order['booking_datetime'])); ?>">
                                             </div>
                                             
                                             <div class="mb-3">
                                                 <label class="form-label">สถานะการชำระเงิน</label>
-                                                <select class="form-select" name="order_payment">
+                                                <select class="form-select" name="order_payment" id="payment_method">
                                                     <option value="ยังไม่จ่ายเงิน" <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'selected' : ''; ?>>ยังไม่จ่ายเงิน</option>
                                                     <option value="จ่ายแล้ว" <?php echo ($order['order_payment'] == 'จ่ายแล้ว') ? 'selected' : ''; ?>>จ่ายแล้ว</option>
                                                 </select>
@@ -167,116 +166,13 @@ $result_details = $conn->query($sql_details);
                                             
                                             <h6 class="mb-3">รายการคอร์ส</h6>
                                             <div id="courseList">
-                                                <?php while ($detail = $result_details->fetch_assoc()): ?>
-                                                    <div class="course-item" data-course-id="<?php echo $detail['course_id']; ?>">
-                                                        <div class="row">
-                                                            <div class="col-md-6 mb-2">
-                                                                <input type="text" class="form-control" name="course_name[]" value="<?php echo $detail['course_name']; ?>" readonly>
-                                                            </div>
-                                                            <div class="col-md-2 mb-2">
-                                                                <input type="number" class="form-control" name="course_amount[]" value="<?php echo $detail['od_amount']; ?>" min="1">
-                                                            </div>
-                                                            <div class="col-md-3 mb-2">
-                                                                <input type="number" class="form-control" name="course_price[]" value="<?php echo $detail['od_price']; ?>" step="0.01">
-                                                            </div>
-                                                            <div class="col-md-1 mb-2">
-                                                                <button type="button" class="btn btn-danger btn-sm remove-course">ลบ</button>
-                                                            </div>
-                                                        </div>
-                                                        
-<div class="course-resources">
-    <h6>ทรัพยากรที่ใช้จริง:</h6>
-    <table class="table table-bordered table-striped resource-table">
-        <thead>
-            <tr>
-                <th>ทรัพยากร</th>
-                <th>ประเภท</th>
-                <th>จำนวน</th>
-                <th>หน่วยนับ</th>
-                <th>การดำเนินการ</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php
-        // ตรวจสอบว่ามีข้อมูลใน order_course_resources หรือไม่
-        $sql_check = "SELECT COUNT(*) as count FROM order_course_resources WHERE order_id = $order_id AND course_id = {$detail['course_id']}";
-        $result_check = $conn->query($sql_check);
-        $row_check = $result_check->fetch_assoc();
-
-        if ($row_check['count'] == 0) {
-            // ถ้าไม่มีข้อมูล ให้เพิ่มข้อมูลจาก course_resources
-            $sql_insert = "INSERT INTO order_course_resources (order_id, course_id, resource_type, resource_id, quantity)
-                           SELECT $order_id, {$detail['course_id']}, resource_type, resource_id, quantity
-                           FROM course_resources
-                           WHERE course_id = {$detail['course_id']}";
-            $conn->query($sql_insert);
-        }
-
-        // ดึงข้อมูลจาก order_course_resources
-        $sql_resources = "SELECT ocr.*, 
-                                 d.drug_name, d.drug_unit_id,
-                                 t.tool_name, t.tool_unit_id,
-                                 a.acc_name, a.acc_unit_id,
-                                 u.unit_name
-                          FROM order_course_resources ocr
-                          LEFT JOIN drug d ON ocr.resource_id = d.drug_id AND ocr.resource_type = 'drug'
-                          LEFT JOIN tool t ON ocr.resource_id = t.tool_id AND ocr.resource_type = 'tool'
-                          LEFT JOIN accessories a ON ocr.resource_id = a.acc_id AND ocr.resource_type = 'accessory'
-                          LEFT JOIN unit u ON 
-                              CASE 
-                                  WHEN ocr.resource_type = 'drug' THEN d.drug_unit_id = u.unit_id
-                                  WHEN ocr.resource_type = 'tool' THEN t.tool_unit_id = u.unit_id
-                                  WHEN ocr.resource_type = 'accessory' THEN a.acc_unit_id = u.unit_id
-                              END
-                          WHERE ocr.order_id = $order_id AND ocr.course_id = {$detail['course_id']}";
-        
-        $result_resources = $conn->query($sql_resources);
-        while ($resource = $result_resources->fetch_assoc()):
-            $resource_name = '';
-            $resource_type = '';
-            switch ($resource['resource_type']) {
-                case 'drug':
-                    $resource_name = $resource['drug_name'];
-                    $resource_type = 'ยา';
-                    break;
-                case 'tool':
-                    $resource_name = $resource['tool_name'];
-                    $resource_type = 'เครื่องมือ';
-                    break;
-                case 'accessory':
-                    $resource_name = $resource['acc_name'];
-                    $resource_type = 'อุปกรณ์เสริม';
-                    break;
-            }
-        ?>
-            <tr>
-                <td><?php echo $resource_name; ?></td>
-                <td><?php echo $resource_type; ?></td>
-                <td>
-                    <input type="number" class="form-control resource-quantity" 
-                           name="resource[<?php echo $resource['id']; ?>][quantity]" 
-                           value="<?php echo $resource['quantity']; ?>" step="0.01"
-                           data-resource-id="<?php echo $resource['id']; ?>">
-                </td>
-                <td><?php echo $resource['unit_name']; ?></td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm remove-resource" 
-                            data-resource-id="<?php echo $resource['id']; ?>">ลบ</button>
-                </td>
-            </tr>
-        <?php endwhile; ?>
-        </tbody>
-    </table>
-    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addResourceModal">เพิ่มทรัพยากร</button>
-</div>
-                                                    </div>
-                                                <?php endwhile; ?>
+                                                <!-- รายการคอร์สจะถูกเพิ่มที่นี่ด้วย JavaScript -->
                                             </div>
-                                            
-                                            <button type="button" class="btn btn-primary mb-3" id="addCourse">เพิ่มคอร์ส</button>
+                                            <button type="button" class="btn btn-primary mb-3" onclick="addNewCourse()">เพิ่มคอร์ส</button>
                                             
                                             <div class="text-end mt-3">
-                                                <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+                                                <h5>ราคารวม: <span id="totalPrice">0</span> บาท</h5>
+                                                <button type="button" class="btn btn-primary" onclick="saveOrder()">บันทึกการแก้ไข</button>
                                                 <a href="service.php" class="btn btn-secondary">ยกเลิก</a>
                                             </div>
                                         </form>
@@ -284,6 +180,7 @@ $result_details = $conn->query($sql_details);
                                 </div>
                             </div>
                         </div>
+                        
                     </div>
                     <?php include 'footer.php'; ?>
                 </div>
@@ -291,46 +188,84 @@ $result_details = $conn->query($sql_details);
         </div>
     </div>
 
+ <!-- Template สำหรับรายการคอร์ส -->
+    <template id="courseTemplate">
+        <div class="course-item mb-3" data-course-id="">
+            <div class="row">
+                <div class="col-md-4">
+                    <select class="form-select course-select" onchange="updateCourseDetails(this)">
+                        <option value="">เลือกคอร์ส</option>
+                        <!-- ตัวเลือกคอร์สจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control course-amount" value="1" min="1" onchange="updateTotalPrice()">
+                </div>
+                <div class="col-md-3">
+                    <input type="number" class="form-control course-price" readonly>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>
+                    <button type="button" class="btn btn-info" onclick="showResourceModal(this)">จัดการทรัพยากร</button>
+                </div>
+            </div>
+            <div class="resources-table mt-2">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ประเภท</th>
+                            <th>ชื่อทรัพยากร</th>
+                            <th>จำนวน</th>
+                            <th>หน่วย</th>
+                            <th>การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- รายการทรัพยากรจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </template>
 
-<!-- Modal -->
-<!-- Modal -->
-<div class="modal fade" id="addResourceModal" tabindex="-1" aria-labelledby="addResourceModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addResourceModalLabel">เพิ่มทรัพยากร</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addResourceForm" onsubmit="return false;">
-          <div class="mb-3">
-            <label for="resourceType" class="form-label">ประเภททรัพยากร</label>
-            <select class="form-select" id="resourceType" required>
-              <option value="">เลือกประเภททรัพยากร</option>
-              <option value="drug">ยา</option>
-              <option value="tool">เครื่องมือ</option>
-              <option value="accessory">อุปกรณ์เสริม</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="resourceId" class="form-label">ทรัพยากร</label>
-            <select class="form-select" id="resourceId" required disabled>
-              <option value="">เลือกทรัพยากร</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="resourceQuantity" class="form-label">จำนวน</label>
-            <input type="number" class="form-control" id="resourceQuantity" min="0.01" step="0.01" required>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-        <button type="button" class="btn btn-primary" id="saveResource">บันทึก</button>
-      </div>
+    <!-- Modal สำหรับจัดการทรัพยากร -->
+    <div class="modal fade" id="resourceModal" tabindex="-1" aria-labelledby="resourceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resourceModalLabel">จัดการทรัพยากร</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addResourceForm">
+                        <div class="mb-3">
+                            <label for="resourceType" class="form-label">ประเภททรัพยากร</label>
+                            <select class="form-select" id="resourceType" required>
+                                <option value="">เลือกประเภท</option>
+                                <option value="drug">ยา</option>
+                                <option value="tool">เครื่องมือ</option>
+                                <option value="accessory">อุปกรณ์เสริม</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="resourceId" class="form-label">ทรัพยากร</label>
+                            <select class="form-select" id="resourceId" required>
+                                <option value="">เลือกทรัพยากร</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="resourceQuantity" class="form-label">จำนวน</label>
+                            <input type="number" class="form-control" id="resourceQuantity" required min="0.01" step="0.01">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-primary" onclick="addResource()">เพิ่มทรัพยากร</button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
 
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
@@ -345,130 +280,289 @@ $result_details = $conn->query($sql_details);
     <script src="../assets/js/main.js"></script>
 
     <script>
+let currentOrderId;
+
+function loadExistingOrder() {
+    currentOrderId = document.querySelector('input[name="order_id"]').value;
+    $.ajax({
+        url: 'sql/get-order-details.php',
+        type: 'GET',
+        data: { id: currentOrderId },
+        success: function(response) {
+            const orderDetails = JSON.parse(response);
+            $('#booking_datetime').val(orderDetails.booking_datetime);
+            $('#payment_method').val(orderDetails.payment_status);
+            
+            orderDetails.courses.forEach(course => {
+                addCourseToList(course);
+            });
+            
+            updateTotalPrice();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading order details:', error);
+        }
+    });
+}
+
+function addCourseToList(course) {
+    const courseList = document.getElementById('courseList');
+    const courseItem = document.createElement('div');
+    courseItem.className = 'course-item mb-3';
+    courseItem.dataset.courseId = course.id;
+    
+    courseItem.innerHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                <input type="text" class="form-control course-name" value="${course.name}" readonly>
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control course-amount" value="${course.amount}" min="1" onchange="updateCourse(this)">
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control course-price" value="${course.price}" onchange="updateCourse(this)">
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>
+            </div>
+        </div>
+        <div class="resources-table mt-2">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ประเภท</th>
+                        <th>ชื่อทรัพยากร</th>
+                        <th>จำนวน</th>
+                        <th>หน่วย</th>
+                        <th>การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${course.resources.map(resource => `
+                        <tr data-resource-id="${resource.id}">
+                            <td>${resource.type}</td>
+                            <td>${resource.name}</td>
+                            <td><input type="number" value="${resource.quantity}" min="0.01" step="0.01" onchange="updateResource(this)"></td>
+                            <td>${resource.unit}</td>
+                            <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-info" onclick="showResourceModal(this)">เพิ่มทรัพยากร</button>
+        </div>
+    `;
+    
+    courseList.appendChild(courseItem);
+}
+
+function updateCourse(input) {
+    const courseItem = input.closest('.course-item');
+    const courseId = courseItem.dataset.courseId;
+    const amount = courseItem.querySelector('.course-amount').value;
+    const price = courseItem.querySelector('.course-price').value;
+    
+    $.ajax({
+        url: 'sql/update-course.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            course_id: courseId,
+            amount: amount,
+            price: price
+        },
+        success: function(response) {
+            console.log('Course updated successfully');
+            updateTotalPrice();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error updating course:', error);
+        }
+    });
+}
+
+function removeCourse(button) {
+    const courseItem = button.closest('.course-item');
+    const courseId = courseItem.dataset.courseId;
+    
+    $.ajax({
+        url: 'sql/remove-course.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            course_id: courseId
+        },
+        success: function(response) {
+            console.log('Course removed successfully');
+            courseItem.remove();
+            updateTotalPrice();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error removing course:', error);
+        }
+    });
+}
+
+function updateResource(input) {
+    const row = input.closest('tr');
+    const resourceId = row.dataset.resourceId;
+    const quantity = input.value;
+    
+    $.ajax({
+        url: 'sql/update-resource.php',
+        type: 'POST',
+        data: {
+            resource_id: resourceId,
+            quantity: quantity
+        },
+        success: function(response) {
+            console.log('Resource updated successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error updating resource:', error);
+        }
+    });
+}
+
+function removeResource(button) {
+    const row = button.closest('tr');
+    const resourceId = row.dataset.resourceId;
+    
+    $.ajax({
+        url: 'sql/remove-resource.php',
+        type: 'POST',
+        data: {
+            resource_id: resourceId
+        },
+        success: function(response) {
+            console.log('Resource removed successfully');
+            row.remove();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error removing resource:', error);
+        }
+    });
+}
+
+function showResourceModal(button) {
+    currentCourseItem = button.closest('.course-item');
+    $('#resourceModal').modal('show');
+}
+
+function addResource() {
+    const type = $('#resourceType').val();
+    const id = $('#resourceId').val();
+    const quantity = $('#resourceQuantity').val();
+    const name = $('#resourceId option:selected').text();
+    const unit = ''; // ต้องดึงข้อมูลหน่วยนับจากฐานข้อมูล
+    
+    $.ajax({
+        url: 'sql/add-resource.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            course_id: currentCourseItem.dataset.courseId,
+            resource_type: type,
+            resource_id: id,
+            quantity: quantity
+        },
+        success: function(response) {
+            console.log('Resource added successfully');
+            const newRow = `
+                <tr data-resource-id="${response.resource_id}">
+                    <td>${type}</td>
+                    <td>${name}</td>
+                    <td><input type="number" value="${quantity}" min="0.01" step="0.01" onchange="updateResource(this)"></td>
+                    <td>${unit}</td>
+                    <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+            `;
+            currentCourseItem.querySelector('.resources-table tbody').insertAdjacentHTML('beforeend', newRow);
+            $('#resourceModal').modal('hide');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error adding resource:', error);
+        }
+    });
+}
+
+function updateTotalPrice() {
+    let total = 0;
+    document.querySelectorAll('.course-item').forEach(item => {
+        const price = parseFloat(item.querySelector('.course-price').value);
+        const amount = parseInt(item.querySelector('.course-amount').value);
+        total += price * amount;
+    });
+    document.getElementById('totalPrice').textContent = total.toFixed(2);
+    
+    // Update total price in database
+    $.ajax({
+        url: 'sql/update-total-price.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            total_price: total
+        },
+        success: function(response) {
+            console.log('Total price updated successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error updating total price:', error);
+        }
+    });
+}
+
+// Load existing order when page loads
 $(document).ready(function() {
-    // เมื่อเปลี่ยนประเภททรัพยากร
-    $('#resourceType').change(function() {
-        var resourceType = $(this).val();
-        if (resourceType) {
-            $.ajax({
-                url: 'sql/get-resources.php',
-                type: 'GET',
-                data: { type: resourceType },
-                dataType: 'json',
-                success: function(resources) {
-                    var options = '<option value="">เลือกทรัพยากร</option>';
-                    resources.forEach(function(resource) {
-                        options += '<option value="' + resource.id + '">' + resource.name + '</option>';
-                    });
-                    $('#resourceId').html(options).prop('disabled', false);
-                }
-            });
-        } else {
-            $('#resourceId').html('<option value="">เลือกทรัพยากร</option>').prop('disabled', true);
-        }
-    });
-
-    // เมื่อกดปุ่มบันทึกใน modal
-    $('#saveResource').click(function() {
-        var resourceType = $('#resourceType').val();
-        var resourceId = $('#resourceId').val();
-        var quantity = $('#resourceQuantity').val();
-
-        // ตรวจสอบว่าเลือกรายการครบหรือไม่
-        if (!resourceType || !resourceId || !quantity) {
-            alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
-            return;
-        }
-
-        var orderId = $('input[name="order_id"]').val();
-        var courseId = $('.course-item').data('course-id');
-
-        $.ajax({
-            url: 'sql/add-order-resource.php',
-            type: 'POST',
-            data: {
-                order_id: orderId,
-                course_id: courseId,
-                resource_type: resourceType,
-                resource_id: resourceId,
-                quantity: quantity
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    $('#addResourceModal').modal('hide');
-                    location.reload(); // รีโหลดหน้าเพื่อแสดงทรัพยากรใหม่
-                } else {
-                    alert('เกิดข้อผิดพลาดในการเพิ่มทรัพยากร: ' + response.message);
-                }
-            }
-        });
-    });
-
-    // เมื่อเปลี่ยนแปลงจำนวนทรัพยากร
-    $('.resource-quantity').change(function() {
-        var resourceId = $(this).data('resource-id');
-        var quantity = $(this).val();
-        var orderId = $('input[name="order_id"]').val();
-
-        $.ajax({
-            url: 'sql/update-order-resource.php',
-            type: 'POST',
-            data: {
-                order_id: orderId,
-                resource_id: resourceId,
-                quantity: quantity
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (!response.success) {
-                    alert('เกิดข้อผิดพลาดในการอัพเดททรัพยากร');
-                }
-            }
-        });
-    });
-
-    // รีเซ็ตฟอร์มเมื่อปิด modal
-    $('#addResourceModal').on('hidden.bs.modal', function () {
-        $('#addResourceForm')[0].reset();
-        $('#resourceId').html('<option value="">เลือกทรัพยากร</option>').prop('disabled', true);
-    });
-
-    // เมื่อกดปุ่มลบทรัพยากร
-    $('.remove-resource').click(function() {
-        var resourceId = $(this).data('resource-id');
-        var orderId = $('input[name="order_id"]').val();
-
-        if (confirm('คุณแน่ใจหรือไม่ที่จะลบทรัพยากรนี้?')) {
-            $.ajax({
-                url: 'sql/delete-order-resource.php',
-                type: 'POST',
-                data: {
-                    order_id: orderId,
-                    resource_id: resourceId
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        location.reload(); // รีโหลดหน้าเพื่อแสดงการเปลี่ยนแปลง
-                    } else {
-                        alert('เกิดข้อผิดพลาดในการลบทรัพยากร');
-                    }
-                }
-            });
-        }
-    });
-
-    // ป้องกันการกด Enter ใน modal
-    $('#addResourceModal').on('keypress', function(event) {
-        if (event.keyCode === 13) { // 13 คือ keyCode ของปุ่ม Enter
-            event.preventDefault();
-            return false;
-        }
-    });
-
-
+    loadExistingOrder();
 });
+
+// Auto-save when changing booking datetime or payment status
+$('#booking_datetime, #payment_method').on('change', function() {
+    $.ajax({
+        url: 'sql/update-order-details.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            booking_datetime: $('#booking_datetime').val(),
+            payment_status: $('#payment_method').val()
+        },
+        success: function(response) {
+            console.log('Order details updated successfully');
+        },
+error: function(xhr, status, error) {
+            console.error('Error updating order details:', error);
+        }
+    });
+});
+
+// Function to load resources for the modal
+function loadResources(type) {
+    $.ajax({
+        url: 'sql/get-resources.php',
+        type: 'GET',
+        data: { type: type },
+        success: function(response) {
+            const resources = JSON.parse(response);
+            const select = $('#resourceId');
+            select.empty();
+            select.append('<option value="">เลือกทรัพยากร</option>');
+            resources.forEach(resource => {
+                select.append(`<option value="${resource.id}">${resource.name}</option>`);
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading resources:', error);
+        }
+    });
+}
+
+// Event listener for resource type change
+$('#resourceType').on('change', function() {
+    loadResources($(this).val());
+});
+
+// No need for a separate save button, as everything is auto-saved
 
 
     </script>

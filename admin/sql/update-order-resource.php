@@ -3,15 +3,17 @@ require '../../dbcon.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $order_id = intval($_POST['order_id']);
+    $course_id = intval($_POST['course_id']);
+    $resource_type = $_POST['resource_type'];
     $resource_id = intval($_POST['resource_id']);
     $quantity = floatval($_POST['quantity']);
 
-    $sql = "UPDATE order_course_resources 
-            SET quantity = ? 
-            WHERE order_id = ? AND id = ?";
+    $sql = "INSERT INTO order_course_resources (order_id, course_id, resource_type, resource_id, quantity) 
+            VALUES (?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE quantity = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("dii", $quantity, $order_id, $resource_id);
+    $stmt->bind_param("iisidi", $order_id, $course_id, $resource_type, $resource_id, $quantity, $quantity);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
@@ -21,4 +23,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
 }
-?>

@@ -1,179 +1,125 @@
 <?php
-session_start();
 require '../../dbcon.php';
 
-if (isset($_GET['order_id'])) {
-    function formatOrderId($orderId) {
-    return 'ORDER-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
-}
-    $order_id = mysqli_real_escape_string($conn, $_GET['order_id']);
-    
-    $sql = "SELECT oc.*, cb.booking_datetime, cu.cus_firstname, cu.cus_lastname, cu.cus_tel, cu.cus_email,
-            od.*, c.course_name, u.users_fname, u.users_lname , oc.users_id as u_id
-            FROM order_course oc
-            JOIN course_bookings cb ON oc.course_bookings_id = cb.id
-            JOIN customer cu ON cb.cus_id = cu.cus_id
-            JOIN order_detail od ON oc.oc_id = od.oc_id
-            JOIN course c ON od.course_id = c.course_id
-            LEFT JOIN users u ON oc.users_id = u.users_id
-            WHERE oc.oc_id = '$order_id'";
-    
-    $result = $conn->query($sql);
+$order_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-
-function convertToThaiDate($date) {
-    $thai_months = [
-        1 => 'ม.ค.', 2 => 'ก.พ.', 3 => 'มี.ค.', 4 => 'เม.ย.', 5 => 'พ.ค.', 6 => 'มิ.ย.',
-        7 => 'ก.ค.', 8 => 'ส.ค.', 9 => 'ก.ย.', 10 => 'ต.ค.', 11 => 'พ.ย.', 12 => 'ธ.ค.'
-    ];
-
-    $date_parts = explode(' ', $date);
-    $time = isset($date_parts[1]) ? $date_parts[1] : '';
-    $date_parts = explode('-', $date_parts[0]);
-    
-    $day = intval($date_parts[2]);
-    $month = $thai_months[intval($date_parts[1])];
-    $year = intval($date_parts[0]) + 543;
-
-    return "$day $month $year" . ($time ? " $time" : "");
+if ($order_id == 0) {
+    echo json_encode(array('error' => 'Invalid order ID'));
+    exit;
 }
 
-    if ($result->num_rows > 0) {
-        $order_info = $result->fetch_assoc();
-        $formatted_order_id = formatOrderId($order_info['oc_id']);
-        ?>
-        <style>
-            .order-details {
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-                color: #333;
-            }
-            .order-details h4 {
-                color: #2c3e50;
-                border-bottom: 2px solid #3498db;
-                padding-bottom: 10px;
-/*                margin-bottom: 20px;*/
-            }
-            .order-details .section {
-                background-color: #f9f9f9;
-                border: 1px solid #e0e0e0;
-                border-radius: 5px;
-                padding: 15px;
-/*                margin-bottom: 20px;*/
-            }
-            .order-details .section h5 {
-                color: #2980b9;
-                margin-top: 0;
-            }
-            .order-details table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 15px;
-            }
-            .order-details th, .order-details td {
-                border: 1px solid #ddd;
-                padding: 12px;
-                text-align: left;
-            }
-            .order-details th {
-                background-color: #f2f2f2;
-                font-weight: bold;
-            }
-            .order-details .total-row {
-                font-weight: bold;
-                background-color: #e8f4fd;
-            }
-            .payment-status {
-                display: inline-block;
-                padding: 5px 10px;
-                border-radius: 15px;
-                font-weight: bold;
-            }
-            .order-id {
-                font-size: 1.2em;
-                font-weight: bold;
-                color: #3498db;
-            }
-            .payment-cash { background-color: #d4edda; color: #155724; }
-            .payment-credit { background-color: #cce5ff; color: #004085; }
-            .payment-transfer { background-color: #e2e3e5; color: #383d41; }
-            .payment-unpaid { background-color: #f8d7da; color: #721c24; }
-        </style>
+// ดึงข้อมูลหลักของคำสั่งซื้อ
+$sql_order = "SELECT oc.*, c.cus_firstname, c.cus_lastname, cb.booking_datetime
+              FROM order_course oc
+              JOIN customer c ON oc.cus_id = c.cus_id
+              JOIN course_bookings cb ON oc.course_bookings_id = cb.id
+              WHERE oc.oc_id = ?";
 
-        <div class="order-details">
-             <h4>รายละเอียดการสั่งซื้อ <span class="order-id"><?php echo $formatted_order_id; ?></span></h4>
+$stmt_order = $conn->prepare($sql_order);
+$stmt_order->bind_param("i", $order_id);
+$stmt_order->execute();
+$result_order = $stmt_order->get_result();
+$order = $result_order->fetch_assoc();
+
+if (!$order) {
+    echo json_encode(array('error' => 'Order not found'));
+    exit;
+}
+
+// ดึงข้อมูลรายละเอียดคอร์สในคำสั่งซื้อ
+$sql_courses = "SELECT od.*, c.course_name
+                FROM order_detail od
+                JOIN course c ON od.course_id = c.course_id
+                WHERE od.oc_id = ?";
+
+$stmt_courses = $conn->prepare($sql_courses);
+$stmt_courses->bind_param("i", $order_id);
+$stmt_courses->execute();
+$result_courses = $stmt_courses->get_result();
+
+$courses = array();
+while ($course = $result_courses->fetch_assoc()) {
+    // ดึงข้อมูลทรัพยากรสำหรับแต่ละคอร์ส
+    $sql_resources = "SELECT cr.*, 
+                      CASE 
+                        WHEN cr.resource_type = 'drug' THEN d.drug_name
+                        WHEN cr.resource_type = 'tool' THEN t.tool_name
+                        WHEN cr.resource_type = 'accessory' THEN a.acc_name
+                      END AS resource_name,
+                      CASE 
+                        WHEN cr.resource_type = 'drug' THEN u1.unit_name
+                        WHEN cr.resource_type = 'tool' THEN u2.unit_name
+                        WHEN cr.resource_type = 'accessory' THEN u3.unit_name
+                      END AS unit_name
+                      FROM course_resources cr
+                      LEFT JOIN drug d ON cr.resource_type = 'drug' AND cr.resource_id = d.drug_id
+                      LEFT JOIN tool t ON cr.resource_type = 'tool' AND cr.resource_id = t.tool_id
+                      LEFT JOIN accessories a ON cr.resource_type = 'accessory' AND cr.resource_id = a.acc_id
+                      LEFT JOIN unit u1 ON d.drug_unit_id = u1.unit_id
+                      LEFT JOIN unit u2 ON t.tool_unit_id = u2.unit_id
+                      LEFT JOIN unit u3 ON a.acc_unit_id = u3.unit_id
+                      WHERE cr.course_id = ?";
+    
+    $stmt_resources = $conn->prepare($sql_resources);
+    $stmt_resources->bind_param("i", $course['course_id']);
+    $stmt_resources->execute();
+    $result_resources = $stmt_resources->get_result();
+    
+    $resources = array();
+    while ($resource = $result_resources->fetch_assoc()) {
+        // ตรวจสอบว่ามีข้อมูลในตาราง order_course_resources หรือไม่
+        $sql_check = "SELECT * FROM order_course_resources 
+                      WHERE order_id = ? AND course_id = ? AND resource_type = ? AND resource_id = ?";
+        $stmt_check = $conn->prepare($sql_check);
+        $stmt_check->bind_param("iisi", $order_id, $course['course_id'], $resource['resource_type'], $resource['resource_id']);
+        $stmt_check->execute();
+        $result_check = $stmt_check->get_result();
+        
+        if ($result_check->num_rows == 0) {
+            // ถ้าไม่มีข้อมูล ให้เพิ่มข้อมูลลงในตาราง order_course_resources
+            $sql_insert = "INSERT INTO order_course_resources (order_id, course_id, resource_type, resource_id, quantity) 
+                           VALUES (?, ?, ?, ?, ?)";
+            $stmt_insert = $conn->prepare($sql_insert);
+            $stmt_insert->bind_param("iisid", $order_id, $course['course_id'], $resource['resource_type'], $resource['resource_id'], $resource['quantity']);
+            $stmt_insert->execute();
             
-            <div class="section">
-                <h5>ข้อมูลลูกค้า</h5>
-                <p><strong>ชื่อ-นามสกุล:</strong> <?php echo htmlspecialchars($order_info['cus_firstname'] . ' ' . $order_info['cus_lastname']); ?></p>
-                <p><strong>เบอร์โทรศัพท์:</strong> <?php echo htmlspecialchars($order_info['cus_tel']); ?></p>
-                <p><strong>อีเมล:</strong> <?php echo htmlspecialchars($order_info['cus_email']); ?></p>
-            </div>
-
-            <div class="section">
-                <h5>รายละเอียดการจอง</h5>
-                <p><strong>วันที่จอง:</strong> <?php echo convertToThaiDate($order_info['booking_datetime']); ?></p>
-                <p><strong>ผู้ทำรายการ:</strong> <?php if($order_info['u_id']!=0){ echo htmlspecialchars($order_info['users_fname'] . ' ' . $order_info['users_lname']); }else{ echo "จองเองผ่าน Line"; } ?></p>
-                <p><strong>วันที่ทำรายการ:</strong> <?php echo convertToThaiDate($order_info['order_datetime']); ?></p>
-                <?php
-                $payment_class = '';
-                switch ($order_info['order_payment']) {
-                    case 'เงินสด':
-                        $payment_class = 'payment-cash';
-                        break;
-                    case 'บัตรเครดิต':
-                        $payment_class = 'payment-credit';
-                        break;
-                    case 'โอนเงิน':
-                        $payment_class = 'payment-transfer';
-                        break;
-                    default:
-                        $payment_class = 'payment-unpaid';
-                }
-                ?>
-                <p><strong>สถานะการชำระเงิน:</strong> <span class="payment-status <?php echo $payment_class; ?>"><?php echo htmlspecialchars($order_info['order_payment']); ?></span></p>
-            </div>
-
-            <div class="section">
-                <h5>รายการคอร์สที่สั่งซื้อ</h5>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>คอร์ส</th>
-                            <th>จำนวน</th>
-                            <th>ราคาต่อหน่วย</th>
-                            <th>ราคารวม</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        $total = 0;
-                        do {
-                            $subtotal = $order_info['od_amount'] * $order_info['od_price'];
-                            $total += $subtotal;
-                            ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($order_info['course_name']); ?></td>
-                                <td><?php echo $order_info['od_amount']; ?></td>
-                                <td><?php echo number_format($order_info['od_price'], 2); ?> บาท</td>
-                                <td><?php echo number_format($subtotal, 2); ?> บาท</td>
-                            </tr>
-                            <?php
-                        } while ($order_info = $result->fetch_assoc());
-                        ?>
-                        <tr class="total-row">
-                            <td colspan="3">รวมทั้งสิ้น</td>
-                            <td><?php echo number_format($total, 2); ?> บาท</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <?php
-    } else {
-        echo "<p>ไม่พบข้อมูลรายละเอียดการสั่งซื้อ</p>";
+            $resource['id'] = $conn->insert_id;
+        } else {
+            $existing_resource = $result_check->fetch_assoc();
+            $resource['id'] = $existing_resource['id'];
+            $resource['quantity'] = $existing_resource['quantity'];
+        }
+        
+        $resources[] = array(
+            'id' => $resource['id'],
+            'type' => $resource['resource_type'],
+            'name' => $resource['resource_name'],
+            'quantity' => $resource['quantity'],
+            'unit' => $resource['unit_name']
+        );
     }
-} else {
-    echo "<p>ไม่พบ ID การสั่งซื้อ</p>";
+    
+    $courses[] = array(
+        'id' => $course['course_id'],
+        'name' => $course['course_name'],
+        'amount' => $course['od_amount'],
+        'price' => $course['od_price'],
+        'resources' => $resources
+    );
 }
-?>
+
+$order_details = array(
+    'order_id' => $order['oc_id'],
+    'customer_name' => $order['cus_firstname'] . ' ' . $order['cus_lastname'],
+    'booking_datetime' => $order['booking_datetime'],
+    'payment_status' => $order['order_payment'],
+    'total_price' => $order['order_net_total'],
+    'courses' => $courses
+);
+
+echo json_encode($order_details);
+
+$stmt_order->close();
+$stmt_courses->close();
+$stmt_resources->close();
+$conn->close();
