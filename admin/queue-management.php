@@ -346,6 +346,7 @@ $result_bookings = $conn->query($sql_bookings);
     <!-- <script src="../assets/js/tables-datatables-basic.js"></script> -->
     <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
 
+
     <!-- Page JS -->
 
 <script>

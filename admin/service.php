@@ -90,60 +90,152 @@ $result_courses->data_seek(0);
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="../assets/js/config.js"></script>
     <style>
-          body {
+    body {
         background-color: #f8f9fa;
     }
     
     .card {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         border: none;
-        border-radius: 10px;
-        margin-bottom: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        overflow: hidden;
     }
     
     .card-header {
-        background-color: #4e73df;
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
         color: white;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-        padding: 15px 20px;
+        border-bottom: none;
+        padding: 20px;
     }
     
     .card-title {
         margin-bottom: 0;
         font-weight: 600;
+        font-size: 1.25rem;
     }
     
     .card-body {
-        padding: 20px;
+        padding: 30px;
     }
     
-    .list-group-item {
-        border: none;
-        background-color: #f1f3f9;
-        margin-bottom: 10px;
-        border-radius: 5px;
+    .order-item, .customer-info {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         transition: all 0.3s ease;
     }
     
-    .list-group-item:hover {
-        background-color: #e9ecef;
+    .order-item:hover, .customer-info:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     
-    .form-check-input:checked + .form-check-label {
-        text-decoration: none;
+    .order-item h6, .customer-info h6 {
         color: #4e73df;
+        border-bottom: 2px solid #4e73df;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .order-id {
+        font-size: 1.2em;
+        color: #4e73df;
+        margin: 0;
+    }
+    
+    .order-info p {
+        margin-bottom: 5px;
+    }
+    
+    .course-list-title {
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #4e73df;
+        border-bottom: 2px solid #4e73df;
+        padding-bottom: 5px;
+    }
+    
+    .course-list {
+        list-style-type: none;
+        padding: 0;
+        margin-bottom: 0;
+    }
+    
+    .course-item {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .course-info {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-right: 10px;
+    }
+    
+    .course-name {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .course-price {
+        font-weight: 600;
+        color: #28a745;
+    }
+    
+    .total-price {
+        font-size: 1.2em;
+        font-weight: 700;
+        color: #4e73df;
+        text-align: right;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 2px solid #e9ecef;
+    }
+    
+    .badge {
+        font-size: 0.85em;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    .bg-warning {
+        background-color: #ffc107 !important;
+        color: #000;
+    }
+    
+    .bg-success {
+        background-color: #28a745 !important;
+    }
+    
+    .bg-info {
+        background-color: #17a2b8 !important;
     }
     
     .text-muted {
-        font-size: 0.85em;
         color: #6c757d !important;
     }
     
-    .btn {
-        border-radius: 5px;
-        padding: 8px 16px;
-        font-weight: 500;
+    .customer-info strong {
+        font-weight: 600;
+        color: #495057;
     }
     
     .btn-primary {
@@ -166,202 +258,11 @@ $result_courses->data_seek(0);
         border-color: #717384;
     }
     
-    .doctor-field, .nurse-field {
-        background-color: #fff;
-        border: 1px solid #e3e6f0;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 5px;
-        transition: all 0.3s ease;
+    .ri-calendar-2-line,
+    .ri-calendar-check-line {
+        margin-right: 5px;
     }
-    
-    .doctor-field:hover, .nurse-field:hover {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .form-label {
-        font-weight: 600;
-        color: #5a5c69;
-    }
-    
-    .form-control, .form-select {
-        border-radius: 5px;
-        border: 1px solid #d1d3e2;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #bac8f3;
-        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-    }
-    
-    .input-group {
-        margin-top: 10px;
-    }
-    
-    .remove-doctor, .remove-nurse {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-    }
-
-    #selectedCourses {
-        background-color: #e8f0fe;
-        border-radius: 5px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-
-    #selectedCourses div {
-        background-color: white;
-        border-radius: 3px;
-        padding: 10px;
-        margin-bottom: 5px;
-    }
-        .list-group-item .form-check-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        .list-group-item .text-muted {
-            font-size: 0.85em;
-        }
-         #addDoctor, #addNurse {
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-        .doctor-field, .nurse-field {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
-        .course-item {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .course-item.used {
-            background-color: #f8f9fa;
-            opacity: 0.7;
-        }
-        .course-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .course-date {
-            font-size: 0.8em;
-            color: #6c757d;
-        }
-        .badge-used {
-            background-color: #28a745;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 0.8em;
-        }
-        .customer-info {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .customer-info h5 {
-            color: #007bff;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .customer-info p {
-            margin-bottom: 10px;
-        }
-        .customer-info strong {
-            font-weight: 600;
-            margin-right: 10px;
-        }
-        .service-details .card-header {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #007bff;
-        }
-
-        .service-details .card-title {
-            color: #007bff;
-            font-weight: bold;
-        }
-
-        .used-courses-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .used-course-item {
-            background-color: #f8f9fa;
-            border-left: 4px solid #28a745;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .used-course-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .used-course-item .course-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .used-course-item .course-name {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .used-course-item .course-price {
-            color: #28a745;
-            font-weight: bold;
-        }
-
-        .used-course-item .usage-date {
-            font-size: 0.9em;
-            color: #6c757d;
-        }
-
-        .used-course-item .usage-date i {
-            margin-right: 5px;
-        }
-
-        .no-courses {
-            text-align: center;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            color: #6c757d;
-        }
-        .total-price {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #e9ecef;
-            border-radius: 4px;
-            text-align: right;
-            font-size: 1.1em;
-        }
-
-        .total-price strong {
-            margin-right: 10px;
-        }
-
-        .total-price span {
-            color: #28a745;
-            font-weight: bold;
-        }
-    </style>
+</style>
 </head>
 <body>
     <!-- Layout wrapper -->
@@ -387,53 +288,11 @@ $result_courses->data_seek(0);
                             <div class="col-md-6">
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        <h5 class="card-title"><i class="ri-calendar-event-fill mr-2"></i> คอร์สที่จองไว้</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <?php if ($result_courses->num_rows > 0): ?>
-                                            <form id="courseSelectionForm">
-                                                <?php while($course = $result_courses->fetch_assoc()): ?>
-                                                    <div class="course-item <?php echo $course['is_used'] ? 'used' : ''; ?>">
-                                                        <div class="course-info">
-                                                            <div>
-                                                                <input class="form-check-input" type="checkbox" 
-                                                                       name="selected_courses[]" 
-                                                                       value="<?php echo $course['od_id']; ?>" 
-                                                                       id="course_<?php echo $course['od_id']; ?>" 
-                                                                       <?php echo $course['is_used'] ? 'disabled checked' : ''; ?>>
-                                                                <label class="form-check-label" for="course_<?php echo $course['od_id']; ?>">
-                                                                    <?php echo $course['course_name']; ?> - 
-                                                                    <?php echo number_format($course['course_price'], 2); ?> บาท
-                                                                </label>
-                                                            </div>
-                                                            <?php if ($course['is_used']): ?>
-                                                                <span class="badge-used">ใช้งานแล้ว</span>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                        <div class="course-date">
-                                                            วันที่จอง: <?php echo date('d/m/Y H:i', strtotime($course['booking_datetime'])); ?>
-                                                            <?php if ($course['is_used']): ?>
-                                                                <br>วันที่ใช้บริการ: <?php echo date('d/m/Y H:i', strtotime($course['used_date'])); ?>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    </div>
-                                                <?php endwhile; ?>
-                                                <button type="submit" class="btn btn-primary mt-3">บันทึกการใช้บริการ</button>
-                                            </form>
-                                        <?php else: ?>
-                                            <p class="text-muted">ไม่พบคอร์สที่จองไว้สำหรับวันนี้หรือในอนาคต</p>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card mb-4">
-                                    <div class="card-header">
                                         <h5 class="card-title"><i class="ri-user-fill mr-2"></i> ข้อมูลลูกค้า</h5>
                                     </div>
                                     <div class="card-body">
                                         <div class="customer-info">
-                                            <h5>ข้อมูลส่วนตัว</h5>
+                                            <h6>ข้อมูลส่วนตัว</h6>
                                             <p><strong>รหัสลูกค้า (HN):</strong> <?php echo 'HN-' . str_pad($queue_data['cus_id'], 6, '0', STR_PAD_LEFT); ?></p>
                                             <p><strong>ชื่อ-นามสกุล:</strong> <?php echo $queue_data['cus_firstname'] . ' ' . $queue_data['cus_lastname']; ?></p>
                                             <p><strong>ชื่อเล่น:</strong> <?php echo $queue_data['cus_nickname']; ?></p>
@@ -442,58 +301,84 @@ $result_courses->data_seek(0);
                                             <p><strong>เลขบัตรประชาชน:</strong> <?php echo $queue_data['cus_id_card_number']; ?></p>
                                             <p><strong>กรุ๊ปเลือด:</strong> <?php echo $queue_data['cus_blood']; ?></p>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
                             <div class="col-md-6">
-                                <div class="card mb-4 service-details">
-                                    <div class="card-header">
-                                        <h5 class="card-title"><i class="ri-file-list-3-line mr-2"></i> รายละเอียดบริการ</h5>
+                                <div class="card mb-4">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0"><i class="ri-shopping-cart-fill mr-2"></i> รายละเอียดคำสั่งซื้อสำหรับการบริการวันนี้</h5>
+
+                                        <?php 
+                                        // ดึงข้อมูลคำสั่งซื้อที่เกี่ยวข้องกับคิวปัจจุบัน
+                                        $sql_order = "SELECT oc.oc_id, oc.order_datetime, oc.order_payment, oc.order_net_total, oc.order_status,
+                                                             cb.booking_datetime
+                                                      FROM service_queue sq
+                                                      JOIN course_bookings cb ON sq.booking_id = cb.id
+                                                      JOIN order_course oc ON cb.id = oc.course_bookings_id
+                                                      WHERE sq.queue_id = '$queue_id'";
+                                        $result_order = $conn->query($sql_order);
+
+                                        if ($result_order->num_rows > 0): 
+                                            $order = $result_order->fetch_assoc();
+
+                                        ?>
+                                        <a href="edit-order.php?id=<?php echo $order['oc_id']; ?>" class="btn btn-primary btn-sm">
+                                            <i class="ri-edit-2-line"></i> แก้ไขคำสั่งซื้อ
+                                        </a>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="card-body">
-                                        <h6 class="mb-3">คอร์สที่ใช้บริการในครั้งนี้:</h6>
-                                        <?php
-                                        $sql_used_courses = "SELECT c.course_name, c.course_price, cu.used_date
-                                                             FROM course_usage cu
-                                                             JOIN order_detail od ON cu.od_id = od.od_id
-                                                             JOIN course c ON od.course_id = c.course_id
-                                                             WHERE cu.queue_id = $queue_id";
-                                        $result_used_courses = $conn->query($sql_used_courses);
-                                        if ($result_used_courses->num_rows > 0): ?>
-                                            <div class="used-courses-list">
-                                                <?php while($used_course = $result_used_courses->fetch_assoc()): ?>
-                                                    <div class="used-course-item">
-                                                        <div class="course-info">
-                                                            <span class="course-name"><?php echo $used_course['course_name']; ?></span>
-                                                            <span class="course-price"><?php echo number_format($used_course['course_price'], 2); ?> บาท</span>
-                                                        </div>
-                                                        <div class="usage-date">
-                                                            <i class="ri-time-line"></i> <?php echo date('d/m/Y H:i', strtotime($used_course['used_date'])); ?>
-                                                        </div>
-                                                    </div>
-                                                <?php endwhile; ?>
+                                        <?php if ($result_order->num_rows > 0): ?>
+                                            <div class="order-item">
+                                                <div class="order-header">
+
+                                                    <h6 class="order-id">คำสั่งซื้อ #<?php echo 'ORDER-' . str_pad($order['oc_id'], 6, '0', STR_PAD_LEFT); ?></h6>
+                                                    <span class="badge <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'bg-warning' : 'bg-success'; ?>">
+                                                        <?php echo $order['order_payment']; ?>
+                                                    </span>
+                                                </div>
+                                                <div class="order-info">
+                                                    <p><i class="ri-calendar-2-line"></i> <strong>วันที่สั่งซื้อ:</strong> <?php echo date('d/m/Y H:i', strtotime($order['order_datetime'])); ?></p>
+                                                    <p><i class="ri-calendar-check-line"></i> <strong>วันที่นัดรับบริการ:</strong> <?php echo date('d/m/Y H:i', strtotime($order['booking_datetime'])); ?></p>
+                                                </div>
+                                                
+                                                <h6 class="course-list-title">รายการคอร์ส:</h6>
+                                                <ul class="course-list">
                                                 <?php
-                                                    $total_price = 0;
-                                                    $result_used_courses->data_seek(0); // รีเซ็ตตัวชี้ข้อมูล
-                                                    while($used_course = $result_used_courses->fetch_assoc()) {
-                                                        $total_price += $used_course['course_price'];
-                                                    }
-                                                    ?>
-                                                    <div class="total-price">
-                                                        <strong>ราคารวม:</strong> <span><?php echo number_format($total_price, 2); ?> บาท</span>
-                                                    </div>
+                                                $sql_details = "SELECT od.od_id, c.course_name, od.od_amount, od.od_price,
+                                                       CASE WHEN cu.id IS NOT NULL THEN 1 ELSE 0 END AS is_used
+                                                FROM order_detail od
+                                                JOIN course c ON od.course_id = c.course_id
+                                                LEFT JOIN course_usage cu ON od.od_id = cu.od_id AND cu.queue_id = '$queue_id'
+                                                WHERE od.oc_id = '{$order['oc_id']}'";
+                                                $result_details = $conn->query($sql_details);
+                                                $result_details->data_seek(0);
+                                                while($detail = $result_details->fetch_assoc()):
+                                                ?>
+                                                    <li class="course-item">
+                                                        <div class="course-info">
+                                                            <span class="course-name"><?php echo $detail['course_name']; ?></span>
+                                                            <span class="course-price"><?php echo number_format($detail['od_price'], 2); ?> บาท</span>
+                                                        </div>
+                                                        <?php if($detail['is_used']): ?>
+                                                            <span class="badge bg-info">ใช้บริการแล้ว</span>
+                                                        <?php endif; ?>
+                                                    </li>
+                                                <?php endwhile; ?>
+                                                </ul>
+                                                <div class="total-price">
+                                                    <strong>ราคารวม:</strong> <span><?php echo number_format($order['order_net_total'], 2); ?> บาท</span>
+                                                </div>
                                             </div>
                                         <?php else: ?>
-                                            <p class="text-muted no-courses">ยังไม่มีการใช้บริการคอร์สในครั้งนี้</p>
+                                            <p class="text-muted text-center">ไม่พบข้อมูลคำสั่งซื้อสำหรับการบริการนี้</p>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6"></div>
                         </div>
+                        
                         
                     <!-- / Content -->
 

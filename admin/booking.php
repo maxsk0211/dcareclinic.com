@@ -170,7 +170,6 @@
         <link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" />
         <link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" />
         <link rel="stylesheet" href="../assets/css/demo.css" />
-
         <!-- Vendors CSS -->
         <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
         <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
@@ -181,6 +180,11 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
         <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+            <!-- Helpers -->
+        <script src="../assets/vendor/js/helpers.js"></script>
+        <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+        <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+        <script src="../assets/js/config.js"></script>
         <style>
             .time-slot {
                 cursor: pointer;

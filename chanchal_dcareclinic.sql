@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 07, 2024 at 02:00 PM
+-- Generation Time: Sep 11, 2024 at 10:29 AM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 5.6.40
 
@@ -158,7 +158,7 @@ INSERT INTO `clinic_hours` (`id`, `day_of_week`, `start_time`, `end_time`, `is_c
 (46, 'Thursday', '09:00:00', '23:00:00', 0),
 (47, 'Friday', '09:00:00', '23:00:00', 0),
 (48, 'Saturday', '10:00:00', '23:00:00', 0),
-(49, 'Sunday', '09:00:00', '17:00:00', 1);
+(49, 'Sunday', '09:00:00', '11:00:00', 0);
 
 -- --------------------------------------------------------
 
@@ -230,18 +230,11 @@ CREATE TABLE `course_bookings` (
 --
 
 INSERT INTO `course_bookings` (`id`, `branch_id`, `cus_id`, `booking_datetime`, `created_at`, `users_id`, `status`) VALUES
-(1, 1, 13, '2024-09-05 09:15:00', '2024-09-05 15:24:09', 1, 'confirmed'),
-(2, 1, 13, '2024-09-16 10:15:00', '2024-09-05 13:34:08', 1, 'confirmed'),
-(3, 1, 14, '2024-09-16 11:30:00', '2024-09-05 13:35:38', 1, 'confirmed'),
-(5, 1, 14, '2024-09-16 12:15:00', '2024-09-05 13:40:15', 1, 'confirmed'),
-(6, 1, 14, '2024-09-16 11:00:00', '2024-09-05 13:46:37', 1, 'confirmed'),
-(7, 1, 13, '2024-09-06 16:45:00', '2024-09-06 05:56:19', 0, 'pending'),
-(8, 1, 13, '2024-09-06 16:00:00', '2024-09-06 05:56:31', 0, 'pending'),
-(9, 1, 13, '2024-09-06 15:15:00', '2024-09-06 05:56:40', 0, 'pending'),
-(10, 1, 13, '2024-09-06 20:15:00', '2024-09-06 09:37:03', 1, 'confirmed'),
-(11, 1, 13, '2024-09-06 22:45:00', '2024-09-06 12:17:03', 1, 'confirmed'),
-(12, 1, 13, '2024-09-10 10:00:00', '2024-09-06 12:25:10', 1, 'confirmed'),
-(13, 1, 13, '2024-09-10 13:00:00', '2024-09-07 01:56:16', 1, 'confirmed');
+(23, 1, 13, '2024-09-09 22:45:00', '2024-09-09 13:23:04', 1, 'confirmed'),
+(24, 1, 14, '2024-09-09 22:30:00', '2024-09-09 13:23:23', 1, 'confirmed'),
+(25, 1, 13, '2024-09-10 10:00:00', '2024-09-10 02:56:58', 1, 'confirmed'),
+(26, 1, 13, '2024-09-10 11:15:00', '2024-09-10 02:57:11', 1, 'confirmed'),
+(27, 1, 13, '2024-09-10 12:45:00', '2024-09-10 02:57:29', 1, 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -291,6 +284,27 @@ INSERT INTO `course_type` (`course_type_id`, `course_type_name`, `course_type_st
 (3, 'ศัลยกรรมความงาม', 1),
 (4, 'ลดน้ำหนักและกระชับสัดส่วน', 1),
 (5, 'ฟื้นฟูผมและหนังศีรษะ', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course_usage`
+--
+
+CREATE TABLE `course_usage` (
+  `id` int(11) NOT NULL,
+  `od_id` int(11) NOT NULL,
+  `queue_id` int(11) NOT NULL,
+  `used_date` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `course_usage`
+--
+
+INSERT INTO `course_usage` (`id`, `od_id`, `queue_id`, `used_date`) VALUES
+(1, 31, 52, '2024-09-10 23:41:38'),
+(2, 33, 52, '2024-09-10 23:41:38');
 
 -- --------------------------------------------------------
 
@@ -435,7 +449,6 @@ CREATE TABLE `opd` (
   `opd_id` int(11) NOT NULL,
   `queue_id` int(11) NOT NULL,
   `cus_id` int(11) NOT NULL,
-  `course_id` int(11) DEFAULT NULL,
   `nurse_id` int(11) DEFAULT NULL,
   `Weight` float DEFAULT NULL,
   `Height` float DEFAULT NULL,
@@ -447,11 +460,22 @@ CREATE TABLE `opd` (
   `opd_note` text DEFAULT NULL,
   `opd_smoke` varchar(10) DEFAULT NULL,
   `opd_alcohol` varchar(10) DEFAULT NULL,
+  `drug_allergy` text DEFAULT NULL,
+  `food_allergy` text DEFAULT NULL,
   `opd_physical` varchar(50) DEFAULT NULL,
-  `opd_status` int(11) DEFAULT 1,
+  `opd_status` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `opd`
+--
+
+INSERT INTO `opd` (`opd_id`, `queue_id`, `cus_id`, `nurse_id`, `Weight`, `Height`, `BMI`, `FBS`, `Systolic`, `Pulsation`, `opd_diagnose`, `opd_note`, `opd_smoke`, `opd_alcohol`, `drug_allergy`, `food_allergy`, `opd_physical`, `opd_status`, `created_at`, `updated_at`) VALUES
+(15, 44, 13, NULL, 130, 180, 40.12, 90, 140, 110, '1', '2', 'ไม่สูบ', 'ไม่ดื่ม', '1', '2', NULL, 1, '2024-09-10 06:40:20', '2024-09-10 06:40:42'),
+(16, 51, 13, NULL, 123, 123, 81.3, 123, 123, 123, '123', '123', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-10 15:24:13', '2024-09-10 15:24:25'),
+(17, 52, 13, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-10 15:26:17', '2024-09-10 15:26:19');
 
 -- --------------------------------------------------------
 
@@ -465,6 +489,13 @@ CREATE TABLE `opd_drawings` (
   `image_path` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `opd_drawings`
+--
+
+INSERT INTO `opd_drawings` (`id`, `opd_id`, `image_path`, `created_at`) VALUES
+(99, 16, 'opd_drawing_1725981858.png', '2024-09-10 15:24:18');
 
 -- --------------------------------------------------------
 
@@ -490,18 +521,11 @@ CREATE TABLE `order_course` (
 --
 
 INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`, `order_datetime`, `order_payment`, `order_net_total`, `order_payment_date`, `payment_proofs`, `order_status`) VALUES
-(1, 13, 1, 1, '2024-09-05 20:33:52', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1),
-(2, 13, 1, 2, '2024-09-05 20:34:08', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1),
-(3, 14, 1, 3, '2024-09-05 20:35:38', 'เงินสด', 45000, NULL, '', 1),
-(5, 14, 1, 5, '2024-09-05 20:40:15', 'เงินสด', 35000, NULL, '', 1),
-(6, 14, 1, 6, '2024-09-05 20:46:37', 'เงินสด', 35000, NULL, '', 1),
-(8, 13, 13, 7, '2024-09-06 12:56:19', 'ยังไม่จ่ายเงิน', 5000, NULL, '', 1),
-(9, 13, 13, 8, '2024-09-06 12:56:31', 'ยังไม่จ่ายเงิน', 40000, NULL, '', 1),
-(10, 13, 13, 9, '2024-09-06 12:56:40', 'ยังไม่จ่ายเงิน', 40000, NULL, '', 1),
-(11, 13, 1, 10, '2024-09-06 16:37:03', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1),
-(12, 13, 1, 11, '2024-09-06 19:17:03', 'ยังไม่จ่ายเงิน', 20000, NULL, '', 1),
-(13, 13, 1, 12, '2024-09-06 19:25:10', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1),
-(14, 13, 1, 13, '2024-09-07 08:56:16', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1);
+(24, 13, 1, 23, '2024-09-09 20:23:04', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1),
+(25, 14, 1, 24, '2024-09-09 20:23:23', 'ยังไม่จ่ายเงิน', 20000, NULL, '', 1),
+(26, 13, 1, 25, '2024-09-10 09:56:58', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1),
+(27, 13, 1, 26, '2024-09-10 09:57:11', 'ยังไม่จ่ายเงิน', 5000, NULL, '', 1),
+(28, 13, 1, 27, '2024-09-10 09:57:29', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1);
 
 -- --------------------------------------------------------
 
@@ -522,23 +546,11 @@ CREATE TABLE `order_detail` (
 --
 
 INSERT INTO `order_detail` (`od_id`, `oc_id`, `course_id`, `od_amount`, `od_price`) VALUES
-(1, 1, 4, 1, 15000),
-(2, 1, 5, 1, 20000),
-(3, 2, 4, 1, 15000),
-(4, 2, 5, 1, 20000),
-(5, 3, 4, 1, 15000),
-(6, 3, 6, 1, 30000),
-(7, 5, 4, 1, 15000),
-(8, 5, 5, 1, 20000),
-(9, 6, 4, 1, 15000),
-(10, 6, 5, 1, 20000),
-(12, 8, 8, 1, 5000),
-(13, 9, 10, 1, 40000),
-(14, 10, 10, 1, 40000),
-(15, 11, 4, 1, 15000),
-(16, 12, 5, 1, 20000),
-(17, 13, 7, 1, 35000),
-(18, 14, 4, 1, 15000);
+(29, 24, 4, 1, 15000),
+(30, 25, 5, 1, 20000),
+(31, 26, 4, 1, 15000),
+(32, 27, 8, 1, 5000),
+(33, 28, 7, 1, 35000);
 
 -- --------------------------------------------------------
 
@@ -601,10 +613,9 @@ CREATE TABLE `service_queue` (
 --
 
 INSERT INTO `service_queue` (`queue_id`, `branch_id`, `cus_id`, `booking_id`, `queue_number`, `queue_date`, `queue_time`, `service_status`, `created_at`, `updated_at`, `notes`) VALUES
-(16, 1, 13, 7, 'Q001', '2024-09-06', '16:45:00', 'in_progress', '2024-09-06 09:34:39', '2024-09-06 11:49:22', ''),
-(17, 1, 13, 10, 'Q002', '2024-09-06', '20:15:00', 'in_progress', '2024-09-06 09:37:11', '2024-09-06 09:37:14', ''),
-(18, 1, 13, 11, 'Q003', '2024-09-06', '22:45:00', 'in_progress', '2024-09-06 12:17:14', '2024-09-06 12:17:16', ''),
-(19, 1, 13, NULL, 'Q001', '2024-09-07', '08:54:00', 'in_progress', '2024-09-07 01:54:38', '2024-09-07 01:54:42', '');
+(52, 1, 13, 25, 'Q001', '2024-09-10', '10:00:00', 'in_progress', '2024-09-10 15:25:52', '2024-09-10 15:26:04', ''),
+(53, 1, 13, 26, 'Q002', '2024-09-10', '11:15:00', 'in_progress', '2024-09-10 15:25:57', '2024-09-10 15:26:05', ''),
+(54, 1, 13, 27, 'Q003', '2024-09-10', '12:45:00', 'waiting', '2024-09-10 15:26:02', '2024-09-10 15:26:02', '');
 
 -- --------------------------------------------------------
 
@@ -783,7 +794,8 @@ INSERT INTO `users` (`users_id`, `users_username`, `users_password`, `users_fnam
 (51, '123', '123', '123', '123', '123', '00000', 2, NULL, 2, 1),
 (52, 'แพทย์ 1', 'แพทย์ 1', 'แพทย์ 1 ', 'แพทย์ 1', 'แพทย์ 1', '1234564897', 3, 'ว12345645', 1, 1),
 (53, 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', '1234564897', 3, 'ว12345645', 1, 1),
-(54, 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', '1234564897', 3, 'ว12345645', 1, 1);
+(54, 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', '1234564897', 3, 'ว12345645', 1, 1),
+(55, 'รับ 1', 'รับ 1', 'รับ 1', 'รับ 1', 'รับ 1', '123', 5, '', 1, 1);
 
 --
 -- Indexes for dumped tables
@@ -845,6 +857,14 @@ ALTER TABLE `course_type`
   ADD PRIMARY KEY (`course_type_id`);
 
 --
+-- Indexes for table `course_usage`
+--
+ALTER TABLE `course_usage`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `od_id` (`od_id`),
+  ADD KEY `queue_id` (`queue_id`);
+
+--
 -- Indexes for table `customer`
 --
 ALTER TABLE `customer`
@@ -870,7 +890,6 @@ ALTER TABLE `opd`
   ADD PRIMARY KEY (`opd_id`),
   ADD KEY `queue_id` (`queue_id`),
   ADD KEY `cus_id` (`cus_id`),
-  ADD KEY `course_id` (`course_id`),
   ADD KEY `nurse_id` (`nurse_id`);
 
 --
@@ -1009,7 +1028,7 @@ ALTER TABLE `course`
 -- AUTO_INCREMENT for table `course_bookings`
 --
 ALTER TABLE `course_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `course_resources`
@@ -1022,6 +1041,12 @@ ALTER TABLE `course_resources`
 --
 ALTER TABLE `course_type`
   MODIFY `course_type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `course_usage`
+--
+ALTER TABLE `course_usage`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `customer`
@@ -1045,25 +1070,25 @@ ALTER TABLE `drug_type`
 -- AUTO_INCREMENT for table `opd`
 --
 ALTER TABLE `opd`
-  MODIFY `opd_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `opd_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `opd_drawings`
 --
 ALTER TABLE `opd_drawings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `order_course`
 --
 ALTER TABLE `order_course`
-  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `order_detail`
 --
 ALTER TABLE `order_detail`
-  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `position`
@@ -1081,7 +1106,7 @@ ALTER TABLE `service_nurse_records`
 -- AUTO_INCREMENT for table `service_queue`
 --
 ALTER TABLE `service_queue`
-  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `service_records`
@@ -1117,7 +1142,7 @@ ALTER TABLE `unit`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `users_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `users_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- Constraints for dumped tables
@@ -1130,12 +1155,18 @@ ALTER TABLE `course_bookings`
   ADD CONSTRAINT `course_bookings_ibfk_2` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`);
 
 --
+-- Constraints for table `course_usage`
+--
+ALTER TABLE `course_usage`
+  ADD CONSTRAINT `course_usage_ibfk_1` FOREIGN KEY (`od_id`) REFERENCES `order_detail` (`od_id`),
+  ADD CONSTRAINT `course_usage_ibfk_2` FOREIGN KEY (`queue_id`) REFERENCES `service_queue` (`queue_id`);
+
+--
 -- Constraints for table `opd`
 --
 ALTER TABLE `opd`
   ADD CONSTRAINT `opd_ibfk_1` FOREIGN KEY (`queue_id`) REFERENCES `service_queue` (`queue_id`),
   ADD CONSTRAINT `opd_ibfk_2` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`),
-  ADD CONSTRAINT `opd_ibfk_3` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`),
   ADD CONSTRAINT `opd_ibfk_4` FOREIGN KEY (`nurse_id`) REFERENCES `users` (`users_id`);
 
 --
