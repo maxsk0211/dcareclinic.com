@@ -143,7 +143,7 @@ $result_details = $conn->query($sql_details);
                                 <div class="card mb-4">
                                     <h5 class="card-header">รายละเอียดคำสั่งซื้อ</h5>
                                     <div class="card-body">
-                                        <form id="editOrderForm" method="post" action="sql/update-order.php">
+                                        <!-- <form id="editOrderForm" method="post" action="sql/update-order.php"> -->
                                             <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
                                             
                                             <div class="mb-3">
@@ -175,7 +175,7 @@ $result_details = $conn->query($sql_details);
                                                 <button type="button" class="btn btn-primary" onclick="saveOrder()">บันทึกการแก้ไข</button>
                                                 <a href="service.php" class="btn btn-secondary">ยกเลิก</a>
                                             </div>
-                                        </form>
+                                        <!-- </form> -->
                                     </div>
                                 </div>
                             </div>
@@ -267,6 +267,29 @@ $result_details = $conn->query($sql_details);
         </div>
     </div>
 
+<!-- Modal สำหรับเพิ่มคอร์ส -->
+<div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCourseModalLabel">เพิ่มคอร์ส</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="courseSelect" class="form-label">เลือกคอร์ส</label>
+                    <select class="form-select" id="courseSelect">
+                        <option value="">เลือกคอร์ส</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-primary" onclick="confirmAddCourse()">เพิ่มคอร์ส</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -275,12 +298,14 @@ $result_details = $conn->query($sql_details);
     <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/hammer/hammer.js"></script>
     <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
 
     <script>
 let currentOrderId;
+let currentCourseItem;
 
 function loadExistingOrder() {
     currentOrderId = document.querySelector('input[name="order_id"]').value;
@@ -288,8 +313,9 @@ function loadExistingOrder() {
         url: 'sql/get-order-details.php',
         type: 'GET',
         data: { id: currentOrderId },
-        success: function(response) {
-            const orderDetails = JSON.parse(response);
+        dataType: 'json',  // เพิ่มบรรทัดนี้
+        success: function(orderDetails) {
+            console.log('Parsed order details:', orderDetails);
             $('#booking_datetime').val(orderDetails.booking_datetime);
             $('#payment_method').val(orderDetails.payment_status);
             
@@ -301,6 +327,8 @@ function loadExistingOrder() {
         },
         error: function(xhr, status, error) {
             console.error('Error loading order details:', error);
+            console.error('Response:', xhr.responseText);
+            alert('เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง');
         }
     });
 }
@@ -338,15 +366,7 @@ function addCourseToList(course) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${course.resources.map(resource => `
-                        <tr data-resource-id="${resource.id}">
-                            <td>${resource.type}</td>
-                            <td>${resource.name}</td>
-                            <td><input type="number" value="${resource.quantity}" min="0.01" step="0.01" onchange="updateResource(this)"></td>
-                            <td>${resource.unit}</td>
-                            <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
-                        </tr>
-                    `).join('')}
+                    <!-- ทรัพยากรจะถูกเพิ่มที่นี่ -->
                 </tbody>
             </table>
             <button type="button" class="btn btn-info" onclick="showResourceModal(this)">เพิ่มทรัพยากร</button>
@@ -354,6 +374,26 @@ function addCourseToList(course) {
     `;
     
     courseList.appendChild(courseItem);
+
+    console.log('Course resources:', course.resources);
+    
+    const resourcesTable = courseItem.querySelector('.resources-table tbody');
+    if (course.resources && course.resources.length > 0) {
+        course.resources.forEach(resource => {
+            const resourceRow = `
+                <tr data-resource-id="${resource.id}">
+                    <td>${resource.type}</td>
+                    <td>${resource.name}</td>
+                    <td><input type="number" value="${resource.quantity}" class="form-control"  min="0.01" step="0.01" onchange="updateResource(this)"></td>
+                    <td>${resource.unit}</td>
+                    <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+            `;
+            resourcesTable.insertAdjacentHTML('beforeend', resourceRow);
+        });
+    } else {
+        resourcesTable.innerHTML = '<tr><td colspan="5">ไม่พบข้อมูลทรัพยากร</td></tr>';
+    }
 }
 
 function updateCourse(input) {
@@ -363,7 +403,7 @@ function updateCourse(input) {
     const price = courseItem.querySelector('.course-price').value;
     
     $.ajax({
-        url: 'sql/update-course.php',
+        url: 'sql/update-order-course.php',
         type: 'POST',
         data: {
             order_id: currentOrderId,
@@ -374,6 +414,17 @@ function updateCourse(input) {
         success: function(response) {
             console.log('Course updated successfully');
             updateTotalPrice();
+            // แสดงการแจ้งเตือนด้วย SweetAlert2
+            Swal.fire({
+                icon: 'success',
+                title: 'แก้ไขคอร์สสำเร็จ',
+                text: 'ข้อมูลคอร์สถูกอัปเดตเรียบร้อยแล้ว',
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500,
+                toast: true,
+
+            });
         },
         error: function(xhr, status, error) {
             console.error('Error updating course:', error);
@@ -409,7 +460,7 @@ function updateResource(input) {
     const quantity = input.value;
     
     $.ajax({
-        url: 'sql/update-resource.php',
+        url: 'sql/update-order-resource.php',
         type: 'POST',
         data: {
             resource_id: resourceId,
@@ -472,7 +523,7 @@ function addResource() {
                 <tr data-resource-id="${response.resource_id}">
                     <td>${type}</td>
                     <td>${name}</td>
-                    <td><input type="number" value="${quantity}" min="0.01" step="0.01" onchange="updateResource(this)"></td>
+                    <td><input type="number" class="form-control" value="${quantity}" min="0.01" step="0.01" onchange="updateResource(this)"></td>
                     <td>${unit}</td>
                     <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
                 </tr>
@@ -515,6 +566,7 @@ function updateTotalPrice() {
 // Load existing order when page loads
 $(document).ready(function() {
     loadExistingOrder();
+    loadCourseOptions();
 });
 
 // Auto-save when changing booking datetime or payment status
@@ -530,7 +582,7 @@ $('#booking_datetime, #payment_method').on('change', function() {
         success: function(response) {
             console.log('Order details updated successfully');
         },
-error: function(xhr, status, error) {
+        error: function(xhr, status, error) {
             console.error('Error updating order details:', error);
         }
     });
@@ -562,9 +614,110 @@ $('#resourceType').on('change', function() {
     loadResources($(this).val());
 });
 
-// No need for a separate save button, as everything is auto-saved
+function addNewCourse() {
+    $('#addCourseModal').modal('show');
+}
 
+function confirmAddCourse() {
+    const courseId = $('#courseSelect').val();
+    const courseName = $('#courseSelect option:selected').text();
+    const coursePrice = parseFloat($('#courseSelect option:selected').data('price'));
 
-    </script>
+    if (!courseId) {
+        alert('กรุณาเลือกคอร์ส');
+        return;
+    }
+
+    $.ajax({
+        url: 'sql/add-course.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            course_id: courseId,
+            amount: 1,
+            price: coursePrice
+        },
+        success: function(response) {
+            const result = JSON.parse(response);
+            if (result.success) {
+                const newCourse = {
+                    id: courseId,
+                    name: courseName,
+                    amount: 1,
+                    price: coursePrice,
+                    resources: []
+                };
+                addCourseToList(newCourse);
+                updateTotalPrice();
+                $('#addCourseModal').modal('hide');
+                
+                // โหลดข้อมูลทรัพยากรสำหรับคอร์สที่เพิ่มใหม่
+                loadCourseResources(courseId);
+            } else {
+                alert('เกิดข้อผิดพลาดในการเพิ่มคอร์ส: ' + result.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error adding course:', error);
+            alert('เกิดข้อผิดพลาดในการเพิ่มคอร์ส');
+        }
+    });
+}
+
+function loadCourseResources(courseId) {
+    $.ajax({
+        url: 'sql/get-course-resources.php',
+        type: 'GET',
+        data: { 
+            order_id: currentOrderId,
+            course_id: courseId 
+        },
+        success: function(response) {
+            const resources = JSON.parse(response);
+            const courseItem = document.querySelector(`.course-item[data-course-id="${courseId}"]`);
+            const resourcesTableBody = courseItem.querySelector('.resources-table tbody');
+            
+            resourcesTableBody.innerHTML = ''; // Clear existing resources
+            
+            resources.forEach(resource => {
+                const newRow = `
+                    <tr data-resource-id="${resource.id}">
+                        <td>${resource.type}</td>
+                        <td>${resource.name}</td>
+                        <td><input type="number" value="${resource.quantity}" min="0.01" step="0.01" onchange="updateResource(this)"></td>
+                        <td>${resource.unit}</td>
+                        <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
+                    </tr>
+                `;
+                resourcesTableBody.insertAdjacentHTML('beforeend', newRow);
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading course resources:', error);
+        }
+    });
+}
+
+// โหลดรายการคอร์สสำหรับ modal
+function loadCourseOptions() {
+    $.ajax({
+        url: 'sql/get-courses.php',
+        type: 'GET',
+        success: function(response) {
+            const courses = JSON.parse(response);
+            const select = $('#courseSelect');
+            select.empty();
+            select.append('<option value="">เลือกคอร์ส</option>');
+            courses.forEach(course => {
+                select.append(`<option value="${course.id}" data-price="${course.price}">${course.name}</option>`);
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading courses:', error);
+        }
+    });
+}
+
+</script>
 </body>
 </html>

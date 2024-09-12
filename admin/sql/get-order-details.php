@@ -1,6 +1,8 @@
 <?php
 require '../../dbcon.php';
 
+header('Content-Type: application/json');
+
 $order_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($order_id == 0) {
@@ -16,8 +18,19 @@ $sql_order = "SELECT oc.*, c.cus_firstname, c.cus_lastname, cb.booking_datetime
               WHERE oc.oc_id = ?";
 
 $stmt_order = $conn->prepare($sql_order);
+if (!$stmt_order) {
+    error_log("Prepare failed: " . $conn->error);
+    echo json_encode(array('error' => 'Database error'));
+    exit;
+}
+
 $stmt_order->bind_param("i", $order_id);
-$stmt_order->execute();
+if (!$stmt_order->execute()) {
+    error_log("Execute failed: " . $stmt_order->error);
+    echo json_encode(array('error' => 'Database error'));
+    exit;
+}
+
 $result_order = $stmt_order->get_result();
 $order = $result_order->fetch_assoc();
 
@@ -33,63 +46,60 @@ $sql_courses = "SELECT od.*, c.course_name
                 WHERE od.oc_id = ?";
 
 $stmt_courses = $conn->prepare($sql_courses);
+if (!$stmt_courses) {
+    error_log("Prepare failed: " . $conn->error);
+    echo json_encode(array('error' => 'Database error'));
+    exit;
+}
+
 $stmt_courses->bind_param("i", $order_id);
-$stmt_courses->execute();
+if (!$stmt_courses->execute()) {
+    error_log("Execute failed: " . $stmt_courses->error);
+    echo json_encode(array('error' => 'Database error'));
+    exit;
+}
+
 $result_courses = $stmt_courses->get_result();
 
 $courses = array();
 while ($course = $result_courses->fetch_assoc()) {
     // ดึงข้อมูลทรัพยากรสำหรับแต่ละคอร์ส
-    $sql_resources = "SELECT cr.*, 
+    $sql_resources = "SELECT ocr.*, 
                       CASE 
-                        WHEN cr.resource_type = 'drug' THEN d.drug_name
-                        WHEN cr.resource_type = 'tool' THEN t.tool_name
-                        WHEN cr.resource_type = 'accessory' THEN a.acc_name
+                        WHEN ocr.resource_type = 'drug' THEN d.drug_name
+                        WHEN ocr.resource_type = 'tool' THEN t.tool_name
+                        WHEN ocr.resource_type = 'accessory' THEN a.acc_name
                       END AS resource_name,
                       CASE 
-                        WHEN cr.resource_type = 'drug' THEN u1.unit_name
-                        WHEN cr.resource_type = 'tool' THEN u2.unit_name
-                        WHEN cr.resource_type = 'accessory' THEN u3.unit_name
+                        WHEN ocr.resource_type = 'drug' THEN u1.unit_name
+                        WHEN ocr.resource_type = 'tool' THEN u2.unit_name
+                        WHEN ocr.resource_type = 'accessory' THEN u3.unit_name
                       END AS unit_name
-                      FROM course_resources cr
-                      LEFT JOIN drug d ON cr.resource_type = 'drug' AND cr.resource_id = d.drug_id
-                      LEFT JOIN tool t ON cr.resource_type = 'tool' AND cr.resource_id = t.tool_id
-                      LEFT JOIN accessories a ON cr.resource_type = 'accessory' AND cr.resource_id = a.acc_id
+                      FROM order_course_resources ocr
+                      LEFT JOIN drug d ON ocr.resource_type = 'drug' AND ocr.resource_id = d.drug_id
+                      LEFT JOIN tool t ON ocr.resource_type = 'tool' AND ocr.resource_id = t.tool_id
+                      LEFT JOIN accessories a ON ocr.resource_type = 'accessory' AND ocr.resource_id = a.acc_id
                       LEFT JOIN unit u1 ON d.drug_unit_id = u1.unit_id
                       LEFT JOIN unit u2 ON t.tool_unit_id = u2.unit_id
                       LEFT JOIN unit u3 ON a.acc_unit_id = u3.unit_id
-                      WHERE cr.course_id = ?";
+                      WHERE ocr.order_id = ? AND ocr.course_id = ?";
     
     $stmt_resources = $conn->prepare($sql_resources);
-    $stmt_resources->bind_param("i", $course['course_id']);
-    $stmt_resources->execute();
+    if (!$stmt_resources) {
+        error_log("Prepare failed: " . $conn->error);
+        continue; // Skip this course if prepare fails
+    }
+
+    $stmt_resources->bind_param("ii", $order_id, $course['course_id']);
+    if (!$stmt_resources->execute()) {
+        error_log("Execute failed: " . $stmt_resources->error);
+        continue; // Skip this course if execute fails
+    }
+
     $result_resources = $stmt_resources->get_result();
     
     $resources = array();
     while ($resource = $result_resources->fetch_assoc()) {
-        // ตรวจสอบว่ามีข้อมูลในตาราง order_course_resources หรือไม่
-        $sql_check = "SELECT * FROM order_course_resources 
-                      WHERE order_id = ? AND course_id = ? AND resource_type = ? AND resource_id = ?";
-        $stmt_check = $conn->prepare($sql_check);
-        $stmt_check->bind_param("iisi", $order_id, $course['course_id'], $resource['resource_type'], $resource['resource_id']);
-        $stmt_check->execute();
-        $result_check = $stmt_check->get_result();
-        
-        if ($result_check->num_rows == 0) {
-            // ถ้าไม่มีข้อมูล ให้เพิ่มข้อมูลลงในตาราง order_course_resources
-            $sql_insert = "INSERT INTO order_course_resources (order_id, course_id, resource_type, resource_id, quantity) 
-                           VALUES (?, ?, ?, ?, ?)";
-            $stmt_insert = $conn->prepare($sql_insert);
-            $stmt_insert->bind_param("iisid", $order_id, $course['course_id'], $resource['resource_type'], $resource['resource_id'], $resource['quantity']);
-            $stmt_insert->execute();
-            
-            $resource['id'] = $conn->insert_id;
-        } else {
-            $existing_resource = $result_check->fetch_assoc();
-            $resource['id'] = $existing_resource['id'];
-            $resource['quantity'] = $existing_resource['quantity'];
-        }
-        
         $resources[] = array(
             'id' => $resource['id'],
             'type' => $resource['resource_type'],
@@ -106,6 +116,8 @@ while ($course = $result_courses->fetch_assoc()) {
         'price' => $course['od_price'],
         'resources' => $resources
     );
+
+    $stmt_resources->close();
 }
 
 $order_details = array(
@@ -116,10 +128,21 @@ $order_details = array(
     'total_price' => $order['order_net_total'],
     'courses' => $courses
 );
-
+// ก่อน echo json_encode($order_details);
+error_log("Order details: " . print_r($order_details, true));
 echo json_encode($order_details);
 
 $stmt_order->close();
 $stmt_courses->close();
-$stmt_resources->close();
 $conn->close();
+
+header('Content-Type: application/json');
+$json_response = json_encode($order_details, JSON_PRETTY_PRINT);
+if ($json_response === false) {
+    // JSON encoding failed
+    error_log("JSON encode error: " . json_last_error_msg());
+    echo json_encode(array("error" => "Internal Server Error"));
+} else {
+    echo $json_response;
+}
+exit;
