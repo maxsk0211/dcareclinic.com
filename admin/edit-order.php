@@ -306,6 +306,31 @@ $result_details = $conn->query($sql_details);
     <script>
 let currentOrderId;
 let currentCourseItem;
+function msg_ok(title,text){
+        Swal.fire({
+        icon: 'success',
+        title: title,
+        text: text,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500,
+        toast: true,
+
+    });
+}
+
+function msg_error(message){
+        Swal.fire({
+        icon: 'error',
+        title: 'แก้ไขคอร์สสำเร็จ',
+        text: 'ข้อมูลคอร์สถูกอัปเดตเรียบร้อยแล้ว',
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500,
+        toast: true,
+
+    });
+}
 
 function loadExistingOrder() {
     currentOrderId = document.querySelector('input[name="order_id"]').value;
@@ -313,7 +338,7 @@ function loadExistingOrder() {
         url: 'sql/get-order-details.php',
         type: 'GET',
         data: { id: currentOrderId },
-        dataType: 'json',  // เพิ่มบรรทัดนี้
+        dataType: 'json',
         success: function(orderDetails) {
             console.log('Parsed order details:', orderDetails);
             $('#booking_datetime').val(orderDetails.booking_datetime);
@@ -321,6 +346,7 @@ function loadExistingOrder() {
             
             orderDetails.courses.forEach(course => {
                 addCourseToList(course);
+                checkAndLoadDefaultResources(course.id);
             });
             
             updateTotalPrice();
@@ -332,7 +358,32 @@ function loadExistingOrder() {
         }
     });
 }
-
+function checkAndLoadDefaultResources(courseId) {
+    $.ajax({
+        url: 'sql/check-and-load-resources.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            course_id: courseId
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                if (response.resourcesAdded) {
+                    console.log('Default resources added for course:', courseId);
+                    loadCourseResources(courseId);
+                } else {
+                    console.log('Resources already exist for course:', courseId);
+                }
+            } else {
+                console.error('Error checking/loading default resources:', response.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX error:', status, error);
+        }
+    });
+}
 function addCourseToList(course) {
     const courseList = document.getElementById('courseList');
     const courseItem = document.createElement('div');
@@ -342,15 +393,19 @@ function addCourseToList(course) {
     courseItem.innerHTML = `
         <div class="row">
             <div class="col-md-4">
+                <label  class="form-label">ชื่อคอร์ส</label> 
                 <input type="text" class="form-control course-name" value="${course.name}" readonly>
             </div>
             <div class="col-md-2">
+                <label  class="form-label">จำนวน</label> 
                 <input type="number" class="form-control course-amount" value="${course.amount}" min="1" onchange="updateCourse(this)">
             </div>
             <div class="col-md-3">
+                <label  class="form-label">ราคา/คอร์ส</label> 
                 <input type="number" class="form-control course-price" value="${course.price}" onchange="updateCourse(this)">
             </div>
             <div class="col-md-3">
+                <label  class="form-label">การดำเนินการ</label><br>
                 <button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>
             </div>
         </div>
@@ -415,16 +470,8 @@ function updateCourse(input) {
             console.log('Course updated successfully');
             updateTotalPrice();
             // แสดงการแจ้งเตือนด้วย SweetAlert2
-            Swal.fire({
-                icon: 'success',
-                title: 'แก้ไขคอร์สสำเร็จ',
-                text: 'ข้อมูลคอร์สถูกอัปเดตเรียบร้อยแล้ว',
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 1500,
-                toast: true,
+            msg_ok('แก้ไขคอร์สสำเร็จ','ข้อมูลคอร์สถูกอัปเดตเรียบร้อยแล้ว');
 
-            });
         },
         error: function(xhr, status, error) {
             console.error('Error updating course:', error);
@@ -445,6 +492,7 @@ function removeCourse(button) {
         },
         success: function(response) {
             console.log('Course removed successfully');
+            msg_ok('ลบคอร์สสำเร็จ','คอร์สถูกลบเรียบร้อยแล้ว');
             courseItem.remove();
             updateTotalPrice();
         },
@@ -458,19 +506,33 @@ function updateResource(input) {
     const row = input.closest('tr');
     const resourceId = row.dataset.resourceId;
     const quantity = input.value;
+    const orderId = currentOrderId;
+    const courseId = row.closest('.course-item').dataset.courseId;
     
     $.ajax({
         url: 'sql/update-order-resource.php',
         type: 'POST',
         data: {
             resource_id: resourceId,
-            quantity: quantity
+            quantity: quantity,
+            order_id: orderId,
+            course_id: courseId
         },
+        dataType: 'json',
         success: function(response) {
-            console.log('Resource updated successfully');
+            if (response.success) {
+                console.log('Resource updated successfully');
+                msg_ok('แก้ไขทรัพยากรสำเร็จ','ข้อมูลทรัพยากรถูกอัปเดตเรียบร้อยแล้ว');
+
+                // อาจจะเพิ่มการแสดงผลให้ผู้ใช้ทราบว่าอัปเดตสำเร็จ
+            } else {
+                console.error('Error updating resource:', response.error);
+                alert('เกิดข้อผิดพลาดในการอัปเดตทรัพยากร: ' + response.error);
+            }
         },
         error: function(xhr, status, error) {
-            console.error('Error updating resource:', error);
+            console.error('AJAX Error:', status, error);
+            alert('เกิดข้อผิดพลาดในการอัปเดตทรัพยากร');
         }
     });
 }
@@ -478,19 +540,32 @@ function updateResource(input) {
 function removeResource(button) {
     const row = button.closest('tr');
     const resourceId = row.dataset.resourceId;
+    const orderId = currentOrderId; // เพิ่มบรรทัดนี้
+    const courseId = row.closest('.course-item').dataset.courseId; // เพิ่มบรรทัดนี้
     
     $.ajax({
         url: 'sql/remove-resource.php',
         type: 'POST',
         data: {
-            resource_id: resourceId
+            resource_id: resourceId,
+            order_id: orderId,
+            course_id: courseId
         },
+        dataType: 'json',
         success: function(response) {
-            console.log('Resource removed successfully');
-            row.remove();
+            if (response.success) {
+                console.log('Resource removed successfully');
+                msg_ok('ลบทรัพยากรสำเร็จ','ข้อมูลทรัพยากรถูกอัปเดตเรียบร้อยแล้ว');
+
+                row.remove();
+            } else {
+                console.error('Error removing resource:', response.error);
+                alert('เกิดข้อผิดพลาดในการลบทรัพยากร: ' + response.error);
+            }
         },
         error: function(xhr, status, error) {
-            console.error('Error removing resource:', error);
+            console.error('AJAX Error:', status, error);
+            alert('เกิดข้อผิดพลาดในการลบทรัพยากร');
         }
     });
 }
@@ -519,6 +594,8 @@ function addResource() {
         },
         success: function(response) {
             console.log('Resource added successfully');
+            msg_ok('เพิ่มคอร์สสำเร็จ','ข้อมูลคอร์สถูกเพิ่มเรียบร้อยแล้ว');
+
             const newRow = `
                 <tr data-resource-id="${response.resource_id}">
                     <td>${type}</td>
@@ -651,7 +728,8 @@ function confirmAddCourse() {
                 updateTotalPrice();
                 $('#addCourseModal').modal('hide');
                 
-                // โหลดข้อมูลทรัพยากรสำหรับคอร์สที่เพิ่มใหม่
+                // เพิ่มการเรียกใช้ฟังก์ชันใหม่
+                checkAndLoadDefaultResources(courseId);
                 loadCourseResources(courseId);
             } else {
                 alert('เกิดข้อผิดพลาดในการเพิ่มคอร์ส: ' + result.error);
