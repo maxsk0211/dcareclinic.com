@@ -1,6 +1,20 @@
 <?php
 require '../../dbcon.php';
 
+function translateResourceType($type) {
+    switch($type) {
+        case 'drug':
+            return 'ยา';
+        case 'tool':
+            return 'เครื่องมือ';
+        case 'accessory':
+            return 'อุปกรณ์';
+        default:
+            return $type;
+    }
+}
+
+
 $order_id = intval($_GET['order_id']);
 $course_id = intval($_GET['course_id']);
 
@@ -33,7 +47,7 @@ $resources = [];
 while ($row = $result->fetch_assoc()) {
     $resources[] = [
         'id' => $row['id'],
-        'type' => $row['resource_type'],
+        'type' => translateResourceType($resource['resource_type']),
         'name' => $row['resource_name'],
         'quantity' => $row['quantity'],
         'unit' => $row['unit_name']

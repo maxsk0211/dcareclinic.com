@@ -118,6 +118,49 @@ $result_details = $conn->query($sql_details);
         .table th {
             background-color: #f8f9fa;
         }
+    .order-info-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .order-info-section .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    .order-info-section .form-control,
+    .order-info-section .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        padding: 10px 15px;
+        font-size: 1rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .order-info-section .form-control:focus,
+    .order-info-section .form-select:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .order-info-section .form-control[readonly] {
+        background-color: #e9ecef;
+        opacity: 1;
+    }
+    .order-info-section .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+    }
+    .payment-pending {
+        color: #ffc107;
+    }
+    .payment-completed {
+        color: #28a745;
+    }
     </style>
 </head>
 <body>
@@ -143,39 +186,61 @@ $result_details = $conn->query($sql_details);
                                 <div class="card mb-4">
                                     <h5 class="card-header">รายละเอียดคำสั่งซื้อ</h5>
                                     <div class="card-body">
-                                        <!-- <form id="editOrderForm" method="post" action="sql/update-order.php"> -->
+                                        <form id="editOrderForm" method="post" action="sql/update-order.php" enctype="multipart/form-data">
                                             <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
-                                            
-                                            <div class="mb-3">
-                                                <label class="form-label">ชื่อลูกค้า</label>
-                                                <input type="text" class="form-control" value="<?php echo $order['cus_firstname'] . ' ' . $order['cus_lastname']; ?>" readonly>
+                                            <div class="order-info-section">
+                                                <div class="mb-4">
+                                                    <label class="form-label">ชื่อลูกค้า</label>
+                                                    <input type="text" class="form-control" value="<?php echo $order['cus_firstname'] . ' ' . $order['cus_lastname']; ?>" readonly>
+                                                </div>
+                                                <div class="mb-4">
+                                                    <label class="form-label">วันที่นัดรับบริการ</label>
+                                                    <input type="datetime-local" class="form-control" name="booking_datetime" id="booking_datetime" value="<?php echo date('Y-m-d\TH:i', strtotime($order['booking_datetime'])); ?>" readonly>
+                                                </div>
+                                                <div class="mb-4">
+                                                    <label class="form-label">สถานะการชำระเงิน</label>
+                                                    <select class="form-select" name="order_payment" id="payment_method">
+                                                        <option value="ยังไม่จ่ายเงิน" <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'selected' : ''; ?> class="payment-pending">ยังไม่จ่ายเงิน</option>
+                                                        <option value="เงินสด" <?php echo ($order['order_payment'] == 'เงินสด') ? 'selected' : ''; ?>>เงินสด</option>
+                                                        <option value="บัตรเครดิต" <?php echo ($order['order_payment'] == 'บัตรเครดิต') ? 'selected' : ''; ?>>บัตรเครดิต</option>
+                                                        <option value="เงินโอน" <?php echo ($order['order_payment'] == 'โอนเงิน') ? 'selected' : ''; ?>>เงินโอน</option>
+                                                    </select>
+                                                </div>
+                                                <?php if (!empty($order['order_payment_date'])): ?>
+                                                <h4>จ่ายเงินแล้วเมื่อวันที่ : <?= $order['order_payment_date'];?></h4>
+                                                <?php endif ?>
+                                                <div id="slipUpload" class="mb-4" style="display: none;">
+                                                    <label class="form-label">อัพโหลดสลิปการโอนเงิน</label>
+                                                    <input type="file" class="form-control" name="payment_slip" accept="image/*">
+                                                </div>
+                                                <?php if (!empty($order['payment_proofs'])): ?>
+                                                <div class="mb-4">
+                                                    <label class="form-label">สลิปการโอนเงินที่อัพโหลดแล้ว</label><br>
+                                                    <img src="../img/payment-proofs/<?php echo $order['payment_proofs']; ?>" alt="Payment Slip" class="img-fluid" style="max-width: 300px;">
+                                                </div>
+                                                <?php endif; ?>
                                             </div>
-                                            
-                                            <div class="mb-3">
-                                                <label class="form-label">วันที่นัดรับบริการ</label>
-                                                <input type="datetime-local" class="form-control" name="booking_datetime" id="booking_datetime" value="<?php echo date('Y-m-d\TH:i', strtotime($order['booking_datetime'])); ?>">
+                                        </form>
+                                            <div class="text-end mt-3">
+                                                <button type="button" class="btn btn-primary" id="saveChangesButton">บันทึกการแก้ไข</button>
+                                                <a href="service.php" class="btn btn-secondary">ยกเลิก</a>
                                             </div>
-                                            
-                                            <div class="mb-3">
-                                                <label class="form-label">สถานะการชำระเงิน</label>
-                                                <select class="form-select" name="order_payment" id="payment_method">
-                                                    <option value="ยังไม่จ่ายเงิน" <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'selected' : ''; ?>>ยังไม่จ่ายเงิน</option>
-                                                    <option value="จ่ายแล้ว" <?php echo ($order['order_payment'] == 'จ่ายแล้ว') ? 'selected' : ''; ?>>จ่ายแล้ว</option>
-                                                </select>
+                                            <div class="mt-5 d-flex  justify-content-between">
+                                                <h3 class="mb-3">รายการคอร์ส</h3>                                                
+                                                <h3>ราคารวม: <span id="totalPrice">0</span> บาท</h3>
                                             </div>
-                                            
-                                            <h6 class="mb-3">รายการคอร์ส</h6>
+
                                             <div id="courseList">
                                                 <!-- รายการคอร์สจะถูกเพิ่มที่นี่ด้วย JavaScript -->
                                             </div>
                                             <button type="button" class="btn btn-primary mb-3" onclick="addNewCourse()">เพิ่มคอร์ส</button>
                                             
-                                            <div class="text-end mt-3">
-                                                <h5>ราคารวม: <span id="totalPrice">0</span> บาท</h5>
-                                                <button type="button" class="btn btn-primary" onclick="saveOrder()">บันทึกการแก้ไข</button>
-                                                <a href="service.php" class="btn btn-secondary">ยกเลิก</a>
-                                            </div>
-                                        <!-- </form> -->
+
+                                            <script>
+                                                document.getElementById('saveChangesButton').addEventListener('click', function() {
+                                                    document.getElementById('editOrderForm').submit();
+                                                });
+                                            </script>
                                     </div>
                                 </div>
                             </div>
@@ -304,6 +369,15 @@ $result_details = $conn->query($sql_details);
     <script src="../assets/js/main.js"></script>
 
     <script>
+document.getElementById('payment_method').addEventListener('change', function() {
+    const slipUpload = document.getElementById('slipUpload');
+    if (this.value === 'เงินโอน') {
+        slipUpload.style.display = 'block';
+    } else {
+        slipUpload.style.display = 'none';
+    }
+});
+
 let currentOrderId;
 let currentCourseItem;
 function msg_ok(title,text){
@@ -332,6 +406,18 @@ function msg_error(message){
     });
 }
 
+function translateResourceType(type) {
+    switch(type) {
+        case 'drug':
+            return 'ยา';
+        case 'tool':
+            return 'เครื่องมือ';
+        case 'accessory':
+            return 'อุปกรณ์';
+        default:
+            return type;
+    }
+}
 function loadExistingOrder() {
     currentOrderId = document.querySelector('input[name="order_id"]').value;
     $.ajax({
@@ -405,7 +491,6 @@ function addCourseToList(course) {
                 <input type="number" class="form-control course-price" value="${course.price}" onchange="updateCourse(this)">
             </div>
             <div class="col-md-3">
-                <label  class="form-label">การดำเนินการ</label><br>
                 <button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>
             </div>
         </div>
@@ -437,7 +522,7 @@ function addCourseToList(course) {
         course.resources.forEach(resource => {
             const resourceRow = `
                 <tr data-resource-id="${resource.id}">
-                    <td>${resource.type}</td>
+                    <td>${translateResourceType(resource.type)}</td>
                     <td>${resource.name}</td>
                     <td><input type="number" value="${resource.quantity}" class="form-control"  min="0.01" step="0.01" onchange="updateResource(this)"></td>
                     <td>${resource.unit}</td>
@@ -795,7 +880,35 @@ function loadCourseOptions() {
         }
     });
 }
+    // msg error
+     <?php if(isset($_SESSION['msg_error'])){ ?>
 
+      Swal.fire({
+         icon: 'error',
+         title: 'แจ้งเตือน!!',
+         text: '<?php echo $_SESSION['msg_error']; ?>',
+         customClass: {
+              confirmButton: 'btn btn-danger waves-effect waves-light'
+            },
+         buttonsStyling: false
+
+      })
+    <?php unset($_SESSION['msg_error']); } ?>
+
+
+    // msg ok 
+    <?php if(isset($_SESSION['msg_ok'])){ ?>
+      Swal.fire({
+         icon: 'success',
+         title: 'แจ้งเตือน!!',
+         text: '<?php echo $_SESSION['msg_ok']; ?>',
+         customClass: {
+              confirmButton: 'btn btn-primary waves-effect waves-light'
+            },
+         buttonsStyling: false
+
+      })
+    <?php unset($_SESSION['msg_ok']); } ?>
 </script>
 </body>
 </html>

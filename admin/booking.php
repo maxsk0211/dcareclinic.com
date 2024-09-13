@@ -409,7 +409,7 @@
                                                         <option value="ยังไม่จ่ายเงิน">ยังไม่จ่ายเงิน</option>
                                                         <option value="เงินสด">เงินสด</option>
                                                         <option value="บัตรเครดิต">บัตรเครดิต</option>
-                                                        <option value="โอนเงิน">โอนเงิน</option>
+                                                        <option value="เงินโอน">เงินโอน</option>
                                                     </select>
                                                 </div>
                                                 <input type="hidden" name="booking_datetime" value="<?= $booking_datetime; ?>">

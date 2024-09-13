@@ -1,8 +1,23 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require '../../dbcon.php';
 
 header('Content-Type: application/json');
-
+function translateResourceType($type) {
+    switch($type) {
+        case 'drug':
+            return 'ยา';
+        case 'tool':
+            return 'เครื่องมือ';
+        case 'accessory':
+            return 'อุปกรณ์';
+        default:
+            return $type;
+    }
+}
 $order_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($order_id == 0) {
@@ -19,15 +34,13 @@ $sql_order = "SELECT oc.*, c.cus_firstname, c.cus_lastname, cb.booking_datetime
 
 $stmt_order = $conn->prepare($sql_order);
 if (!$stmt_order) {
-    error_log("Prepare failed: " . $conn->error);
-    echo json_encode(array('error' => 'Database error'));
+    echo json_encode(array('error' => 'Prepare failed: ' . $conn->error));
     exit;
 }
 
 $stmt_order->bind_param("i", $order_id);
 if (!$stmt_order->execute()) {
-    error_log("Execute failed: " . $stmt_order->error);
-    echo json_encode(array('error' => 'Database error'));
+    echo json_encode(array('error' => 'Execute failed: ' . $stmt_order->error));
     exit;
 }
 
@@ -47,15 +60,13 @@ $sql_courses = "SELECT od.*, c.course_name
 
 $stmt_courses = $conn->prepare($sql_courses);
 if (!$stmt_courses) {
-    error_log("Prepare failed: " . $conn->error);
-    echo json_encode(array('error' => 'Database error'));
+    echo json_encode(array('error' => 'Prepare failed: ' . $conn->error));
     exit;
 }
 
 $stmt_courses->bind_param("i", $order_id);
 if (!$stmt_courses->execute()) {
-    error_log("Execute failed: " . $stmt_courses->error);
-    echo json_encode(array('error' => 'Database error'));
+    echo json_encode(array('error' => 'Execute failed: ' . $stmt_courses->error));
     exit;
 }
 
@@ -86,14 +97,14 @@ while ($course = $result_courses->fetch_assoc()) {
     
     $stmt_resources = $conn->prepare($sql_resources);
     if (!$stmt_resources) {
-        error_log("Prepare failed: " . $conn->error);
-        continue; // Skip this course if prepare fails
+        echo json_encode(array('error' => 'Prepare failed: ' . $conn->error));
+        exit;
     }
 
     $stmt_resources->bind_param("ii", $order_id, $course['course_id']);
     if (!$stmt_resources->execute()) {
-        error_log("Execute failed: " . $stmt_resources->error);
-        continue; // Skip this course if execute fails
+        echo json_encode(array('error' => 'Execute failed: ' . $stmt_resources->error));
+        exit;
     }
 
     $result_resources = $stmt_resources->get_result();
@@ -102,7 +113,7 @@ while ($course = $result_courses->fetch_assoc()) {
     while ($resource = $result_resources->fetch_assoc()) {
         $resources[] = array(
             'id' => $resource['id'],
-            'type' => $resource['resource_type'],
+            'type' => translateResourceType($resource['resource_type']),
             'name' => $resource['resource_name'],
             'quantity' => $resource['quantity'],
             'unit' => $resource['unit_name']
@@ -128,21 +139,10 @@ $order_details = array(
     'total_price' => $order['order_net_total'],
     'courses' => $courses
 );
-// ก่อน echo json_encode($order_details);
-error_log("Order details: " . print_r($order_details, true));
-echo json_encode($order_details);
+
+ob_clean();
+echo json_encode($order_details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 $stmt_order->close();
 $stmt_courses->close();
 $conn->close();
-
-header('Content-Type: application/json');
-$json_response = json_encode($order_details, JSON_PRETTY_PRINT);
-if ($json_response === false) {
-    // JSON encoding failed
-    error_log("JSON encode error: " . json_last_error_msg());
-    echo json_encode(array("error" => "Internal Server Error"));
-} else {
-    echo $json_response;
-}
-exit;
