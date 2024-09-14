@@ -242,7 +242,7 @@ $result_bookings = $conn->query($sql_bookings);
                                                            data-queue-id="<?php echo $row['queue_id']; ?>">OPD</a>
                                                         <a href="service.php?queue_id=<?php echo $row['queue_id']; ?>" 
                                                            id="service-btn-<?php echo $row['queue_id']; ?>" 
-                                                           class="btn btn-sm btn-info service-btn d-none" >บริการ</a>
+                                                           class="btn btn-sm btn-info service-btn " >บริการ</a>
                                                     <?php endif; ?>
                                                     <?php if($row['service_status'] != 'cancelled'): ?>
                                                         <button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(<?php echo $row['queue_id']; ?>, 'cancelled')">ยกเลิก</button>
@@ -504,16 +504,16 @@ function checkOPDStatus(queueId) {
             if (response.has_opd) {
                 if (response.opd_status === 1) {
                     opdBtn.removeClass('btn-info').addClass('btn-success');
-                    serviceBtn.removeClass('d-none');
+                    // serviceBtn.removeClass('d-none');
                     // serviceBtn.show();
                 } else {
                     opdBtn.removeClass('btn-success').addClass('btn-info');
-                    serviceBtn.addClass('d-none');
+                    // serviceBtn.addClass('d-none');
                     // serviceBtn.hide();
                 }
             } else {
                 opdBtn.removeClass('btn-success').addClass('btn-info');
-                serviceBtn.addClass('d-none');
+                // serviceBtn.addClass('d-none');
                 // serviceBtn.hide();
             }
         },
@@ -589,7 +589,7 @@ function updateQueueRow(queueId, newStatus) {
         if (newStatus === 'in_progress') {
             actionButtons = `
                 <a href="opd.php?queue_id=${queueId}" id="opd-btn-${queueId}" class="btn btn-sm btn-info opd-btn" data-queue-id="${queueId}">OPD</a>
-                <a href="service.php?queue_id=${queueId}" id="service-btn-${queueId}" class="btn btn-sm btn-info service-btn d-none">บริการ</a>
+                <a href="service.php?queue_id=${queueId}" id="service-btn-${queueId}" class="btn btn-sm btn-info service-btn">บริการ</a>
             `;
         } else if (newStatus === 'waiting') {
             actionButtons = `
@@ -679,7 +679,7 @@ function refreshQueueTable() {
                     } else if (row.service_status == 'in_progress') {
                         actionButtons = `
                             <a href="opd.php?queue_id=${row.queue_id}" id="opd-btn-${row.queue_id}" class="btn btn-sm btn-info opd-btn" data-queue-id="${row.queue_id}">OPD</a>
-                            <a href="service.php?queue_id=${row.queue_id}" id="service-btn-${row.queue_id}" class="btn btn-sm btn-info service-btn d-none" >บริการ</a>
+                            <a href="service.php?queue_id=${row.queue_id}" id="service-btn-${row.queue_id}" class="btn btn-sm btn-info service-btn " >บริการ</a>
                         `;
                     }
                     if (row.service_status != 'cancelled' && row.service_status != 'completed') {

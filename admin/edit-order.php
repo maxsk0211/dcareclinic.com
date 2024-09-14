@@ -22,6 +22,8 @@ if ($result->num_rows == 0) {
 }
 
 $order = $result->fetch_assoc();
+// ตรวจสอบสถานะการชำระเงิน
+$isPaymentCompleted = in_array($order['order_payment'], ['เงินสด', 'บัตรเครดิต', 'เงินโอน']);
 
 // ดึงรายละเอียดคอร์ส
 $sql_details = "SELECT od.*, c.course_name, c.course_price
@@ -29,6 +31,10 @@ $sql_details = "SELECT od.*, c.course_name, c.course_price
                 JOIN course c ON od.course_id = c.course_id
                 WHERE od.oc_id = $order_id";
 $result_details = $conn->query($sql_details);
+
+
+// ตรวจสอบว่าผู้ใช้เป็นผู้ดูแลระบบหรือผู้จัดการหรือไม่
+$canCancelPayment = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2);
 
 ?>
 
@@ -292,7 +298,7 @@ $result_details = $conn->query($sql_details);
                                             </div>
                                             <div class="mb-4">
                                                 <label class="form-label">สถานะการชำระเงิน</label>
-                                                <select class="form-select" name="order_payment" id="payment_method">
+                                                <select class="form-select" name="order_payment" id="payment_method" <?php echo $isPaymentCompleted ? 'disabled' : ''; ?>>
                                                     <option value="ยังไม่จ่ายเงิน" <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'selected' : ''; ?>>ยังไม่จ่ายเงิน</option>
                                                     <option value="เงินสด" <?php echo ($order['order_payment'] == 'เงินสด') ? 'selected' : ''; ?>>เงินสด</option>
                                                     <option value="บัตรเครดิต" <?php echo ($order['order_payment'] == 'บัตรเครดิต') ? 'selected' : ''; ?>>บัตรเครดิต</option>
@@ -335,12 +341,18 @@ $result_details = $conn->query($sql_details);
                                         </div>
 
                                         <div class="text-end mt-4">
-                                            <button type="button" class="btn btn-primary" id="saveChangesButton">บันทึกการแก้ไข</button>
-                                            <a href="service.php" class="btn btn-secondary">ยกเลิก</a>
+                                         <!-- เพิ่มปุ่มยกเลิกการชำระเงินถ้าผู้ใช้มีสิทธิ์และการชำระเงินเสร็จสิ้นแล้ว -->
+                                        <?php if ($canCancelPayment && $isPaymentCompleted): ?>
+                                            <button type="button" class="btn btn-warning" id="cancelPaymentButton">ยกเลิกการชำระเงิน</button>
+                                        <?php endif; ?>
+                                            <button type="button" class="btn btn-primary" id="saveChangesButton"  <?php echo $isPaymentCompleted ? 'disabled' : '';?>>บันทึกการแก้ไข</button>
+                                        <?php if($order['order_payment_date']==null): ?>
+                                            <a href="queue-management.php" class="btn btn-secondary" >ยกเลิก</a>
+                                        <?php endif ?>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mb-4">
                                             <h3 class="mb-0">รายการคอร์ส</h3>
-                                            <h3 class="mb-0 total-price">ราคารวม: <span id="totalPrice">0</span> บาท</h3>
+                                            <h3 class="mb-0 total-price">ราคารวม: <span id="totalPrice">0.00</span> บาท</h3>
                                         </div>
                                     </form>
 
@@ -362,7 +374,7 @@ $result_details = $conn->query($sql_details);
                                             <div id="courseList">
                                                 <!-- รายการคอร์สจะถูกเพิ่มที่นี่ด้วย JavaScript -->
                                             </div>
-                                            <button type="button" class="btn btn-primary mb-3" onclick="addNewCourse()">เพิ่มคอร์ส</button>
+                                            <button type="button" class="btn btn-primary mb-3" onclick="addNewCourse()" <?php echo $isPaymentCompleted ? 'disabled' : '';?>>เพิ่มคอร์ส</button>
                                             
 
                                             <script>
@@ -519,7 +531,7 @@ document.getElementById('payment_method').addEventListener('change', function() 
         slipUpload.style.display = 'none';
     }
 });
-
+var isPaymentCompleted = <?php echo json_encode($isPaymentCompleted); ?>;
 let currentOrderId;
 let currentCourseItem;
 function msg_ok(title,text){
@@ -538,8 +550,8 @@ function msg_ok(title,text){
 function msg_error(message){
         Swal.fire({
         icon: 'error',
-        title: 'แก้ไขคอร์สสำเร็จ',
-        text: 'ข้อมูลคอร์สถูกอัปเดตเรียบร้อยแล้ว',
+        title: 'ข้อมูลผิดพลาด!',
+        text: message,
         position: 'top-end',
         showConfirmButton: false,
         timer: 1500,
@@ -547,7 +559,9 @@ function msg_error(message){
 
     });
 }
-
+function formatNumber(number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 function translateResourceType(type) {
     switch(type) {
         case 'drug':
@@ -630,10 +644,10 @@ function addCourseToList(course) {
             </div>
             <div class="col-md-3">
                 <label  class="form-label">ราคา/คอร์ส</label> 
-                <input type="number" class="form-control course-price" value="${course.price}" onchange="updateCourse(this)">
+                <input type="text" class="form-control course-price" value="${formatNumber(parseFloat(course.price).toFixed(2))}" onchange="updateCourse(this)" ${isPaymentCompleted ? 'readonly' : ''}>
             </div>
             <div class="col-md-3">
-                <button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>
+                ${isPaymentCompleted ? '' : '<button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>'}
             </div>
         </div>
         <div class="resources-table mt-2">
@@ -651,7 +665,7 @@ function addCourseToList(course) {
                     <!-- ทรัพยากรจะถูกเพิ่มที่นี่ -->
                 </tbody>
             </table>
-            <button type="button" class="btn btn-info" onclick="showResourceModal(this)">เพิ่มทรัพยากร</button>
+            ${isPaymentCompleted ? '' : '<button type="button" class="btn btn-info" onclick="showResourceModal(this)">เพิ่มทรัพยากร</button>'}
         </div>
     `;
     
@@ -666,9 +680,9 @@ function addCourseToList(course) {
                 <tr data-resource-id="${resource.id}">
                     <td>${translateResourceType(resource.type)}</td>
                     <td>${resource.name}</td>
-                    <td><input type="number" value="${resource.quantity}" class="form-control"  min="0.01" step="0.01" onchange="updateResource(this)"></td>
+                    <td><input type="number" value="${resource.quantity}" class="form-control"  min="0.01" step="0.01" onchange="updateResource(this)" ${isPaymentCompleted ? 'readonly' : ''}></td>
                     <td>${resource.unit}</td>
-                    <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
+                    <td>${isPaymentCompleted ? '' : '<button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button>'}</td>
                 </tr>
             `;
             resourcesTable.insertAdjacentHTML('beforeend', resourceRow);
@@ -682,8 +696,16 @@ function updateCourse(input) {
     const courseItem = input.closest('.course-item');
     const courseId = courseItem.dataset.courseId;
     const amount = courseItem.querySelector('.course-amount').value;
-    const price = courseItem.querySelector('.course-price').value;
+     let price = parseFloat(courseItem.querySelector('.course-price').value.replace(/,/g, ''));
     
+    // ตรวจสอบว่าราคาเป็นตัวเลขที่ถูกต้อง
+    if (isNaN(price)) {
+        alert('กรุณาใส่ราคาที่ถูกต้อง');
+        return;
+    }
+    // ปัดเศษทศนิยมให้เหลือ 2 ตำแหน่ง
+    price = parseFloat(price.toFixed(2));
+
     $.ajax({
         url: 'sql/update-order-course.php',
         type: 'POST',
@@ -695,10 +717,10 @@ function updateCourse(input) {
         },
         success: function(response) {
             console.log('Course updated successfully');
+            courseItem.querySelector('.course-price').value = formatNumber(price.toFixed(2));
             updateTotalPrice();
             // แสดงการแจ้งเตือนด้วย SweetAlert2
             msg_ok('แก้ไขคอร์สสำเร็จ','ข้อมูลคอร์สถูกอัปเดตเรียบร้อยแล้ว');
-
         },
         error: function(xhr, status, error) {
             console.error('Error updating course:', error);
@@ -831,9 +853,9 @@ function addResource() {
                 <tr data-resource-id="${response.resource_id}">
                     <td>${type}</td>
                     <td>${name}</td>
-                    <td><input type="number" class="form-control" value="${quantity}" min="0.01" step="0.01" onchange="updateResource(this)"></td>
+                    <td><input type="number" class="form-control" value="${quantity}" min="0.01" step="0.01" onchange="updateResource(this)" ${isPaymentCompleted ? 'readonly' : ''}></td>
                     <td>${unit}</td>
-                    <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
+                    <td>${isPaymentCompleted ? '' : '<button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button>'}</td>
                 </tr>
             `;
             currentCourseItem.querySelector('.resources-table tbody').insertAdjacentHTML('beforeend', newRow);
@@ -848,11 +870,11 @@ function addResource() {
 function updateTotalPrice() {
     let total = 0;
     document.querySelectorAll('.course-item').forEach(item => {
-        const price = parseFloat(item.querySelector('.course-price').value);
+        const price = parseFloat(item.querySelector('.course-price').value.replace(/,/g, ''));
         const amount = parseInt(item.querySelector('.course-amount').value);
         total += price * amount;
     });
-    document.getElementById('totalPrice').textContent = total.toFixed(2);
+    document.getElementById('totalPrice').textContent = formatNumber(total.toFixed(2));
     
     // Update total price in database
     $.ajax({
@@ -875,6 +897,71 @@ function updateTotalPrice() {
 $(document).ready(function() {
     loadExistingOrder();
     loadCourseOptions();
+
+  $('#cancelPaymentButton').on('click', function() {
+        Swal.fire({
+            title: 'ยืนยันการยกเลิกการชำระเงิน?',
+            text: "คุณแน่ใจหรือไม่ที่จะยกเลิกการชำระเงินนี้?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ใช่, ยกเลิกการชำระเงิน',
+            cancelButtonText: 'ยกเลิก',
+              customClass: {
+                confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
+                cancelButton: 'btn btn-outline-secondary waves-effect'
+              },
+              buttonsStyling: false
+
+
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'sql/cancel-payment.php',
+                    type: 'POST',
+                    data: {
+                        order_id: currentOrderId
+                    },
+                    success: function(response) {
+                        console.log('Server response:', response);  // เพิ่ม log นี้
+                        if (response.success) {
+                            Swal.fire({
+                                 icon: 'success',
+                                 title: 'ยกเลิกสำเร็จ!',
+                                 text: 'การชำระเงินได้ถูกยกเลิกแล้ว',
+                                 customClass: {
+                                      confirmButton: 'btn btn-danger waves-effect waves-light'
+                                    },
+                                 buttonsStyling: false
+                            }).then(() => {
+                                location.reload(); // รีโหลดหน้าเพื่อแสดงการเปลี่ยนแปลง
+                            });
+
+                        } else {
+                            msg_error()
+                            Swal.fire(
+                                'เกิดข้อผิดพลาด!',
+                                response.message || 'ไม่สามารถยกเลิกการชำระเงินได้',
+                                'error'
+                            );
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    console.log('Response Text:', xhr.responseText);
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด!',
+                            'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                            'error'
+                        );
+                    }
+                });
+            }
+        });
+    });
+
+
 });
 
 // Auto-save when changing booking datetime or payment status
@@ -993,9 +1080,9 @@ function loadCourseResources(courseId) {
                     <tr data-resource-id="${resource.id}">
                         <td>${resource.type}</td>
                         <td>${resource.name}</td>
-                        <td><input type="number" value="${resource.quantity}" min="0.01" step="0.01" onchange="updateResource(this)"></td>
+                        <td><input type="number" value="${resource.quantity}" min="0.01" step="0.01" onchange="updateResource(this)" ${isPaymentCompleted ? 'readonly' : ''}></td>
                         <td>${resource.unit}</td>
-                        <td><button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button></td>
+                        <td>${isPaymentCompleted ? '' : '<button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button>'}</td>
                     </tr>
                 `;
                 resourcesTableBody.insertAdjacentHTML('beforeend', newRow);
