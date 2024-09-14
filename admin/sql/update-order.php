@@ -41,17 +41,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // กำหนดวันที่ชำระเงิน
+    // กำหนดวันที่ชำระเงินและผู้ขาย
     if (in_array($order_payment, ['เงินสด', 'เงินโอน', 'บัตรเครดิต'])) {
         $order_payment_date = date('Y-m-d H:i:s');
+        $seller_id = $_SESSION['users_id'];
     }
 
     // อัปเดตข้อมูลในฐานข้อมูล
-    $sql = "UPDATE order_course SET order_payment = ?, payment_proofs = ?, order_payment_date = ? WHERE oc_id = ?";
+    $sql = "UPDATE order_course SET order_payment = ?, payment_proofs = ?, order_payment_date = ?, seller_id = ? WHERE oc_id = ?";
     $stmt = $conn->prepare($sql);
 
     if ($stmt) {
-        $stmt->bind_param("sssi", $order_payment, $payment_proofs, $order_payment_date, $order_id);
+        $stmt->bind_param("sssii", $order_payment, $payment_proofs, $order_payment_date, $seller_id, $order_id);
         if ($stmt->execute()) {
             $_SESSION['msg_ok'] = "อัปเดตข้อมูลสำเร็จ";
         } else {

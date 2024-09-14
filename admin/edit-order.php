@@ -161,6 +161,96 @@ $result_details = $conn->query($sql_details);
     .payment-completed {
         color: #28a745;
     }
+        .order-info-section {
+        background-color: #ffffff;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    .order-info-section .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    .order-info-section .form-control,
+    .order-info-section .form-select {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    .order-info-section .form-control:focus,
+    .order-info-section .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    .order-info-section .form-control[readonly] {
+        background-color: #f8f9fa;
+        opacity: 1;
+    }
+    .payment-date {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    .slip-preview {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+    }
+    .slip-preview img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover, .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .total-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #4e73df;
+    }
+    .slip-preview img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .slip-preview img:hover {
+        transform: scale(1.05);
+    }
+    .modal-body img {
+        max-width: 100%;
+        height: auto;
+    }
+    .payment-date {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .payment-date p {
+        margin-bottom: 5px;
+    }
+    .payment-date p:last-child {
+        margin-bottom: 0;
+    }
     </style>
 </head>
 <body>
@@ -186,49 +276,88 @@ $result_details = $conn->query($sql_details);
                                 <div class="card mb-4">
                                     <h5 class="card-header">รายละเอียดคำสั่งซื้อ</h5>
                                     <div class="card-body">
-                                        <form id="editOrderForm" method="post" action="sql/update-order.php" enctype="multipart/form-data">
-                                            <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
-                                            <div class="order-info-section">
-                                                <div class="mb-4">
+                                     <form id="editOrderForm" method="post" action="sql/update-order.php" enctype="multipart/form-data">
+                                        <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
+                                        <div class="order-info-section">
+                                            <h3 class="mb-4">รายละเอียดคำสั่งซื้อ</h3>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-4">
                                                     <label class="form-label">ชื่อลูกค้า</label>
                                                     <input type="text" class="form-control" value="<?php echo $order['cus_firstname'] . ' ' . $order['cus_lastname']; ?>" readonly>
                                                 </div>
-                                                <div class="mb-4">
+                                                <div class="col-md-6 mb-4">
                                                     <label class="form-label">วันที่นัดรับบริการ</label>
                                                     <input type="datetime-local" class="form-control" name="booking_datetime" id="booking_datetime" value="<?php echo date('Y-m-d\TH:i', strtotime($order['booking_datetime'])); ?>" readonly>
                                                 </div>
-                                                <div class="mb-4">
-                                                    <label class="form-label">สถานะการชำระเงิน</label>
-                                                    <select class="form-select" name="order_payment" id="payment_method">
-                                                        <option value="ยังไม่จ่ายเงิน" <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'selected' : ''; ?> class="payment-pending">ยังไม่จ่ายเงิน</option>
-                                                        <option value="เงินสด" <?php echo ($order['order_payment'] == 'เงินสด') ? 'selected' : ''; ?>>เงินสด</option>
-                                                        <option value="บัตรเครดิต" <?php echo ($order['order_payment'] == 'บัตรเครดิต') ? 'selected' : ''; ?>>บัตรเครดิต</option>
-                                                        <option value="เงินโอน" <?php echo ($order['order_payment'] == 'โอนเงิน') ? 'selected' : ''; ?>>เงินโอน</option>
-                                                    </select>
-                                                </div>
-                                                <?php if (!empty($order['order_payment_date'])): ?>
-                                                <h4>จ่ายเงินแล้วเมื่อวันที่ : <?= $order['order_payment_date'];?></h4>
-                                                <?php endif ?>
-                                                <div id="slipUpload" class="mb-4" style="display: none;">
-                                                    <label class="form-label">อัพโหลดสลิปการโอนเงิน</label>
-                                                    <input type="file" class="form-control" name="payment_slip" accept="image/*">
-                                                </div>
-                                                <?php if (!empty($order['payment_proofs'])): ?>
-                                                <div class="mb-4">
-                                                    <label class="form-label">สลิปการโอนเงินที่อัพโหลดแล้ว</label><br>
-                                                    <img src="../img/payment-proofs/<?php echo $order['payment_proofs']; ?>" alt="Payment Slip" class="img-fluid" style="max-width: 300px;">
-                                                </div>
-                                                <?php endif; ?>
                                             </div>
-                                        </form>
-                                            <div class="text-end mt-3">
-                                                <button type="button" class="btn btn-primary" id="saveChangesButton">บันทึกการแก้ไข</button>
-                                                <a href="service.php" class="btn btn-secondary">ยกเลิก</a>
+                                            <div class="mb-4">
+                                                <label class="form-label">สถานะการชำระเงิน</label>
+                                                <select class="form-select" name="order_payment" id="payment_method">
+                                                    <option value="ยังไม่จ่ายเงิน" <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'selected' : ''; ?>>ยังไม่จ่ายเงิน</option>
+                                                    <option value="เงินสด" <?php echo ($order['order_payment'] == 'เงินสด') ? 'selected' : ''; ?>>เงินสด</option>
+                                                    <option value="บัตรเครดิต" <?php echo ($order['order_payment'] == 'บัตรเครดิต') ? 'selected' : ''; ?>>บัตรเครดิต</option>
+                                                    <option value="เงินโอน" <?php echo ($order['order_payment'] == 'โอนเงิน') ? 'selected' : ''; ?>>เงินโอน</option>
+                                                </select>
                                             </div>
-                                            <div class="mt-5 d-flex  justify-content-between">
-                                                <h3 class="mb-3">รายการคอร์ส</h3>                                                
-                                                <h3>ราคารวม: <span id="totalPrice">0</span> บาท</h3>
+<?php if (!empty($order['order_payment_date'])): ?>
+<div class="payment-date mb-4">
+    <p>จ่ายเงินแล้วเมื่อวันที่: <?php echo date('d/m/Y H:i', strtotime($order['order_payment_date'])); ?></p>
+    <?php
+    if (!empty($order['seller_id'])) {
+        $seller_sql = "SELECT users_fname, users_lname FROM users WHERE users_id = ?";
+        $seller_stmt = $conn->prepare($seller_sql);
+        if ($seller_stmt) {
+            $seller_stmt->bind_param("i", $order['seller_id']);
+            $seller_stmt->execute();
+            $seller_result = $seller_stmt->get_result();
+            if ($seller_data = $seller_result->fetch_assoc()) {
+                echo "<p>ผู้ขาย: " . htmlspecialchars($seller_data['users_fname'] . ' ' . $seller_data['users_lname']) . "</p>";
+            }
+            $seller_stmt->close();
+        } else {
+            echo "<p>Error preparing statement: " . $conn->error . "</p>";
+        }
+    }
+    ?>
+</div>
+<?php endif; ?>
+                                            
+                                            <div id="slipUpload" class="mb-4" style="display: none;">
+                                                <label class="form-label">อัพโหลดสลิปการโอนเงิน</label>
+                                                <input type="file" class="form-control" name="payment_slip" accept="image/*">
                                             </div>
+                                            <?php if (!empty($order['payment_proofs'])): ?>
+                                            <div class="mb-4 slip-preview">
+                                                <label class="form-label">สลิปการโอนเงินที่อัพโหลดแล้ว</label><br>
+                                                <img src="../img/payment-proofs/<?php echo $order['payment_proofs']; ?>" alt="Payment Slip" class="img-fluid" onclick="showSlipModal(this.src)" style="height: 300px;">
+                                            </div>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <div class="text-end mt-4">
+                                            <button type="button" class="btn btn-primary" id="saveChangesButton">บันทึกการแก้ไข</button>
+                                            <a href="service.php" class="btn btn-secondary">ยกเลิก</a>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                            <h3 class="mb-0">รายการคอร์ส</h3>
+                                            <h3 class="mb-0 total-price">ราคารวม: <span id="totalPrice">0</span> บาท</h3>
+                                        </div>
+                                    </form>
+
+                                    <!-- Modal สำหรับแสดงรูปภาพ -->
+                                    <div class="modal fade" id="slipModal" tabindex="-1" aria-labelledby="slipModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="slipModalLabel">สลิปการโอนเงิน</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <img src="" id="slipModalImage" alt="Payment Slip" class="img-fluid">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                             <div id="courseList">
                                                 <!-- รายการคอร์สจะถูกเพิ่มที่นี่ด้วย JavaScript -->
@@ -369,6 +498,19 @@ $result_details = $conn->query($sql_details);
     <script src="../assets/js/main.js"></script>
 
     <script>
+document.getElementById('addResourceForm').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        return false;
+    }
+});
+
+function showSlipModal(imageSrc) {
+    document.getElementById('slipModalImage').src = imageSrc;
+    var slipModal = new bootstrap.Modal(document.getElementById('slipModal'));
+    slipModal.show();
+}
+
 document.getElementById('payment_method').addEventListener('change', function() {
     const slipUpload = document.getElementById('slipUpload');
     if (this.value === 'เงินโอน') {
@@ -484,7 +626,7 @@ function addCourseToList(course) {
             </div>
             <div class="col-md-2">
                 <label  class="form-label">จำนวน</label> 
-                <input type="number" class="form-control course-amount" value="${course.amount}" min="1" onchange="updateCourse(this)">
+                <input type="number" class="form-control course-amount" value="${course.amount}" min="1" onchange="updateCourse(this)" readonly>
             </div>
             <div class="col-md-3">
                 <label  class="form-label">ราคา/คอร์ส</label> 
@@ -666,7 +808,11 @@ function addResource() {
     const quantity = $('#resourceQuantity').val();
     const name = $('#resourceId option:selected').text();
     const unit = ''; // ต้องดึงข้อมูลหน่วยนับจากฐานข้อมูล
-    
+
+    if (!quantity) {
+        alert('กรุณาใส่จำนวน');
+        return;
+    }
     $.ajax({
         url: 'sql/add-resource.php',
         type: 'POST',
