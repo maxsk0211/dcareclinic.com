@@ -52,7 +52,11 @@ $result_courses = $conn->query($sql_courses);
 // รีเซ็ตตัวชี้ข้อมูลกลับไปที่จุดเริ่มต้น
 $result_courses->data_seek(0);
 ?>
-
+<?php
+    if (!isset($order) || !isset($order['order_net_total'])) {
+        $order['order_net_total'] = 0;
+    }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,7 +87,7 @@ $result_courses->data_seek(0);
     <link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <!-- Helpers -->
     <script src="../assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
@@ -262,6 +266,68 @@ $result_courses->data_seek(0);
     .ri-calendar-check-line {
         margin-right: 5px;
     }
+    .df-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .df-record {
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .df-record:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .df-record p {
+        margin-bottom: 5px;
+        font-size: 16px;
+    }
+    .df-record .staff-name {
+        font-weight: bold;
+        color: #3366cc;
+    }
+    .df-record .df-amount {
+        font-weight: bold;
+        color: #28a745;
+    }
+    .df-record .remove-btn {
+        margin-top: 10px;
+    }
+    .df-total {
+        font-size: 18px;
+        font-weight: bold;
+        text-align: right;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 2px solid #e9ecef;
+    }
+    .add-df-btn {
+        margin-top: 20px;
+    }
+    .btn-success.btn-lg {
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-success.btn-lg:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .card-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        padding: 20px;
+    }
 </style>
 </head>
 <body>
@@ -288,7 +354,7 @@ $result_courses->data_seek(0);
                             <div class="col-md-6">
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        <h5 class="card-title"><i class="ri-user-fill mr-2"></i> ข้อมูลลูกค้า</h5>
+                                        <h5 class="card-title text-white"><i class="ri-user-fill mr-2"></i> ข้อมูลลูกค้า</h5>
                                     </div>
                                     <div class="card-body">
                                         <div class="customer-info">
@@ -307,7 +373,7 @@ $result_courses->data_seek(0);
                             <div class="col-md-6">
                                 <div class="card mb-4">
                                     <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h5 class="card-title mb-0"><i class="ri-shopping-cart-fill mr-2"></i> รายละเอียดคำสั่งซื้อสำหรับการบริการวันนี้</h5>
+                                        <h5 class="card-title mb-0 text-white"><i class="ri-shopping-cart-fill mr-2"></i> รายละเอียดคำสั่งซื้อสำหรับการบริการวันนี้</h5>
 
                                         <?php 
                                         // ดึงข้อมูลคำสั่งซื้อที่เกี่ยวข้องกับคิวปัจจุบัน
@@ -373,6 +439,9 @@ $result_courses->data_seek(0);
                                             </div>
                                         <?php else: ?>
                                             <p class="text-muted text-center">ไม่พบข้อมูลคำสั่งซื้อสำหรับการบริการนี้</p>
+                                            <div class="text-center mt-3">
+                                                <button type="button" class="btn btn-primary" onclick="createOrder()">สร้างคำสั่งซื้อ</button>
+                                            </div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -381,7 +450,73 @@ $result_courses->data_seek(0);
                         
                         
                     <!-- / Content -->
+                    <!-- df -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title text-white">ค่าธรรมเนียมแพทย์และพยาบาล (DF)</h5>
+    </div>
+    <div class="card-body">
+        <div class="df-container">
+            <div id="dfList">
+                <!-- DF records will be displayed here -->
+            </div>
+            <div class="df-total">รวม DF: <span id="totalDF">0</span> บาท</div>
+        </div>
+        <button type="button" class="btn btn-primary add-df-btn" data-bs-toggle="modal" data-bs-target="#addDFModal">
+            <i class="fas fa-plus-circle"></i> เพิ่ม DF
+        </button>
+    </div>
+    <div class="card-footer text-center">
+        <button type="button" class="btn btn-success btn-lg" onclick="completeService()">
+            <i class="fas fa-check-circle"></i> เสร็จสิ้น
+        </button>
+    </div>
+</div>
 
+<!-- Modal for adding DF -->
+<div class="modal fade" id="addDFModal" tabindex="-1" aria-labelledby="addDFModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addDFModalLabel"><i class="fas fa-plus-circle"></i> เพิ่มค่าธรรมเนียม (DF)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addDFForm">
+                    <div class="mb-3">
+                        <label for="staffType" class="form-label">ประเภทบุคลากร</label>
+                        <select class="form-select" id="staffType" required>
+                            <option value="">เลือกประเภท</option>
+                            <option value="doctor">แพทย์</option>
+                            <option value="nurse">พยาบาล</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="staffId" class="form-label">เลือกบุคลากร</label>
+                        <select class="form-select" id="staffId" required>
+                            <option value="">เลือกบุคลากร</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dfAmount" class="form-label">จำนวน DF</label>
+                        <input type="number" class="form-control" id="dfAmount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dfType" class="form-label">ประเภท DF</label>
+                        <select class="form-select" id="dfType" required>
+                            <option value="amount">บาท</option>
+                            <option value="percent">เปอร์เซ็นต์</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-primary" onclick="addDF()">เพิ่ม DF</button>
+            </div>
+        </div>
+    </div>
+</div>                    <!-- df -->
                     <!-- Footer -->
                     <?php include 'footer.php'; ?>
                     <!-- / Footer -->
@@ -401,49 +536,259 @@ $result_courses->data_seek(0);
     <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/hammer/hammer.js"></script>
     <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
-
     <!-- Page JS -->
 <script>
- 
 
-  document.getElementById('courseSelectionForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        var selectedCourses = Array.from(document.querySelectorAll('input[name="selected_courses[]"]:checked'))
-                                   .map(el => el.value);
-        
-        if (selectedCourses.length === 0) {
-            alert('กรุณาเลือกคอร์สอย่างน้อยหนึ่งรายการ');
-            return;
-        }
+function msg_ok(title,text){
+        Swal.fire({
+        icon: 'success',
+        title: title,
+        text: text,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500,
+        toast: true,
 
-        // ส่งข้อมูลไปยัง server ด้วย AJAX
-        fetch('sql/update-course-usage.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                queue_id: <?php echo $queue_id; ?>,
-                selected_courses: selectedCourses
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('บันทึกการใช้บริการสำเร็จ');
-                location.reload(); // รีโหลดหน้าเพื่อแสดงสถานะใหม่
-            } else {
-                alert('เกิดข้อผิดพลาด: ' + data.message);
-            }
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-        });
     });
+}
+
+function msg_error(message){
+        Swal.fire({
+        icon: 'error',
+        title: 'ข้อมูลผิดพลาด!',
+        text: message,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500,
+        toast: true,
+
+    });
+}
+
+function createOrder() {
+    $.ajax({
+        url: 'sql/create-order.php',
+        type: 'POST',
+        data: {
+            queue_id: <?php echo $queue_id; ?>,
+            cus_id: <?php echo $cus_id; ?>
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                window.location.href = 'edit-order.php?id=' + response.order_id;
+            } else {
+                console.error('Server response:', response);
+                alert('เกิดข้อผิดพลาดในการสร้างคำสั่งซื้อ: ' + response.message);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error:', textStatus, errorThrown);
+            console.log('Response Text:', jqXHR.responseText);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
+        }
+    });
+}
+
+function showAddDFModal() {
+    $('#addDFModal').modal('show');
+}
+
+function loadStaff(type) {
+    $.ajax({
+        url: 'sql/get-staff.php',
+        type: 'GET',
+        data: { type: type },
+        success: function(response) {
+            const staff = JSON.parse(response);
+            const select = $('#staffId');
+            select.empty();
+            select.append('<option value="">เลือกบุคลากร</option>');
+            staff.forEach(s => {
+                select.append(`<option value="${s.id}">${s.name}</option>`);
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading staff:', error);
+        }
+    });
+}
+
+$('#staffType').on('change', function() {
+    loadStaff($(this).val());
+});
+
+function addDF() {
+    const staffType = $('#staffType').val();
+    const staffId = $('#staffId').val();
+    const dfAmount = $('#dfAmount').val();
+    const dfType = $('#dfType').val();
+
+    $.ajax({
+        url: 'sql/add-df.php',
+        type: 'POST',
+        data: {
+            service_id: <?php echo $queue_id; ?>, // ใช้ queue_id แทน service_id
+            staff_type: staffType,
+            staff_id: staffId,
+            df_amount: dfAmount,
+            df_type: dfType
+        },
+        success: function(response) {
+            const result = JSON.parse(response);
+            if (result.success) {
+                loadDFRecords();
+                $('#addDFModal').modal('hide');
+                msg_ok('เพิ่ม DF สำเร็จ', 'ค่าธรรมเนียมถูกเพิ่มเรียบร้อยแล้ว');
+            } else {
+                msg_error('เกิดข้อผิดพลาดในการเพิ่ม DF: ' + result.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error adding DF:', error);
+            msg_error('เกิดข้อผิดพลาดในการเพิ่ม DF');
+        }
+    });
+}
+
+function loadDFRecords() {
+    $.ajax({
+        url: 'sql/get-df-records.php',
+        type: 'GET',
+        data: { service_id: <?php echo $queue_id; ?> },
+        success: function(response) {
+            const records = JSON.parse(response);
+            const dfList = $('#dfList');
+            dfList.empty();
+            let totalDF = 0;
+
+            records.forEach(record => {
+            const dfAmount = record.staff_df_type === 'amount' 
+                ? parseFloat(record.staff_df) 
+                : (parseFloat(record.staff_df) / 100) * <?php echo json_encode($order['order_net_total']); ?>;
+                
+                totalDF += dfAmount;
+
+                dfList.append(`
+                    <div class="df-record">
+                        <p class="staff-name">${record.staff_type === 'doctor' ? '<i class="fas fa-user-md"></i> แพทย์' : '<i class="fas fa-user-nurse"></i> พยาบาล'}: ${record.staff_name}</p>
+                        <p class="df-amount">DF: ${record.staff_df_type === 'amount' 
+                            ? record.staff_df + ' บาท' 
+                            : record.staff_df + '% (' + (dfAmount ? dfAmount.toFixed(2) : '0.00') + ' บาท)'}</p>
+                        <button class="btn btn-danger btn-sm remove-btn" onclick="removeDF(${record.staff_record_id})">
+                            <i class="fas fa-trash-alt"></i> ลบ
+                        </button>
+                    </div>
+                `);
+            });
+
+            $('#totalDF').text(totalDF.toFixed(2));
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading DF records:', error);
+        }
+    });
+}
+
+function removeDF(recordId) {
+
+    Swal.fire({
+      title: 'คุณแน่ใจหรือไม่ที่จะลบข้อมูล?',
+      text: "การลบจะทำให้ข้อมูลหาย ไม่สามารถกู้คืนมาได้!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
+      customClass: {
+        confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
+        cancelButton: 'btn btn-outline-secondary waves-effect'
+      },
+      buttonsStyling: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+            url: 'sql/remove-df.php',
+            type: 'POST',
+            data: { record_id: recordId },
+            success: function(response) {
+                const result = JSON.parse(response);
+                if (result.success) {
+                    loadDFRecords();
+                    msg_ok('ลบ DF สำเร็จ', 'ค่าธรรมเนียมถูกลบเรียบร้อยแล้ว');
+                } else {
+                    msg_error('เกิดข้อผิดพลาดในการลบ DF: ' + result.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error removing DF:', error);
+                msg_error('เกิดข้อผิดพลาดในการลบ DF');
+            }
+        });
+
+      }
+    });
+}
+
+$(document).ready(function() {
+    loadDFRecords();
+});
+
+function completeService() {
+    Swal.fire({
+        title: 'ยืนยันการเสร็จสิ้น?',
+        text: "คุณแน่ใจหรือไม่ว่าต้องการเสร็จสิ้นการให้บริการนี้?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, เสร็จสิ้น!!',
+        customClass: {
+        confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
+        cancelButton: 'btn btn-outline-secondary waves-effect'
+      }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/complete-service.php',
+                type: 'POST',
+                data: { queue_id: <?php echo $queue_id; ?> },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'เสร็จสิ้น!',
+                            text: 'การให้บริการเสร็จสิ้นเรียบร้อยแล้ว',
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            window.location.href = 'queue-management.php';
+                        });
+                    } else {
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด!',
+                            'ไม่สามารถอัปเดตสถานะได้: ' + response.message,
+                            'error'
+                        );
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error completing service:', error);
+                    Swal.fire(
+                        'เกิดข้อผิดพลาด!',
+                        'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+}
 </script>
 </body>
 </html>

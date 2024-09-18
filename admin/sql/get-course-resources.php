@@ -1,4 +1,8 @@
 <?php
+header('Content-Type: application/json');
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+
 require '../../dbcon.php';
 
 function translateResourceType($type) {
@@ -14,47 +18,55 @@ function translateResourceType($type) {
     }
 }
 
+$order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
+$course_id = isset($_GET['course_id']) ? intval($_GET['course_id']) : 0;
 
-$order_id = intval($_GET['order_id']);
-$course_id = intval($_GET['course_id']);
-
-$sql = "SELECT ocr.*, 
-               CASE 
-                 WHEN ocr.resource_type = 'drug' THEN d.drug_name
-                 WHEN ocr.resource_type = 'tool' THEN t.tool_name
-                 WHEN ocr.resource_type = 'accessory' THEN a.acc_name
-               END AS resource_name,
-               CASE 
-                 WHEN ocr.resource_type = 'drug' THEN u1.unit_name
-                 WHEN ocr.resource_type = 'tool' THEN u2.unit_name
-                 WHEN ocr.resource_type = 'accessory' THEN u3.unit_name
-               END AS unit_name
-        FROM order_course_resources ocr
-        LEFT JOIN drug d ON ocr.resource_type = 'drug' AND ocr.resource_id = d.drug_id
-        LEFT JOIN tool t ON ocr.resource_type = 'tool' AND ocr.resource_id = t.tool_id
-        LEFT JOIN accessories a ON ocr.resource_type = 'accessory' AND ocr.resource_id = a.acc_id
-        LEFT JOIN unit u1 ON d.drug_unit_id = u1.unit_id
-        LEFT JOIN unit u2 ON t.tool_unit_id = u2.unit_id
-        LEFT JOIN unit u3 ON a.acc_unit_id = u3.unit_id
-        WHERE ocr.order_id = ? AND ocr.course_id = ?";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $order_id, $course_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$resources = [];
-while ($row = $result->fetch_assoc()) {
-    $resources[] = [
-        'id' => $row['id'],
-        'type' => translateResourceType($resource['resource_type']),
-        'name' => $row['resource_name'],
-        'quantity' => $row['quantity'],
-        'unit' => $row['unit_name']
-    ];
+try {
+    $sql = "SELECT ocr.*, 
+                   CASE 
+                     WHEN ocr.resource_type = 'drug' THEN d.drug_name
+                     WHEN ocr.resource_type = 'tool' THEN t.tool_name
+                     WHEN ocr.resource_type = 'accessory' THEN a.acc_name
+                   END AS resource_name,
+                   CASE 
+                     WHEN ocr.resource_type = 'drug' THEN u1.unit_name
+                     WHEN ocr.resource_type = 'tool' THEN u2.unit_name
+                     WHEN ocr.resource_type = 'accessory' THEN u3.unit_name
+                   END AS unit_name
+            FROM order_course_resources ocr
+            LEFT JOIN drug d ON ocr.resource_type = 'drug' AND ocr.resource_id = d.drug_id
+            LEFT JOIN tool t ON ocr.resource_type = 'tool' AND ocr.resource_id = t.tool_id
+            LEFT JOIN accessories a ON ocr.resource_type = 'accessory' AND ocr.resource_id = a.acc_id
+            LEFT JOIN unit u1 ON d.drug_unit_id = u1.unit_id
+            LEFT JOIN unit u2 ON t.tool_unit_id = u2.unit_id
+            LEFT JOIN unit u3 ON a.acc_unit_id = u3.unit_id
+            WHERE ocr.order_id = ? AND ocr.course_id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $order_id, $course_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $resources = [];
+    while ($row = $result->fetch_assoc()) {
+        $resources[] = [
+            'id' => $row['id'],
+            'type' => translateResourceType($row['resource_type']),
+            'name' => $row['resource_name'],
+            'quantity' => $row['quantity'],
+            'unit' => $row['unit_name']
+        ];
+    }
+    
+    echo json_encode($resources);
+    
+} catch (Exception $e) {
+    echo json_encode(['error' => $e->getMessage()]);
+} finally {
+    if (isset($stmt)) {
+        $stmt->close();
+    }
+    if (isset($conn)) {
+        $conn->close();
+    }
 }
-
-echo json_encode($resources);
-
-$stmt->close();
-$conn->close();

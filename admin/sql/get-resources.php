@@ -11,19 +11,22 @@ if (empty($type)) {
 
 switch ($type) {
     case 'drug':
-        $sql = "SELECT drug_id as id, drug_name as name, drug_unit_id, drug_amount as stock
-                FROM drug 
-                WHERE drug_status = 1";
+        $sql = "SELECT d.drug_id as id, d.drug_name as name, d.drug_unit_id, d.drug_amount as stock, u.unit_name
+                FROM drug d
+                JOIN unit u ON d.drug_unit_id = u.unit_id
+                WHERE d.drug_status = 1";
         break;
     case 'tool':
-        $sql = "SELECT tool_id as id, tool_name as name, tool_unit_id, tool_amount as stock
-                FROM tool 
-                WHERE tool_status = 1";
+        $sql = "SELECT t.tool_id as id, t.tool_name as name, t.tool_unit_id, t.tool_amount as stock, u.unit_name
+                FROM tool t
+                JOIN unit u ON t.tool_unit_id = u.unit_id
+                WHERE t.tool_status = 1";
         break;
     case 'accessory':
-        $sql = "SELECT acc_id as id, acc_name as name, acc_unit_id, acc_amount as stock
-                FROM accessories 
-                WHERE acc_status = 1";
+        $sql = "SELECT a.acc_id as id, a.acc_name as name, a.acc_unit_id, a.acc_amount as stock, u.unit_name
+                FROM accessories a
+                JOIN unit u ON a.acc_unit_id = u.unit_id
+                WHERE a.acc_status = 1";
         break;
     default:
         echo json_encode(array('error' => 'Invalid resource type'));
@@ -51,6 +54,7 @@ while ($row = $result->fetch_assoc()) {
         'id' => $row['id'],
         'name' => $row['name'],
         'unit_id' => $row['drug_unit_id'] ?? $row['tool_unit_id'] ?? $row['acc_unit_id'],
+        'unit_name' => $row['unit_name'],
         'stock' => $row['stock']
     );
 }

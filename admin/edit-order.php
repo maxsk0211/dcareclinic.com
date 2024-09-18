@@ -36,6 +36,9 @@ $result_details = $conn->query($sql_details);
 // ตรวจสอบว่าผู้ใช้เป็นผู้ดูแลระบบหรือผู้จัดการหรือไม่
 $canCancelPayment = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2);
 
+function formatOrderId($orderId) {
+    return 'ORDER-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
+}
 ?>
 
 <!DOCTYPE html>
@@ -44,35 +47,39 @@ $canCancelPayment = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <title>แก้ไขคำสั่งซื้อ - D Care Clinic</title>
-   <meta name="description" content="" />
-    <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap" rel="stylesheet" />
-    <!-- Icons -->
-    <link rel="stylesheet" href="../assets/vendor/fonts/remixicon/remixicon.css" />
-    <!-- Core CSS -->
-    <link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" />
-    <link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" />
-    <link rel="stylesheet" href="../assets/css/demo.css" />
-    <!-- Vendors CSS -->
-    <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
-    <!-- Page CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
 
-    <!-- Helpers -->
-    <script src="../assets/vendor/js/helpers.js"></script>
-    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
-    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
-    <script src="../assets/js/config.js"></script>
+        <meta name="description" content="" />
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+        <!-- Icons -->
+        <link rel="stylesheet" href="../assets/vendor/fonts/remixicon/remixicon.css" />
+
+        <!-- Core CSS -->
+        <link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" />
+        <link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" />
+        <link rel="stylesheet" href="../assets/css/demo.css" />
+        <!-- Vendors CSS -->
+        <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+        <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
+        <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
+        <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
+
+        <!-- Page CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+            <!-- Helpers -->
+        <script src="../assets/vendor/js/helpers.js"></script>
+        <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+        <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+        <script src="../assets/js/config.js"></script>
     <style>
         .course-item {
             background-color: #f8f9fa;
@@ -276,7 +283,7 @@ $canCancelPayment = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                     <!-- / Menu -->
 
                     <div class="container-xxl flex-grow-1 container-p-y">
-                        <h4 class="fw-bold py-3 mb-4">แก้ไขคำสั่งซื้อ #<?php echo $order_id; ?></h4>
+                        <h4 class="fw-bold py-3 mb-4">แก้ไขคำสั่งซื้อ #<?php echo formatOrderId($order_id); ?></h4>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="card mb-4">
@@ -296,15 +303,15 @@ $canCancelPayment = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                                                     <input type="datetime-local" class="form-control" name="booking_datetime" id="booking_datetime" value="<?php echo date('Y-m-d\TH:i', strtotime($order['booking_datetime'])); ?>" readonly>
                                                 </div>
                                             </div>
+                                            <?php
+                                            $paymentStatusClass = ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'text-warning' : 'text-success';
+                                            ?>
                                             <div class="mb-4">
                                                 <label class="form-label">สถานะการชำระเงิน</label>
-                                                <select class="form-select" name="order_payment" id="payment_method" <?php echo $isPaymentCompleted ? 'disabled' : ''; ?>>
-                                                    <option value="ยังไม่จ่ายเงิน" <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'selected' : ''; ?>>ยังไม่จ่ายเงิน</option>
-                                                    <option value="เงินสด" <?php echo ($order['order_payment'] == 'เงินสด') ? 'selected' : ''; ?>>เงินสด</option>
-                                                    <option value="บัตรเครดิต" <?php echo ($order['order_payment'] == 'บัตรเครดิต') ? 'selected' : ''; ?>>บัตรเครดิต</option>
-                                                    <option value="เงินโอน" <?php echo ($order['order_payment'] == 'โอนเงิน') ? 'selected' : ''; ?>>เงินโอน</option>
-                                                </select>
+                                                <input type="text" class="form-control <?php echo ($order['order_payment'] == 'ยังไม่จ่ายเงิน') ? 'text-warning' : 'text-success'; ?>" 
+                                                       value="<?php echo $order['order_payment']; ?>" readonly>
                                             </div>
+                                            <input type="hidden" name="order_payment" value="<?php echo $order['order_payment']; ?>">
 <?php if (!empty($order['order_payment_date'])): ?>
 <div class="payment-date mb-4">
     <p>จ่ายเงินแล้วเมื่อวันที่: <?php echo date('d/m/Y H:i', strtotime($order['order_payment_date'])); ?></p>
@@ -345,9 +352,9 @@ $canCancelPayment = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                                         <?php if ($canCancelPayment && $isPaymentCompleted): ?>
                                             <button type="button" class="btn btn-warning" id="cancelPaymentButton">ยกเลิกการชำระเงิน</button>
                                         <?php endif; ?>
-                                            <button type="button" class="btn btn-primary" id="saveChangesButton"  <?php echo $isPaymentCompleted ? 'disabled' : '';?>>บันทึกการแก้ไข</button>
+                                            <!-- <button type="button" class="btn btn-primary" id="saveChangesButton"  <?php echo $isPaymentCompleted ? 'disabled' : '';?>>บันทึกการแก้ไข</button> -->
                                         <?php if($order['order_payment_date']==null): ?>
-                                            <a href="queue-management.php" class="btn btn-secondary" >ยกเลิก</a>
+                                            <!-- <a href="queue-management.php" class="btn btn-secondary" >ยกเลิก</a> -->
                                         <?php endif ?>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -499,16 +506,30 @@ $canCancelPayment = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
 
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="../assets/vendor/js/bootstrap.js"></script>
     <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
     <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/hammer/hammer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="../assets/vendor/js/menu.js"></script>
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
+
+
+    <!-- Vendors JS -->
+    <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
 
+    <!-- Page JS -->
+    <!-- <script src="../assets/js/tables-datatables-basic.js"></script> -->
+    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+
+    <!-- Core JS -->
+
+    <!-- Page JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
     <script>
 document.getElementById('addResourceForm').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
@@ -523,14 +544,14 @@ function showSlipModal(imageSrc) {
     slipModal.show();
 }
 
-document.getElementById('payment_method').addEventListener('change', function() {
-    const slipUpload = document.getElementById('slipUpload');
-    if (this.value === 'เงินโอน') {
-        slipUpload.style.display = 'block';
-    } else {
-        slipUpload.style.display = 'none';
-    }
-});
+// document.getElementById('payment_method').addEventListener('change', function() {
+//     const slipUpload = document.getElementById('slipUpload');
+//     if (this.value === 'เงินโอน') {
+//         slipUpload.style.display = 'block';
+//     } else {
+//         slipUpload.style.display = 'none';
+//     }
+// });
 var isPaymentCompleted = <?php echo json_encode($isPaymentCompleted); ?>;
 let currentOrderId;
 let currentCourseItem;
@@ -789,9 +810,11 @@ function updateResource(input) {
 function removeResource(button) {
     const row = button.closest('tr');
     const resourceId = row.dataset.resourceId;
-    const orderId = currentOrderId; // เพิ่มบรรทัดนี้
-    const courseId = row.closest('.course-item').dataset.courseId; // เพิ่มบรรทัดนี้
+    const orderId = currentOrderId;
+    const courseId = row.closest('.course-item').dataset.courseId;
     
+    console.log('Removing resource:', { resourceId, orderId, courseId }); // เพิ่ม log นี้
+
     $.ajax({
         url: 'sql/remove-resource.php',
         type: 'POST',
@@ -804,16 +827,16 @@ function removeResource(button) {
         success: function(response) {
             if (response.success) {
                 console.log('Resource removed successfully');
-                msg_ok('ลบทรัพยากรสำเร็จ','ข้อมูลทรัพยากรถูกอัปเดตเรียบร้อยแล้ว');
-
+                msg_ok('ลบทรัพยากรสำเร็จ','ข้อมูลทรัพยากรถูกลบเรียบร้อยแล้ว');
                 row.remove();
             } else {
-                console.error('Error removing resource:', response.error);
-                alert('เกิดข้อผิดพลาดในการลบทรัพยากร: ' + response.error);
+                console.error('Error removing resource:', response.message);
+                alert('เกิดข้อผิดพลาดในการลบทรัพยากร: ' + response.message);
             }
         },
         error: function(xhr, status, error) {
             console.error('AJAX Error:', status, error);
+            console.log('Response Text:', xhr.responseText);
             alert('เกิดข้อผิดพลาดในการลบทรัพยากร');
         }
     });
@@ -821,6 +844,7 @@ function removeResource(button) {
 
 function showResourceModal(button) {
     currentCourseItem = button.closest('.course-item');
+    resetAddResourceModal(); // รีเซ็ต Modal ก่อนแสดง
     $('#resourceModal').modal('show');
 }
 
@@ -829,7 +853,7 @@ function addResource() {
     const id = $('#resourceId').val();
     const quantity = $('#resourceQuantity').val();
     const name = $('#resourceId option:selected').text();
-    const unit = ''; // ต้องดึงข้อมูลหน่วยนับจากฐานข้อมูล
+    const unit = $('#resourceId option:selected').data('unit');
 
     if (!quantity) {
         alert('กรุณาใส่จำนวน');
@@ -845,24 +869,35 @@ function addResource() {
             resource_id: id,
             quantity: quantity
         },
+        dataType: 'json',
         success: function(response) {
-            console.log('Resource added successfully');
-            msg_ok('เพิ่มคอร์สสำเร็จ','ข้อมูลคอร์สถูกเพิ่มเรียบร้อยแล้ว');
+            if (response.success) {
+                console.log('Resource added successfully');
+                msg_ok('เพิ่มทรัพยากรสำเร็จ','ข้อมูลทรัพยากรถูกเพิ่มเรียบร้อยแล้ว');
 
-            const newRow = `
-                <tr data-resource-id="${response.resource_id}">
-                    <td>${type}</td>
-                    <td>${name}</td>
-                    <td><input type="number" class="form-control" value="${quantity}" min="0.01" step="0.01" onchange="updateResource(this)" ${isPaymentCompleted ? 'readonly' : ''}></td>
-                    <td>${unit}</td>
-                    <td>${isPaymentCompleted ? '' : '<button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button>'}</td>
-                </tr>
-            `;
-            currentCourseItem.querySelector('.resources-table tbody').insertAdjacentHTML('beforeend', newRow);
-            $('#resourceModal').modal('hide');
+                const newRow = `
+                    <tr data-resource-id="${response.id}">
+                        <td>${translateResourceType(type)}</td>
+                        <td>${name}</td>
+                        <td><input type="number" class="form-control" value="${quantity}" min="0.01" step="0.01" onchange="updateResource(this)" ${isPaymentCompleted ? 'readonly' : ''}></td>
+                        <td>${unit}</td>
+                        <td>${isPaymentCompleted ? '' : '<button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button>'}</td>
+                    </tr>
+                `;
+                currentCourseItem.querySelector('.resources-table tbody').insertAdjacentHTML('beforeend', newRow);
+                // รีเซ็ต Modal
+                $('#resourceType').val('').trigger('change');
+                $('#resourceId').val('').trigger('change');
+                $('#resourceQuantity').val('');
+                $('#resourceModal').modal('hide');
+            } else {
+                console.error('Error adding resource:', response.message);
+                alert('เกิดข้อผิดพลาดในการเพิ่มทรัพยากร: ' + response.message);
+            }
         },
         error: function(xhr, status, error) {
             console.error('Error adding resource:', error);
+            alert('เกิดข้อผิดพลาดในการเพิ่มทรัพยากร');
         }
     });
 }
@@ -995,7 +1030,7 @@ function loadResources(type) {
             select.empty();
             select.append('<option value="">เลือกทรัพยากร</option>');
             resources.forEach(resource => {
-                select.append(`<option value="${resource.id}">${resource.name}</option>`);
+                select.append(`<option value="${resource.id}" data-unit="${resource.unit_name}">${resource.name}</option>`);
             });
         },
         error: function(xhr, status, error) {
@@ -1033,29 +1068,39 @@ function confirmAddCourse() {
             price: coursePrice
         },
         success: function(response) {
-            const result = JSON.parse(response);
-            if (result.success) {
-                const newCourse = {
-                    id: courseId,
-                    name: courseName,
-                    amount: 1,
-                    price: coursePrice,
-                    resources: []
-                };
-                addCourseToList(newCourse);
-                updateTotalPrice();
-                $('#addCourseModal').modal('hide');
-                
-                // เพิ่มการเรียกใช้ฟังก์ชันใหม่
-                checkAndLoadDefaultResources(courseId);
-                loadCourseResources(courseId);
-            } else {
-                alert('เกิดข้อผิดพลาดในการเพิ่มคอร์ส: ' + result.error);
+            console.log('Raw response:', response);  // เพิ่มบรรทัดนี้เพื่อ debug
+            try {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                if (result.success) {
+                    const newCourse = {
+                        id: courseId,
+                        name: courseName,
+                        amount: 1,
+                        price: coursePrice,
+                        resources: []
+                    };
+                    addCourseToList(newCourse);
+                    updateTotalPrice();
+                    $('#addCourseModal').modal('hide');
+
+                    // รีเซ็ต select ใน Modal
+                    $('#courseSelect').val('').trigger('change');
+
+                    checkAndLoadDefaultResources(courseId);
+                    loadCourseResources(courseId);
+                } else {
+                    alert('เกิดข้อผิดพลาดในการเพิ่มคอร์ส: ' + (result.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                console.error('Raw response:', response);
+                alert('เกิดข้อผิดพลาดในการประมวลผลการตอบกลับจากเซิร์ฟเวอร์');
             }
         },
         error: function(xhr, status, error) {
-            console.error('Error adding course:', error);
-            alert('เกิดข้อผิดพลาดในการเพิ่มคอร์ส');
+            console.error('AJAX error:', status, error);
+            console.log('Response Text:', xhr.responseText);
+            alert('เกิดข้อผิดพลาดในการเพิ่มคอร์ส: ' + error);
         }
     });
 }
@@ -1068,28 +1113,34 @@ function loadCourseResources(courseId) {
             order_id: currentOrderId,
             course_id: courseId 
         },
-        success: function(response) {
-            const resources = JSON.parse(response);
-            const courseItem = document.querySelector(`.course-item[data-course-id="${courseId}"]`);
-            const resourcesTableBody = courseItem.querySelector('.resources-table tbody');
+        dataType: 'json',
+        success: function(data) {  // เปลี่ยนจาก resources เป็น data
+            console.log("Loaded resources:", data);
             
+            // ส่วนที่เหลือของโค้ดสำหรับการแสดงผลทรัพยากร
+            const resourcesTableBody = document.querySelector(`.course-item[data-course-id="${courseId}"] .resources-table tbody`);
             resourcesTableBody.innerHTML = ''; // Clear existing resources
             
-            resources.forEach(resource => {
+            data.forEach(resource => {  // ใช้ data แทน resources
                 const newRow = `
                     <tr data-resource-id="${resource.id}">
                         <td>${resource.type}</td>
                         <td>${resource.name}</td>
-                        <td><input type="number" value="${resource.quantity}" min="0.01" step="0.01" onchange="updateResource(this)" ${isPaymentCompleted ? 'readonly' : ''}></td>
+                        <td><input type="number" value="${resource.quantity}" class="form-control" min="0.01" step="0.01" onchange="updateResource(this)" ${isPaymentCompleted ? 'readonly' : ''}></td>
                         <td>${resource.unit}</td>
                         <td>${isPaymentCompleted ? '' : '<button onclick="removeResource(this)" class="btn btn-sm btn-danger">ลบ</button>'}</td>
                     </tr>
                 `;
                 resourcesTableBody.insertAdjacentHTML('beforeend', newRow);
             });
+
+            if (data.length === 0) {  // ใช้ data แทน resources
+                resourcesTableBody.innerHTML = '<tr><td colspan="5">ไม่พบข้อมูลทรัพยากร</td></tr>';
+            }
         },
         error: function(xhr, status, error) {
             console.error('Error loading course resources:', error);
+            console.log('Response Text:', xhr.responseText);
         }
     });
 }
@@ -1113,6 +1164,29 @@ function loadCourseOptions() {
         }
     });
 }
+
+function resetAddCourseModal() {
+    $('#courseSelect').val('').trigger('change');
+}
+
+function resetAddResourceModal() {
+    $('#resourceType').val('').trigger('change');
+    $('#resourceId').val('').trigger('change');
+    $('#resourceQuantity').val('');
+}
+
+// เพิ่ม event listeners สำหรับการปิด Modal
+$('#addCourseModal').on('hidden.bs.modal', function () {
+    resetAddCourseModal();
+});
+
+$('#resourceModal').on('hidden.bs.modal', function () {
+    resetAddResourceModal();
+});
+
+
+
+
     // msg error
      <?php if(isset($_SESSION['msg_error'])){ ?>
 

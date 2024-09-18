@@ -1,21 +1,34 @@
 <?php
 require '../../dbcon.php';
 
-$order_id = intval($_POST['order_id']);
-$course_id = intval($_POST['course_id']);
-$resource_type = $_POST['resource_type'];
-$resource_id = intval($_POST['resource_id']);
-$quantity = floatval($_POST['quantity']);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
+    $course_id = isset($_POST['course_id']) ? intval($_POST['course_id']) : 0;
+    $resource_type = isset($_POST['resource_type']) ? $_POST['resource_type'] : '';
+    $resource_id = isset($_POST['resource_id']) ? intval($_POST['resource_id']) : 0;
+    $quantity = isset($_POST['quantity']) ? floatval($_POST['quantity']) : 0;
 
-$sql = "INSERT INTO order_course_resources (order_id, course_id, resource_type, resource_id, quantity) VALUES (?, ?, ?, ?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("iisid", $order_id, $course_id, $resource_type, $resource_id, $quantity);
+    if ($order_id == 0 || $course_id == 0 || empty($resource_type) || $resource_id == 0 || $quantity == 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid input data']);
+        exit;
+    }
 
-if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'resource_id' => $conn->insert_id]);
+    $sql = "INSERT INTO order_course_resources (order_id, course_id, resource_type, resource_id, quantity) 
+            VALUES (?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => 'Prepare statement failed: ' . $conn->error]);
+        exit;
+    }
+    $stmt->bind_param("iisid", $order_id, $course_id, $resource_type, $resource_id, $quantity);
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'id' => $stmt->insert_id]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Error executing query: ' . $stmt->error]);
+    }
+    $stmt->close();
 } else {
-    echo json_encode(['success' => false, 'error' => $conn->error]);
+    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
 }
 
-$stmt->close();
 $conn->close();

@@ -224,38 +224,39 @@ $result_bookings = $conn->query($sql_bookings);
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php if ($result->num_rows > 0): ?>
-                                            <?php while($row = $result->fetch_assoc()): ?>
-                                            <tr data-queue-id="<?php echo $row['queue_id']; ?>">
-                                                <td class="queue-number"><?php echo $row['queue_number']; ?></td>
-                                                <td class="customer-name"><?php echo $row['cus_firstname'] . ' ' . $row['cus_lastname']; ?></td>
-                                                <td><?php echo $row['booking_datetime'] ? date('H:i', strtotime($row['booking_datetime'])) : ($row['queue_time'] ? date('H:i', strtotime($row['queue_time'])) : 'ไม่ระบุ'); ?></td>
-                                                <td><span class="queue-status status-badge status-<?php echo $row['service_status']; ?>"><?php echo getStatusText($row['service_status']); ?></span></td>
-                                                <td class="action-buttons">
-
-                                                    <?php if($row['service_status'] == 'waiting'): ?>
-                                                        <button class="btn btn-sm btn-primary" onclick="updateStatus(<?php echo $row['queue_id']; ?>, 'in_progress')">เริ่มให้บริการ</button>
-                                                    <?php elseif($row['service_status'] == 'in_progress'): ?>
-                                                        <a href="opd.php?queue_id=<?php echo $row['queue_id']; ?>" 
-                                                           id="opd-btn-<?php echo $row['queue_id']; ?>" 
-                                                           class="btn btn-sm btn-info opd-btn" 
-                                                           data-queue-id="<?php echo $row['queue_id']; ?>">OPD</a>
-                                                        <a href="service.php?queue_id=<?php echo $row['queue_id']; ?>" 
-                                                           id="service-btn-<?php echo $row['queue_id']; ?>" 
-                                                           class="btn btn-sm btn-info service-btn " >บริการ</a>
-                                                    <?php endif; ?>
-                                                    <?php if($row['service_status'] != 'cancelled'): ?>
-                                                        <button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(<?php echo $row['queue_id']; ?>, 'cancelled')">ยกเลิก</button>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                            <?php endwhile; ?>
-                                        <?php else: ?>
-                                            <tr>
-                                                <td colspan="5" class="text-center">ยังไม่มีคิวในวันนี้</td>
-                                            </tr>
-                                        <?php endif; ?>
-                                    </tbody>
+                                    <?php if ($result->num_rows > 0): ?>
+                                        <?php while($row = $result->fetch_assoc()): ?>
+                                        <tr data-queue-id="<?php echo $row['queue_id']; ?>">
+                                            <td class="queue-number"><?php echo $row['queue_number']; ?></td>
+                                            <td class="customer-name"><?php echo $row['cus_firstname'] . ' ' . $row['cus_lastname']; ?></td>
+                                            <td><?php echo $row['booking_datetime'] ? date('H:i', strtotime($row['booking_datetime'])) : ($row['queue_time'] ? date('H:i', strtotime($row['queue_time'])) : 'ไม่ระบุ'); ?></td>
+                                            <td><span class="queue-status status-badge status-<?php echo $row['service_status']; ?>"><?php echo getStatusText($row['service_status']); ?></span></td>
+                                            <td class="action-buttons">
+                                                <?php if($row['service_status'] == 'waiting'): ?>
+                                                    <button class="btn btn-sm btn-primary" onclick="updateStatus(<?php echo $row['queue_id']; ?>, 'in_progress')">เริ่มให้บริการ</button>
+                                                <?php elseif($row['service_status'] == 'in_progress'): ?>
+                                                    <a href="opd.php?queue_id=<?php echo $row['queue_id']; ?>" 
+                                                       id="opd-btn-<?php echo $row['queue_id']; ?>" 
+                                                       class="btn btn-sm btn-info opd-btn" 
+                                                       data-queue-id="<?php echo $row['queue_id']; ?>">OPD</a>
+                                                    <a href="service.php?queue_id=<?php echo $row['queue_id']; ?>" 
+                                                       id="service-btn-<?php echo $row['queue_id']; ?>" 
+                                                       class="btn btn-sm btn-info service-btn">บริการ</a>
+                                                <?php elseif($row['service_status'] == 'completed'): ?>
+                                                    <button class="btn btn-sm btn-warning" onclick="revertStatus(<?php echo $row['queue_id']; ?>)">ยกเลิกสถานะ</button>
+                                                <?php endif; ?>
+                                                <?php if($row['service_status'] != 'cancelled' && $row['service_status'] != 'completed'): ?>
+                                                    <button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(<?php echo $row['queue_id']; ?>)">ยกเลิก</button>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php endwhile; ?>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="5" class="text-center">ยังไม่มีคิวในวันนี้</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
                                 </table>
                             </div>
                         </div>
@@ -328,6 +329,7 @@ $result_bookings = $conn->query($sql_bookings);
     <!-- Core JS -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="../assets/vendor/js/bootstrap.js"></script>
     <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
     <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
@@ -346,7 +348,11 @@ $result_bookings = $conn->query($sql_bookings);
     <!-- <script src="../assets/js/tables-datatables-basic.js"></script> -->
     <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
 
+    <!-- Core JS -->
 
+    <!-- Page JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
     <!-- Page JS -->
 
 <script>
@@ -586,19 +592,21 @@ function updateQueueRow(queueId, newStatus) {
         
         const actionCell = row.find('.action-buttons');
         let actionButtons = '';
-        if (newStatus === 'in_progress') {
+        if (newStatus === 'waiting') {
+            actionButtons = `<button class="btn btn-sm btn-primary" onclick="updateStatus(${queueId}, 'in_progress')">เริ่มให้บริการ</button>`;
+        } else if (newStatus === 'in_progress') {
             actionButtons = `
                 <a href="opd.php?queue_id=${queueId}" id="opd-btn-${queueId}" class="btn btn-sm btn-info opd-btn" data-queue-id="${queueId}">OPD</a>
                 <a href="service.php?queue_id=${queueId}" id="service-btn-${queueId}" class="btn btn-sm btn-info service-btn">บริการ</a>
             `;
-        } else if (newStatus === 'waiting') {
-            actionButtons = `
-                <button class="btn btn-sm btn-primary" onclick="updateStatus(${queueId}, 'in_progress')">เริ่มให้บริการ</button>
-            `;
+        } else if (newStatus === 'completed') {
+            actionButtons = `<button class="btn btn-sm btn-warning" onclick="revertStatus(${queueId})">ยกเลิกสถานะ</button>`;
         }
+        
         if (newStatus !== 'cancelled' && newStatus !== 'completed') {
             actionButtons += `<button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(${queueId})">ยกเลิก</button>`;
         }
+        
         actionCell.html(actionButtons);
 
         if (newStatus === 'in_progress') {
@@ -679,11 +687,14 @@ function refreshQueueTable() {
                     } else if (row.service_status == 'in_progress') {
                         actionButtons = `
                             <a href="opd.php?queue_id=${row.queue_id}" id="opd-btn-${row.queue_id}" class="btn btn-sm btn-info opd-btn" data-queue-id="${row.queue_id}">OPD</a>
-                            <a href="service.php?queue_id=${row.queue_id}" id="service-btn-${row.queue_id}" class="btn btn-sm btn-info service-btn " >บริการ</a>
+                            <a href="service.php?queue_id=${row.queue_id}" id="service-btn-${row.queue_id}" class="btn btn-sm btn-info service-btn">บริการ</a>
                         `;
+                    } else if (row.service_status == 'completed') {
+                        actionButtons = `<button class="btn btn-sm btn-warning" onclick="revertStatus(${row.queue_id})">ยกเลิกสถานะ</button>`;
                     }
+                    
                     if (row.service_status != 'cancelled' && row.service_status != 'completed') {
-                        actionButtons += `<button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(${row.queue_id}, 'cancelled')">ยกเลิก</button>`;
+                        actionButtons += `<button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(${row.queue_id})">ยกเลิก</button>`;
                     }
                     
                     tableBody += `
@@ -708,7 +719,7 @@ function refreshQueueTable() {
                 }
             });
         },
-error: function() {
+        error: function() {
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
@@ -783,6 +794,26 @@ function addQueue() {
                 title: 'เกิดข้อผิดพลาด',
                 text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
             });
+        }
+    });
+}
+function revertStatus(queueId) {
+    Swal.fire({
+        title: 'ยืนยันการยกเลิกสถานะ?',
+        text: "คุณต้องการยกเลิกสถานะ 'เสร็จสิ้น' และกลับไปเป็น 'กำลังให้บริการ' ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, ยกเลิกสถานะ',
+        cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ',
+        reverseButtons: true,
+        customClass: {
+            confirmButton: 'btn btn-success me-1',
+            cancelButton: 'btn btn-danger'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            updateStatus(queueId, 'in_progress');
         }
     });
 }

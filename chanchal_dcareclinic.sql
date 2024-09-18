@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 11, 2024 at 10:17 PM
+-- Generation Time: Sep 18, 2024 at 10:36 AM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 5.6.40
 
@@ -235,7 +235,13 @@ INSERT INTO `course_bookings` (`id`, `branch_id`, `cus_id`, `booking_datetime`, 
 (25, 1, 13, '2024-09-10 10:00:00', '2024-09-10 02:56:58', 1, 'confirmed'),
 (26, 1, 13, '2024-09-10 11:15:00', '2024-09-10 02:57:11', 1, 'confirmed'),
 (27, 1, 13, '2024-09-10 12:45:00', '2024-09-10 02:57:29', 1, 'confirmed'),
-(28, 1, 13, '2024-09-11 14:00:00', '2024-09-11 03:56:19', 1, 'confirmed');
+(28, 1, 13, '2024-09-11 14:00:00', '2024-09-11 03:56:19', 1, 'confirmed'),
+(29, 1, 13, '2024-09-12 20:00:00', '2024-09-12 02:22:12', 1, 'confirmed'),
+(30, 1, 14, '2024-09-13 22:45:00', '2024-09-13 02:32:31', 1, 'confirmed'),
+(31, 1, 14, '2024-09-14 22:45:00', '2024-09-14 05:03:43', 1, 'confirmed'),
+(32, 1, 13, '2024-09-16 13:00:00', '2024-09-16 04:40:26', 1, 'confirmed'),
+(33, 1, 5, '2024-09-16 11:31:00', '2024-09-16 07:56:20', 1, 'confirmed'),
+(34, 1, 7, '2024-09-17 10:36:00', '2024-09-17 03:36:50', 1, 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -261,7 +267,10 @@ INSERT INTO `course_resources` (`id`, `course_id`, `resource_type`, `resource_id
 (2, 8, 'drug', 1, 30, '2024-08-24 15:50:38', '2024-08-24 15:50:38'),
 (4, 8, 'tool', 5, 1, '2024-08-24 15:53:24', '2024-08-24 15:53:24'),
 (6, 8, 'tool', 3, 1.2, '2024-08-24 16:17:27', '2024-08-24 16:17:27'),
-(7, 8, 'accessory', 3, 1, '2024-08-24 16:23:35', '2024-08-24 16:23:35');
+(7, 8, 'accessory', 3, 1, '2024-08-24 16:23:35', '2024-08-24 16:23:35'),
+(8, 14, 'drug', 4, 12, '2024-09-12 14:55:54', '2024-09-12 14:55:54'),
+(9, 14, 'drug', 8, 10, '2024-09-12 14:56:02', '2024-09-12 14:56:02'),
+(10, 14, 'drug', 1, 32, '2024-09-12 14:56:29', '2024-09-12 14:56:29');
 
 -- --------------------------------------------------------
 
@@ -478,7 +487,12 @@ INSERT INTO `opd` (`opd_id`, `queue_id`, `cus_id`, `nurse_id`, `Weight`, `Height
 (16, 51, 13, NULL, 123, 123, 81.3, 123, 123, 123, '123', '123', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-10 15:24:13', '2024-09-10 15:24:25'),
 (17, 52, 13, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-10 15:26:17', '2024-09-10 15:26:19'),
 (18, 55, 13, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-11 03:57:01', '2024-09-11 03:57:05'),
-(19, 56, 14, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-11 04:36:23', '2024-09-11 04:36:27');
+(19, 56, 14, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-11 04:36:23', '2024-09-11 04:36:27'),
+(20, 57, 13, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-12 02:21:24', '2024-09-12 02:21:27'),
+(21, 58, 13, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-12 02:22:44', '2024-09-12 02:22:46'),
+(22, 59, 14, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-13 02:33:01', '2024-09-13 02:33:05'),
+(23, 60, 14, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-14 05:04:22', '2024-09-14 05:04:26'),
+(24, 65, 7, NULL, 123, 123, 81.3, 123, 123, 123, '1', '', 'ไม่สูบ', 'ไม่ดื่ม', '1', '2', NULL, 1, '2024-09-17 03:36:43', '2024-09-17 03:36:46');
 
 -- --------------------------------------------------------
 
@@ -515,6 +529,7 @@ CREATE TABLE `order_course` (
   `order_payment` varchar(50) DEFAULT NULL,
   `order_net_total` int(11) DEFAULT NULL,
   `order_payment_date` datetime DEFAULT NULL,
+  `seller_id` int(11) DEFAULT NULL,
   `payment_proofs` varchar(50) NOT NULL,
   `order_status` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -523,13 +538,19 @@ CREATE TABLE `order_course` (
 -- Dumping data for table `order_course`
 --
 
-INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`, `order_datetime`, `order_payment`, `order_net_total`, `order_payment_date`, `payment_proofs`, `order_status`) VALUES
-(24, 13, 1, 23, '2024-09-09 20:23:04', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1),
-(25, 14, 1, 24, '2024-09-09 20:23:23', 'ยังไม่จ่ายเงิน', 20000, NULL, '', 1),
-(26, 13, 1, 25, '2024-09-10 09:56:58', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1),
-(27, 13, 1, 26, '2024-09-10 09:57:11', 'ยังไม่จ่ายเงิน', 5000, NULL, '', 1),
-(28, 13, 1, 27, '2024-09-10 09:57:29', 'ยังไม่จ่ายเงิน', 35000, NULL, '', 1),
-(29, 13, 1, 28, '2024-09-11 10:56:19', 'ยังไม่จ่ายเงิน', 15000, NULL, '', 1);
+INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`, `order_datetime`, `order_payment`, `order_net_total`, `order_payment_date`, `seller_id`, `payment_proofs`, `order_status`) VALUES
+(24, 13, 1, 23, '2024-09-09 20:23:04', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1),
+(25, 14, 1, 24, '2024-09-09 20:23:23', 'ยังไม่จ่ายเงิน', 20000, NULL, NULL, '', 1),
+(26, 13, 1, 25, '2024-09-10 09:56:58', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1),
+(27, 13, 1, 26, '2024-09-10 09:57:11', 'ยังไม่จ่ายเงิน', 5000, NULL, NULL, '', 1),
+(28, 13, 1, 27, '2024-09-10 09:57:29', 'ยังไม่จ่ายเงิน', 35000, NULL, NULL, '', 1),
+(29, 13, 1, 28, '2024-09-11 10:56:19', 'ยังไม่จ่ายเงิน', 35000, NULL, NULL, '', 1),
+(30, 13, 1, 29, '2024-09-12 09:22:12', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1),
+(31, 14, 1, 30, '2024-09-13 09:32:31', NULL, 45000, NULL, NULL, '', 1),
+(32, 14, 1, 31, '2024-09-14 12:03:43', 'เงินสด', 14990, '2024-09-14 21:22:26', 1, '', 1),
+(33, 13, 1, 32, '2024-09-16 11:40:26', 'ยังไม่จ่ายเงิน', 5000, NULL, 1, '', 1),
+(34, 5, 1, 33, '2024-09-16 14:56:20', 'ยังไม่จ่ายเงิน', 25000, NULL, NULL, '', 1),
+(35, 7, 1, 34, '2024-09-17 10:36:50', 'ยังไม่จ่ายเงิน', 5000, NULL, NULL, '', 1);
 
 -- --------------------------------------------------------
 
@@ -551,10 +572,26 @@ CREATE TABLE `order_course_resources` (
 --
 
 INSERT INTO `order_course_resources` (`id`, `order_id`, `course_id`, `resource_type`, `resource_id`, `quantity`) VALUES
-(40, 29, 8, 'drug', 1, '30.00'),
-(41, 29, 8, 'tool', 5, '1.00'),
-(42, 29, 8, 'tool', 3, '5.00'),
-(43, 29, 8, 'accessory', 3, '1.00');
+(248, 31, 8, 'drug', 1, '30.00'),
+(249, 31, 8, 'tool', 5, '10.00'),
+(250, 31, 8, 'tool', 3, '10.00'),
+(251, 31, 8, 'accessory', 3, '5.00'),
+(255, 31, 8, 'tool', 14, '3.00'),
+(256, 31, 11, 'tool', 14, '3.00'),
+(258, 32, 7, 'accessory', 7, '15.00'),
+(259, 32, 7, 'drug', 16, '2.00'),
+(260, 32, 7, 'drug', 26, '15.00'),
+(360, 33, 8, 'drug', 1, '30.00'),
+(361, 33, 8, 'tool', 5, '1.00'),
+(362, 33, 8, 'tool', 3, '1.20'),
+(363, 33, 8, 'accessory', 3, '1.00'),
+(389, 34, 12, 'tool', 12, '10.00'),
+(391, 34, 12, 'tool', 12, '5.00'),
+(393, 34, 12, 'tool', 12, '5.00'),
+(395, 35, 8, 'drug', 1, '30.00'),
+(396, 35, 8, 'tool', 5, '1.00'),
+(397, 35, 8, 'tool', 3, '1.20'),
+(398, 35, 8, 'accessory', 3, '1.00');
 
 -- --------------------------------------------------------
 
@@ -575,11 +612,15 @@ CREATE TABLE `order_detail` (
 --
 
 INSERT INTO `order_detail` (`od_id`, `oc_id`, `course_id`, `od_amount`, `od_price`) VALUES
-(29, 24, 4, 1, 15000),
-(30, 25, 5, 1, 20000),
 (31, 26, 4, 1, 15000),
 (32, 27, 8, 1, 5000),
-(33, 29, 8, 1, 35000);
+(33, 29, 8, 1, 35000),
+(68, 31, 8, 1, 35000),
+(69, 31, 11, 1, 10000),
+(70, 32, 7, 1, 14990),
+(87, 33, 8, 1, 5000),
+(91, 34, 12, 1, 25000),
+(92, 35, 8, 1, 5000);
 
 -- --------------------------------------------------------
 
@@ -602,20 +643,6 @@ INSERT INTO `position` (`position_id`, `position_name`) VALUES
 (3, 'หมอ'),
 (4, 'พยาบาล'),
 (5, 'พนักงานต้อนรับ');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `service_nurse_records`
---
-
-CREATE TABLE `service_nurse_records` (
-  `nurse_record_id` int(11) NOT NULL,
-  `service_id` int(11) NOT NULL,
-  `nurse_id` int(11) NOT NULL,
-  `nurse_df` decimal(10,2) NOT NULL,
-  `nurse_df_type` enum('amount','percent') NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -644,9 +671,18 @@ CREATE TABLE `service_queue` (
 INSERT INTO `service_queue` (`queue_id`, `branch_id`, `cus_id`, `booking_id`, `queue_number`, `queue_date`, `queue_time`, `service_status`, `created_at`, `updated_at`, `notes`) VALUES
 (52, 1, 13, 25, 'Q001', '2024-09-10', '10:00:00', 'in_progress', '2024-09-10 15:25:52', '2024-09-10 15:26:04', ''),
 (53, 1, 13, 26, 'Q002', '2024-09-10', '11:15:00', 'in_progress', '2024-09-10 15:25:57', '2024-09-10 15:26:05', ''),
-(54, 1, 13, 27, 'Q003', '2024-09-10', '12:45:00', 'waiting', '2024-09-10 15:26:02', '2024-09-10 15:26:02', ''),
+(54, 1, 13, 27, 'Q003', '2024-09-10', '12:45:00', 'in_progress', '2024-09-10 15:26:02', '2024-09-17 07:09:33', ''),
 (55, 1, 13, 28, 'Q001', '2024-09-11', '14:00:00', 'in_progress', '2024-09-11 03:56:45', '2024-09-11 03:56:48', ''),
-(56, 1, 14, NULL, 'Q002', '2024-09-11', '11:35:00', 'in_progress', '2024-09-11 04:36:07', '2024-09-11 04:36:10', '');
+(56, 1, 14, NULL, 'Q002', '2024-09-11', '11:35:00', 'in_progress', '2024-09-11 04:36:07', '2024-09-11 04:36:10', ''),
+(57, 1, 13, NULL, 'Q001', '2024-09-12', '09:20:00', 'in_progress', '2024-09-12 02:21:06', '2024-09-12 02:21:10', ''),
+(58, 1, 13, 29, 'Q002', '2024-09-12', '20:00:00', 'in_progress', '2024-09-12 02:22:30', '2024-09-12 02:22:32', ''),
+(59, 1, 14, 30, 'Q001', '2024-09-13', '22:45:00', 'in_progress', '2024-09-13 02:32:42', '2024-09-13 02:32:47', ''),
+(60, 1, 14, 31, 'Q001', '2024-09-14', '22:45:00', 'in_progress', '2024-09-14 05:04:07', '2024-09-14 05:04:10', ''),
+(61, 1, 13, NULL, 'Q002', '2024-09-14', '21:22:00', 'in_progress', '2024-09-14 14:22:41', '2024-09-14 14:22:45', ''),
+(62, 1, 5, 33, 'Q001', '2024-09-16', '11:31:00', 'in_progress', '2024-09-16 04:31:09', '2024-09-16 07:56:20', ''),
+(63, 1, 13, 32, 'Q002', '2024-09-16', '13:00:00', 'in_progress', '2024-09-16 04:41:00', '2024-09-16 04:41:02', ''),
+(64, 1, 14, NULL, 'Q003', '2024-09-16', '18:21:00', 'in_progress', '2024-09-16 11:21:42', '2024-09-16 11:21:46', ''),
+(65, 1, 7, 34, 'Q001', '2024-09-17', '10:36:00', 'in_progress', '2024-09-17 03:36:23', '2024-09-17 09:13:13', '');
 
 -- --------------------------------------------------------
 
@@ -679,6 +715,14 @@ CREATE TABLE `service_staff_records` (
   `staff_df` decimal(10,2) NOT NULL,
   `staff_df_type` enum('amount','percent') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `service_staff_records`
+--
+
+INSERT INTO `service_staff_records` (`staff_record_id`, `service_id`, `staff_id`, `staff_type`, `staff_df`, `staff_df_type`) VALUES
+(3, 65, 52, 'doctor', '100.00', 'amount'),
+(4, 65, 53, 'doctor', '3.00', 'percent');
 
 -- --------------------------------------------------------
 
@@ -824,7 +868,7 @@ INSERT INTO `users` (`users_id`, `users_username`, `users_password`, `users_fnam
 (1, 'admin', 'Toshibal_123', 'ผู้ดูแลระบบ', '..', '', '', 1, '', 0, 1),
 (51, '123', '123', '123', '123', '123', '00000', 2, NULL, 2, 1),
 (52, 'แพทย์ 1', 'แพทย์ 1', 'แพทย์ 1 ', 'แพทย์ 1', 'แพทย์ 1', '1234564897', 3, 'ว12345645', 1, 1),
-(53, 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', '1234564897', 3, 'ว12345645', 1, 1),
+(53, 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', 'แพทย์ 2', '1234564897', 3, 'ว12345645', 2, 1),
 (54, 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', 'แพทย์ 3', '1234564897', 3, 'ว12345645', 1, 1),
 (55, 'รับ 1', 'รับ 1', 'รับ 1', 'รับ 1', 'รับ 1', '123', 5, '', 1, 1);
 
@@ -960,14 +1004,6 @@ ALTER TABLE `position`
   ADD PRIMARY KEY (`position_id`);
 
 --
--- Indexes for table `service_nurse_records`
---
-ALTER TABLE `service_nurse_records`
-  ADD PRIMARY KEY (`nurse_record_id`),
-  ADD KEY `service_id` (`service_id`),
-  ADD KEY `nurse_id` (`nurse_id`);
-
---
 -- Indexes for table `service_queue`
 --
 ALTER TABLE `service_queue`
@@ -1067,13 +1103,13 @@ ALTER TABLE `course`
 -- AUTO_INCREMENT for table `course_bookings`
 --
 ALTER TABLE `course_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `course_resources`
 --
 ALTER TABLE `course_resources`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `course_type`
@@ -1109,7 +1145,7 @@ ALTER TABLE `drug_type`
 -- AUTO_INCREMENT for table `opd`
 --
 ALTER TABLE `opd`
-  MODIFY `opd_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `opd_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `opd_drawings`
@@ -1121,19 +1157,19 @@ ALTER TABLE `opd_drawings`
 -- AUTO_INCREMENT for table `order_course`
 --
 ALTER TABLE `order_course`
-  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `order_course_resources`
 --
 ALTER TABLE `order_course_resources`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=402;
 
 --
 -- AUTO_INCREMENT for table `order_detail`
 --
 ALTER TABLE `order_detail`
-  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
 
 --
 -- AUTO_INCREMENT for table `position`
@@ -1142,16 +1178,10 @@ ALTER TABLE `position`
   MODIFY `position_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'รหัสตำแหน่ง', AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `service_nurse_records`
---
-ALTER TABLE `service_nurse_records`
-  MODIFY `nurse_record_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `service_queue`
 --
 ALTER TABLE `service_queue`
-  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT for table `service_records`
@@ -1163,7 +1193,7 @@ ALTER TABLE `service_records`
 -- AUTO_INCREMENT for table `service_staff_records`
 --
 ALTER TABLE `service_staff_records`
-  MODIFY `staff_record_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `staff_record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `stock_transactions`
@@ -1242,13 +1272,6 @@ ALTER TABLE `order_detail`
   ADD CONSTRAINT `order_detail_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`);
 
 --
--- Constraints for table `service_nurse_records`
---
-ALTER TABLE `service_nurse_records`
-  ADD CONSTRAINT `service_nurse_records_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service_records` (`service_id`),
-  ADD CONSTRAINT `service_nurse_records_ibfk_2` FOREIGN KEY (`nurse_id`) REFERENCES `users` (`users_id`);
-
---
 -- Constraints for table `service_queue`
 --
 ALTER TABLE `service_queue`
@@ -1263,13 +1286,6 @@ ALTER TABLE `service_records`
   ADD CONSTRAINT `service_records_ibfk_1` FOREIGN KEY (`cus_id`) REFERENCES `customer` (`cus_id`),
   ADD CONSTRAINT `service_records_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`),
   ADD CONSTRAINT `service_records_ibfk_3` FOREIGN KEY (`doctor_id`) REFERENCES `users` (`users_id`);
-
---
--- Constraints for table `service_staff_records`
---
-ALTER TABLE `service_staff_records`
-  ADD CONSTRAINT `service_staff_records_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service_records` (`service_id`),
-  ADD CONSTRAINT `service_staff_records_ibfk_2` FOREIGN KEY (`staff_id`) REFERENCES `users` (`users_id`);
 
 --
 -- Constraints for table `stock_transactions`
