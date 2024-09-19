@@ -49,9 +49,10 @@ function thai_date($date) {
 }
 
 // ดึงข้อมูลใบเสร็จและรายการสินค้า
-$sql_order = "SELECT oc.*, u.users_fname, u.users_lname 
+$sql_order = "SELECT oc.*, u.users_fname, u.users_lname,
+              CONCAT(u.users_fname, ' ', u.users_lname) as seller_name
               FROM order_course oc
-              LEFT JOIN users u ON oc.users_id = u.users_id
+              LEFT JOIN users u ON oc.seller_id = u.users_id
               WHERE oc.oc_id = ?";
 $stmt_order = $conn->prepare($sql_order);
 $stmt_order->bind_param("i", $oc_id);
@@ -67,6 +68,25 @@ $stmt_items = $conn->prepare($sql_items);
 $stmt_items->bind_param("i", $oc_id);
 $stmt_items->execute();
 $items_result = $stmt_items->get_result();
+
+// เพิ่มการดึงข้อมูล booking และ queue
+$sql_booking = "SELECT cb.booking_datetime 
+                FROM course_bookings cb
+                WHERE cb.id = ?";
+$stmt_booking = $conn->prepare($sql_booking);
+$stmt_booking->bind_param("i", $order_data['course_bookings_id']);
+$stmt_booking->execute();
+$booking_result = $stmt_booking->get_result();
+$booking_data = $booking_result->fetch_assoc();
+
+$sql_queue = "SELECT sq.queue_date, sq.queue_time 
+              FROM service_queue sq
+              WHERE sq.booking_id = ?";
+$stmt_queue = $conn->prepare($sql_queue);
+$stmt_queue->bind_param("i", $order_data['course_bookings_id']);
+$stmt_queue->execute();
+$queue_result = $stmt_queue->get_result();
+$queue_data = $queue_result->fetch_assoc();
 
 // ฟังก์ชันสำหรับฟอร์แมตวันที่และเวลา
 function format_datetime($datetime) {
@@ -86,7 +106,8 @@ while ($item = $items_result->fetch_assoc()) {
 function format_money($amount) {
     return number_format($amount, 2, '.', ',');
 }
-
+// ตรวจสอบว่าผู้ใช้เป็นผู้ดูแลระบบหรือผู้จัดการหรือไม่
+$canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2);
 ?>
 
 <!DOCTYPE html>
@@ -128,118 +149,291 @@ function format_money($amount) {
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="../assets/js/config.js"></script>
-    <style>
+     <style>
+    body {
+        background-color: #f8f9fc;
+        font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .container-xxl {
+        padding: 20px;
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+        background-color: #4e73df;
+        color: white;
+        font-weight: bold;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 0.75rem 1.25rem;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .customer-info {
+        background-color: #ffffff;
+    }
+
+    .customer-info .avatar {
+        width: 100px;
+        height: 100px;
+        background-color: #4e73df;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #ffffff;
+        margin-bottom: 1rem;
+    }
+
+    .customer-info .info-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    .customer-info .info-list li {
+        margin-bottom: 0.5rem;
+        display: flex;
+    }
+
+    .customer-info .info-list .label {
+        font-weight: 600;
+        width: 150px;
+        color: #4e73df;
+    }
+
+    .order-details, .payment-section {
+        background-color: #ffffff;
+    }
+
+    .order-details table, .payment-section table {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .order-details th, .payment-section th {
+        background-color: #f8f9fc;
+        color: #4e73df;
+        font-weight: 600;
+    }
+
+    .order-details td, .order-details th,
+    .payment-section td, .payment-section th {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #e3e6f0;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.35em 0.65em;
+        border-radius: 0.35rem;
+    }
+
+    .payment-summary .summary-box {
+        background-color: #f8f9fc;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.35rem;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .payment-summary .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+
+    .payment-summary .summary-item .label {
+        font-weight: 600;
+        color: #4e73df;
+    }
+
+    .payment-summary .summary-item .value {
+        font-weight: 700;
+    }
+
+    .payment-summary .summary-item.total {
+        border-top: 2px solid #e3e6f0;
+        padding-top: 10px;
+        margin-top: 10px;
+        font-size: 18px;
+    }
+
+    .payment-summary .summary-item.total .label,
+    .payment-summary .summary-item.total .value {
+        color: #e74a3b;
+        font-weight: 700;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid #d1d3e2;
+        border-radius: 0.35rem;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #bac8f3;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .btn {
+        font-weight: 600;
+        border-radius: 0.35rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+    }
+
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+    }
+
+    .side-panel {
+        background-color: #ffffff;
+        border-radius: 0.35rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .side-panel h5 {
+        color: #4e73df;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .warning-box {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        color: #856404;
+        padding: 0.75rem;
+        border-radius: 0.35rem;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .customer-info .info-list .label {
+            width: 120px;
+        }
+    }
         .card {
-            margin-bottom: 1.5rem;
-        }
-        .customer-info {
-            background-color: #f8f9fa;
-            border-radius: 0.5rem;
-            padding: 1rem;
-        }
-        .customer-info .avatar {
-            width: 80px;
-            height: 80px;
-            background-color: #e0e0e0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: #757575;
-        }
-        .customer-info .info-list {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        .customer-info .info-list li {
-            margin-bottom: 0.5rem;
-        }
-.order-details {
-    background-color: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-}
-.order-details h5 {
-    margin-bottom: 1rem;
-}
-.order-details table {
-    width: 100%;
-    margin-bottom: 1rem;
-}
-.order-details th, .order-details td {
-    padding: 0.5rem;
-    vertical-align: middle;
-}
-.order-details .badge {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.5rem;
-}
-.order-details tfoot {
-    font-weight: bold;
-    background-color: #f8f9fa;
-}
-.order-details tfoot td {
-    border-top: 2px solid #dee2e6;
-}
-        .payment-section {
-            background-color: #f8f9fa;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-        .payment-section input, .payment-section select {
-            margin-bottom: 1rem;
-        }
-        .action-buttons {
-            margin-top: 1rem;
-        }
-        .action-buttons button {
-            margin-right: 0.5rem;
-        }
-        .side-panel {
-            background-color: #f8f9fa;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        .side-panel h5 {
-            margin-bottom: 1rem;
-        }
-        .warning-box {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            color: #856404;
-            padding: 0.75rem;
-            border-radius: 0.25rem;
-            margin-top: 1rem;
-        }
-        .avatar {
-            width: 80px;
-            height: 80px;
-            background-color: #e0e0e0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: #757575;
-            overflow: hidden;
-        }
-        .avatar-initial {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+        background-color: #4e73df;
+        color: white;
+        font-weight: bold;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 0.75rem 1.25rem;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .avatar {
+        width: 60px;
+        height: 60px;
+        background-color: #4e73df;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #ffffff;
+    }
+
+    .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .info-list {
+        list-style-type: none;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+
+    .info-list li {
+        margin-bottom: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .info-list .label {
+        font-weight: 600;
+        width: 150px;
+        color: #4e73df;
+    }
+
+    .info-list .value {
+        flex: 1;
+    }
+
+    @media (max-width: 768px) {
+        .info-list .label {
             width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: #fff;
-            text-transform: uppercase;
         }
-        
-    </style>
+        .info-list .value {
+            width: 100%;
+            padding-left: 1rem;
+        }
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    .deposit-info .card-header {
+        background-color: #4e73df;
+    }
+    .deposit-info .badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.8em;
+    }
+    .deposit-info .form-label {
+        font-weight: 600;
+        color: #4e73df;
+    }
+    .deposit-info .form-control:read-only,
+    .deposit-info .form-select:disabled {
+        background-color: #f8f9fc;
+        opacity: 1;
+    }
+    .deposit-info .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
 </head>
 <body>
     <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
@@ -251,41 +445,53 @@ function format_money($amount) {
                     <div class="container-xxl flex-grow-1 container-p-y">
                         <div class="row">
                             <div class="col-md-8">
-                                <div class="card customer-info">
-                                    <h5>ข้อมูลลูกค้า</h5>
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <div class="avatar">
-                                                <?php
-                                                if (!empty($customer_data['line_picture_url'])) {
-                                                    // $firstChar = mb_substr($customer_data['line_picture_url'], 0, 1, 'UTF-8');
-                                                    echo '<img src="'.$customer_data['line_picture_url'].'" class="rounded-circle" alt="">';
-                                                } else {
-                                                    echo '<i class="ri-user-line"></i>';
-                                                }
-                                                ?>
+                                <div class="card customer-info mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">ข้อมูลลูกค้า</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="avatar me-3">
+                                                <?php if (!empty($customer_data['line_picture_url'])): ?>
+                                                    <img src="<?php echo $customer_data['line_picture_url']; ?>" alt="Avatar" class="rounded-circle">
+                                                <?php else: ?>
+                                                    <i class="ri-user-line"></i>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0"><?php echo $customer_data['cus_title'] . ' ' . $customer_data['cus_firstname'] . ' ' . $customer_data['cus_lastname']; ?></h6>
+                                                <small class="text-muted"><?php echo 'HN-' . str_pad($customer_data['cus_id'], 6, '0', STR_PAD_LEFT); ?></small>
                                             </div>
                                         </div>
-                                        <div class="col-md-10">
-                                            <ul class="info-list">
-                                                <li><strong>รหัส:</strong> <?php echo 'HN-' . str_pad($customer_data['cus_id'], 6, '0', STR_PAD_LEFT); ?></li>
-                                                <li><strong>ชื่อ - นามสกุล:</strong> <?php echo $customer_data['cus_title'] . ' ' . $customer_data['cus_firstname'] . ' ' . $customer_data['cus_lastname'] . ' (' . $customer_data['cus_nickname'] . ')'; ?></li>
-                                                <li><strong>เลขบัตรประชาชน:</strong> <?php echo $customer_data['cus_id_card_number']; ?></li>
-                                                <li><strong>เพศ:</strong> <?php echo $customer_data['cus_gender']; ?> | <strong>วันเกิด:</strong> <?php echo thai_date($customer_data['cus_birthday']) . ' (' . $age->y . ' ปี ' . $age->m . ' เดือน ' . $age->d . ' วัน)'; ?></li>
-                                                <li><strong>กรุ๊ปเลือด:</strong> <?php echo $customer_data['cus_blood']; ?></li>
-                                                <li><strong>แพ้ยา:</strong> <?php echo $customer_data['cus_drugallergy'] ?: 'ไม่มี'; ?> | <strong>โรคประจำตัว:</strong> <?php echo $customer_data['cus_congenital'] ?: 'ไม่มี'; ?></li>
-                                                <li><strong>ที่อยู่:</strong> <i class="ri-home-4-line"></i> <?php echo $customer_data['cus_address'] . ' ' . $customer_data['cus_district'] . ' ' . $customer_data['cus_city'] . ' ' . $customer_data['cus_province'] . ' ' . $customer_data['cus_postal_code']; ?></li>
-                                                <li><strong>โทร:</strong> <i class="ri-phone-line"></i> <?php echo $customer_data['cus_tel']; ?></li>
-                                            </ul>
-                                        </div>
+                                        <ul class="info-list">
+                                            <li><span class="label">ชื่อเล่น:</span> <span class="value"><?php echo $customer_data['cus_nickname']; ?></span></li>
+                                            <li><span class="label">เลขบัตรประชาชน:</span> <span class="value"><?php echo $customer_data['cus_id_card_number']; ?></span></li>
+                                            <li><span class="label">วันเกิด:</span> <span class="value"><?php echo thai_date($customer_data['cus_birthday']); ?></span></li>
+                                            <li><span class="label">อายุ:</span> <span class="value"><?php echo $age->y . ' ปี ' . $age->m . ' เดือน ' . $age->d . ' วัน'; ?></span></li>
+                                            <li><span class="label">เพศ:</span> <span class="value"><?php echo $customer_data['cus_gender']; ?></span></li>
+                                            <li><span class="label">กรุ๊ปเลือด:</span> <span class="value"><?php echo $customer_data['cus_blood']; ?></span></li>
+                                            <li><span class="label">โทรศัพท์:</span> <span class="value"><?php echo $customer_data['cus_tel']; ?></span></li>
+                                            <li><span class="label">ที่อยู่:</span> <span class="value"><?php echo $customer_data['cus_address'] . ' ' . $customer_data['cus_district'] . ' ' . $customer_data['cus_city'] . ' ' . $customer_data['cus_province'] . ' ' . $customer_data['cus_postal_code']; ?></span></li>
+                                        </ul>
                                     </div>
                                 </div>
-                                <div class="card order-details">
-                                    <h5>เลขที่ใบเสร็จ <?php echo formatOrderId($order_data['oc_id']); ?> 
-                                        <!-- <span class="badge bg-success">ส่วนลดทั้งใบเสร็จ</span> -->
-                                    </h5>
-                                    <p>สร้างเมื่อ: <?php echo format_datetime($order_data['order_datetime']); ?> / 
-                                       โดย: <?php echo $order_data['users_fname'] . ' ' . $order_data['users_lname']; ?></p>
+                                <div class="card order-info mb-4">
+                                     <div class="card-header">
+                                        <h5 class="mb-0">ข้อมูลใบเสร็จ</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6 class="mb-3">เลขที่ใบเสร็จ: <?php echo formatOrderId($order_data['oc_id']); ?></h6>
+                                        <ul class="info-list">
+                                            <li><span class="label">สร้างเมื่อ:</span> <span class="value"><?php echo format_datetime($order_data['order_datetime']); ?></span></li>
+                                            <li><span class="label">โดย:</span> <span class="value"><?php echo $order_data['users_fname'] . ' ' . $order_data['users_lname']; ?></span></li>
+                                            <?php if ($booking_data): ?>
+                                            <li><span class="label">วันที่ Booking คอร์ส:</span> <span class="value"><?php echo format_datetime($booking_data['booking_datetime']); ?></span></li>
+                                            <?php endif; ?>
+                                            <?php if ($queue_data): ?>
+                                            <li><span class="label">คิวที่มาใช้บริการ:</span> <span class="value"><?php echo thai_date($queue_data['queue_date']) . ' ' . date('H:i', strtotime($queue_data['queue_time'])); ?></span></li>
+                                            <?php endif; ?>
+                                        </ul>
+                                    </div>
                                     <table class="table">
                                         <thead>
                                             <tr>
@@ -321,62 +527,139 @@ function format_money($amount) {
                                         <a href="edit-order.php?id=<?php echo $oc_id; ?>" class="btn btn-primary">แก้ไขคำสั่งซื้อ</a>
                                     </div>
                                 </div>
-                                <div class="card payment-section">
-                                    <h5>การชำระเงินมัดจำ</h5>
-                                    <form id="depositForm" enctype="multipart/form-data">
-                                        <input type="hidden" name="order_id" value="<?php echo $oc_id; ?>">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <label>จำนวนเงินมัดจำ (บาท)</label>
-                                                <input type="number" class="form-control" name="deposit_amount" id="deposit_amount" value="<?php echo $order_data['deposit_amount']; ?>" step="0.01" min="0">
+                                <div class="card deposit-info mb-4">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">ข้อมูลการชำระเงินมัดจำ</h5>
+                                        <?php if ($order_data['deposit_amount'] > 0): ?>
+                                            <span class="badge bg-success">ชำระแล้ว</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning">ยังไม่ได้ชำระ</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="depositForm" enctype="multipart/form-data">
+                                            <input type="hidden" name="order_id" value="<?php echo $oc_id; ?>">
+                                            <div class="mb-3">
+                                                <label for="deposit_amount" class="form-label">จำนวนเงินมัดจำ (บาท)</label>
+                                                <input type="number" class="form-control" id="deposit_amount" name="deposit_amount" 
+                                                       value="<?php echo $order_data['deposit_amount']; ?>" step="0.01" min="0" required>
                                             </div>
-                                            <div class="col-md-6">
-                                                <label>ประเภทการชำระเงินมัดจำ</label>
-                                                <select class="form-select" name="deposit_payment_type" id="deposit_payment_type">
+                                            <div class="mb-3">
+                                                <label for="deposit_payment_type" class="form-label">ประเภทการชำระเงินมัดจำ</label>
+                                                <select class="form-select" id="deposit_payment_type" name="deposit_payment_type" required>
                                                     <option value="">เลือกประเภท</option>
                                                     <option value="เงินสด" <?php echo $order_data['deposit_payment_type'] == 'เงินสด' ? 'selected' : ''; ?>>เงินสด</option>
                                                     <option value="บัตรเครดิต" <?php echo $order_data['deposit_payment_type'] == 'บัตรเครดิต' ? 'selected' : ''; ?>>บัตรเครดิต</option>
                                                     <option value="เงินโอน" <?php echo $order_data['deposit_payment_type'] == 'เงินโอน' ? 'selected' : ''; ?>>เงินโอน</option>
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="row mt-3" id="slipUploadSection" style="display: none;">
-                                            <div class="col-md-12">
-                                                <label>อัพโหลดสลิปการโอนเงิน</label>
-                                                <input type="file" class="form-control" name="deposit_slip" id="deposit_slip" accept="image/*">
+                                            <div id="transferSlipSection" style="display: <?php echo $order_data['deposit_payment_type'] == 'เงินโอน' ? 'block' : 'none'; ?>;">
+                                                <div class="mb-3">
+                                                    <label for="deposit_slip" class="form-label">แนบสลิปเงินโอน</label>
+                                                    <input type="file" class="form-control" id="deposit_slip" name="deposit_slip" accept="image/*">
+                                                </div>
+                                            </div>
+                                            <?php if (!empty($order_data['deposit_slip_image'])): ?>
+                                            <div class="mb-3">
+                                                <label class="form-label">สลิปการโอนเงินที่อัพโหลด</label>
+                                                <div>
+                                                    <button type="button" class="btn btn-sm btn-primary" onclick="showSlipModal('../img/payment-proofs/<?php echo $order_data['deposit_slip_image']; ?>')">
+                                                        <i class="ri-eye-line me-1"></i> ดูสลิป
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <?php endif; ?>
+                                            <?php if (!empty($order_data['deposit_date'])): ?>
+                                            <div class="mb-3">
+                                                <label class="form-label">วันที่และเวลาชำระมัดจำ</label>
+                                                <input type="text" class="form-control" value="<?php echo date('d/m/Y H:i:s', strtotime($order_data['deposit_date'])); ?>" readonly>
+                                            </div>
+                                            <?php endif; ?>
+                                            <?php if($order_data['deposit_amount'] <= 0): ?>
+                                            <button type="submit" class="btn btn-primary" id="saveDepositBtn">บันทึกข้อมูลมัดจำ</button>
+                                            <?php endif; ?>
+                                            <?php if ($canCancelDeposit): ?>
+                                            <button type="button" class="btn btn-danger" id="cancelDepositBtn">ยกเลิกค่ามัดจำ</button>
+                                            <?php endif; ?>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="card payment-summary mt-4">
+                                    <h5 class="card-header">สรุปการชำระเงิน</h5>
+                                    <div class="card-body">
+                                        <div class="summary-box mb-3">
+                                            <div class="summary-item">
+                                                <span class="label">ยอดรวมทั้งสิ้น:</span>
+                                                <span class="value"><?php echo format_money($total_amount); ?> บาท</span>
+                                            </div>
+                                            <div class="summary-item">
+                                                <span class="label">หักเงินมัดจำ:</span>
+                                                <span class="value"><?php echo format_money($order_data['deposit_amount']); ?> บาท</span>
+                                            </div>
+                                            <div class="summary-item total">
+                                                <span class="label">ยอดที่ต้องชำระเพิ่ม:</span>
+                                                <span class="value" id="remainingAmount"><?php echo format_money($total_amount - $order_data['deposit_amount']); ?> บาท</span>
                                             </div>
                                         </div>
-                                        <?php if (!empty($order_data['deposit_slip_image'])): ?>
-                                        <div class="row mt-3">
-                                            <div class="col-md-12">
-                                                <label>สลิปการโอนเงิน:</label>
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="showSlipModal('<?php echo '../img/payment-proofs/' . $order_data['deposit_slip_image']; ?>')">ดูสลิป</button>
+
+                                        <?php if ($order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
+                                        <form id="paymentForm" enctype="multipart/form-data">
+                                            <input type="hidden" name="order_id" value="<?php echo $oc_id; ?>">
+                                            <div class="mb-3">
+                                                <label for="payment_type" class="form-label">ประเภทการชำระเงิน</label>
+                                                <select class="form-select" id="payment_type" name="payment_type" required>
+                                                    <option value="">เลือกประเภท</option>
+                                                    <option value="เงินสด">เงินสด</option>
+                                                    <option value="บัตรเครดิต">บัตรเครดิต</option>
+                                                    <option value="เงินโอน">เงินโอน</option>
+                                                </select>
                                             </div>
+                                            <div id="paymentSlipSection" style="display: none;">
+                                                <div class="mb-3">
+                                                    <label for="payment_slip" class="form-label">แนบสลิปการชำระเงิน</label>
+                                                    <input type="file" class="form-control" id="payment_slip" name="payment_slip" accept="image/*">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="received_amount" class="form-label">จำนวนเงินที่รับมา</label>
+                                                <input type="number" class="form-control" id="received_amount" name="received_amount" step="0.01" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="change_amount" class="form-label">เงินทอน</label>
+                                                <input type="text" class="form-control" id="change_amount" readonly>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary btn-lg w-100">บันทึกการชำระเงิน</button>
+                                        </form>
+                                        <?php else: ?>
+                                        <div class="summary-box">
+                                            <div class="summary-item">
+                                                <span class="label">สถานะการชำระเงิน:</span>
+                                                <span class="value"><?php echo $order_data['order_payment']; ?></span>
+                                            </div>
+                                            <div class="summary-item">
+                                                <span class="label">จำนวนเงินที่ชำระ:</span>
+                                                <span class="value"><?php echo format_money($order_data['order_net_total']); ?> บาท</span>
+                                            </div>
+                                            <div class="summary-item">
+                                                <span class="label">วันที่ชำระเงิน:</span>
+                                                <span class="value"><?php echo date('d/m/Y H:i:s', strtotime($order_data['order_payment_date'])); ?></span>
+                                            </div>
+                                            <div class="summary-item">
+                                                <span class="label">ผู้รับชำระเงิน:</span>
+                                                <span class="value"><?php echo $order_data['seller_name']; ?></span>
+                                            </div>
+                                            <?php if ($order_data['payment_proofs']): ?>
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-info btn-sm" onclick="showPaymentSlip('<?php echo $order_data['payment_proofs']; ?>')">
+                                                    ดูสลิปการชำระเงิน
+                                                </button>
+                                            </div>
+                                            <?php endif; ?>
                                         </div>
+                                        <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
+                                        <button type="button" class="btn btn-danger btn-lg mt-3" onclick="cancelPayment(<?php echo $oc_id; ?>)">ยกเลิกการชำระเงิน</button>
                                         <?php endif; ?>
-                                        <?php if (!empty($order_data['deposit_date'])): ?>
-                                        <div class="row mt-3">
-                                            <div class="col-md-12">
-                                                <label>วันที่และเวลาชำระมัดจำ:</label>
-                                                <span><?php echo date('d/m/Y H:i:s', strtotime($order_data['deposit_date'])); ?></span>
-                                            </div>
-                                        </div>
                                         <?php endif; ?>
-                                        <div class="row mt-3">
-                                            <div class="col-md-12">
-                                                <button type="submit" class="btn btn-primary">บันทึกข้อมูลมัดจำ</button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                    <div class="card payment-summary mt-4">
-                                        <h5>สรุปการชำระเงิน</h5>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <p>ยอดรวมทั้งสิ้น: <?php echo format_money($total_amount); ?> บาท</p>
-                                                <p>หักเงินมัดจำ: <?php echo format_money($order_data['deposit_amount']); ?> บาท</p>
-                                                <p><strong>ยอดที่ต้องชำระเพิ่ม: <?php echo format_money($total_amount - $order_data['deposit_amount']); ?> บาท</strong></p>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -477,40 +760,73 @@ function format_money($amount) {
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
 
-    <script>
+
+<script>
+// ย้ายฟังก์ชัน showSlipModal มาไว้นอก $(document).ready()
 function showSlipModal(imageSrc) {
-    document.getElementById('slipImage').src = imageSrc;
-    var modal = new bootstrap.Modal(document.getElementById('slipModal'));
-    modal.show();
+    Swal.fire({
+        title: 'สลิปการโอนเงิน',
+        imageUrl: imageSrc,
+        imageAlt: 'Slip Image',
+        width: 350,
+        showCloseButton: true,
+        showConfirmButton: false
+    });
 }
 
+function showPaymentSlip(imageName) {
+    Swal.fire({
+        title: 'สลิปการชำระเงิน',
+        imageUrl: '../img/payment-proofs/' + imageName,
+        imageAlt: 'Payment Slip',
+        width: 350,
+        // imageWidth: 400,
+        imageHeight: 'auto',
+        showCloseButton: true,
+        showConfirmButton: false
+    });
+}
 $(document).ready(function() {
-    function toggleSlipUpload() {
-        if ($('#deposit_payment_type').val() == 'เงินโอน') {
-            $('#slipUploadSection').show();
-        } else {
-            $('#slipUploadSection').hide();
-        }
+    function updateDepositFormState() {
+        var depositAmount = parseFloat($('#deposit_amount').val()) || 0;
+        var hasDeposit = depositAmount > 0;
+        $('#deposit_amount, #deposit_payment_type, #deposit_slip').prop('disabled', hasDeposit);
+        $('#saveDepositBtn').toggle(!hasDeposit);
+        $('#cancelDepositBtn').toggle(hasDeposit);
     }
 
-    // เรียกใช้ฟังก์ชันเมื่อโหลดหน้าเพื่อตั้งค่าเริ่มต้น
-    toggleSlipUpload();
+    updateDepositFormState();
 
-    // เรียกใช้ฟังก์ชันเมื่อมีการเปลี่ยนแปลงค่า
-    $('#deposit_payment_type').change(toggleSlipUpload);
+    $('#deposit_payment_type').change(function() {
+        $('#transferSlipSection').toggle($(this).val() === 'เงินโอน');
+    });
 
     $('#depositForm').submit(function(e) {
         e.preventDefault();
-        var formData = new FormData(this);
 
-        // ตรวจสอบว่ามีไฟล์ถูกเลือกหรือไม่
-        var fileInput = $('#deposit_slip')[0];
-        if(fileInput.files.length > 0) {
-            console.log('File selected:', fileInput.files[0]);
-        } else {
-            console.log('No file selected');
+        var depositAmount = parseFloat($('#deposit_amount').val()) || 0;
+        var depositPaymentType = $('#deposit_payment_type').val();
+
+        // ตรวจสอบว่าได้เลือกประเภทการชำระเงินมัดจำหรือไม่
+        if (!depositPaymentType) {
+            Swal.fire({
+                icon: 'error',
+                title: 'กรุณาเลือกประเภทการชำระเงินมัดจำ',
+                text: 'โปรดเลือกประเภทการชำระเงินมัดจำก่อนบันทึกข้อมูล',
+            });
+            return;
+        }
+        // ตรวจสอบว่าได้แนบสลิปหรือไม่ (กรณีเลือกเงินโอน)
+        if (depositPaymentType === 'เงินโอน' && !$('#deposit_slip')[0].files.length) {
+            Swal.fire({
+                icon: 'error',
+                title: 'กรุณาแนบสลิปการโอนเงิน',
+                text: 'โปรดแนบสลิปการโอนเงินก่อนบันทึกข้อมูล',
+            });
+            return;
         }
 
+        var formData = new FormData(this);
         $.ajax({
             url: 'sql/update-deposit.php',
             type: 'POST',
@@ -519,7 +835,6 @@ $(document).ready(function() {
             processData: false,
             dataType: 'json',
             success: function(response) {
-                console.log('Server response:', response);
                 if(response.success) {
                     Swal.fire({
                         icon: 'success',
@@ -538,9 +853,7 @@ $(document).ready(function() {
                     });
                 }
             },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('AJAX Error:', textStatus, errorThrown);
-                console.log('Response Text:', jqXHR.responseText);
+            error: function() {
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
@@ -550,8 +863,190 @@ $(document).ready(function() {
         });
     });
 
-    // เพิ่มฟังก์ชันอื่นๆ ที่จำเป็นสำหรับหน้านี้ (ถ้ามี)
+    $('#cancelDepositBtn').click(function() {
+        Swal.fire({
+            title: 'ยืนยันการยกเลิกค่ามัดจำ',
+            text: "คุณแน่ใจหรือไม่ที่จะยกเลิกค่ามัดจำนี้?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ใช่, ยกเลิก',
+            cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'sql/cancel-deposit.php',
+                    type: 'POST',
+                    data: { order_id: <?php echo $oc_id; ?> },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'สำเร็จ',
+                                text: 'ยกเลิกค่ามัดจำเรียบร้อยแล้ว',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: response.message || 'ไม่สามารถยกเลิกค่ามัดจำได้',
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+  var remainingAmount = <?php echo $total_amount - $order_data['deposit_amount']; ?>;
+
+    $('#payment_type').change(function() {
+        $('#paymentSlipSection').toggle($(this).val() === 'เงินโอน');
+    });
+
+    $('#received_amount').on('input', function() {
+        var receivedAmount = parseFloat($(this).val()) || 0;
+        var changeAmount = receivedAmount - remainingAmount;
+        $('#change_amount').val(changeAmount >= 0 ? changeAmount.toFixed(2) : '0.00');
+    });
+
+    $('#paymentForm').submit(function(e) {
+        e.preventDefault();
+        
+        var paymentType = $('#payment_type').val();
+        var receivedAmount = parseFloat($('#received_amount').val()) || 0;
+
+        if (!paymentType) {
+            Swal.fire({
+                icon: 'error',
+                title: 'กรุณาเลือกประเภทการชำระเงิน',
+                text: 'โปรดเลือกประเภทการชำระเงินก่อนบันทึกข้อมูล',
+            });
+            return;
+        }
+
+        if (paymentType === 'เงินโอน' && !$('#payment_slip')[0].files.length) {
+            Swal.fire({
+                icon: 'error',
+                title: 'กรุณาแนบสลิปการชำระเงิน',
+                text: 'โปรดแนบสลิปการชำระเงินก่อนบันทึกข้อมูล',
+            });
+            return;
+        }
+
+        if (receivedAmount < remainingAmount) {
+            Swal.fire({
+                icon: 'error',
+                title: 'จำนวนเงินไม่เพียงพอ',
+                text: 'จำนวนเงินที่รับมาน้อยกว่ายอดที่ต้องชำระ',
+            });
+            return;
+        }
+
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: 'sql/update-payment.php',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function(response) {
+                if(response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ',
+                        text: response.message || 'บันทึกการชำระเงินสำเร็จ',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: response.message || 'ไม่สามารถบันทึกการชำระเงินได้',
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                });
+            }
+        });
+    });
+
+
+
+
+
 });
+function cancelPayment(orderId) {
+    Swal.fire({
+        title: 'ยืนยันการยกเลิกการชำระเงิน',
+        text: "คุณแน่ใจหรือไม่ที่จะยกเลิกการชำระเงินนี้?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ยกเลิก',
+        cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/cancel-payment.php',
+                type: 'POST',
+                data: { order_id: orderId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ',
+                            text: 'ยกเลิกการชำระเงินเรียบร้อยแล้ว',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: response.message || 'ไม่สามารถยกเลิกการชำระเงินได้',
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                    });
+                }
+            });
+        }
+    });
+}
 </script>
+
 </body>
 </html>

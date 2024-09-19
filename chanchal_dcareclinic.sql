@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 18, 2024 at 10:36 AM
+-- Generation Time: Sep 19, 2024 at 05:49 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 5.6.40
 
@@ -241,7 +241,8 @@ INSERT INTO `course_bookings` (`id`, `branch_id`, `cus_id`, `booking_datetime`, 
 (31, 1, 14, '2024-09-14 22:45:00', '2024-09-14 05:03:43', 1, 'confirmed'),
 (32, 1, 13, '2024-09-16 13:00:00', '2024-09-16 04:40:26', 1, 'confirmed'),
 (33, 1, 5, '2024-09-16 11:31:00', '2024-09-16 07:56:20', 1, 'confirmed'),
-(34, 1, 7, '2024-09-17 10:36:00', '2024-09-17 03:36:50', 1, 'confirmed');
+(34, 1, 7, '2024-09-17 10:36:00', '2024-09-17 03:36:50', 1, 'confirmed'),
+(35, 1, 2, '2024-09-18 10:37:00', '2024-09-18 04:23:02', 1, 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -531,26 +532,31 @@ CREATE TABLE `order_course` (
   `order_payment_date` datetime DEFAULT NULL,
   `seller_id` int(11) DEFAULT NULL,
   `payment_proofs` varchar(50) NOT NULL,
-  `order_status` int(11) DEFAULT NULL
+  `order_status` int(11) DEFAULT NULL,
+  `deposit_amount` decimal(10,2) DEFAULT 0.00,
+  `deposit_payment_type` enum('เงินสด','บัตรเครดิต','เงินโอน') DEFAULT NULL,
+  `deposit_slip_image` varchar(255) DEFAULT NULL,
+  `deposit_date` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `order_course`
 --
 
-INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`, `order_datetime`, `order_payment`, `order_net_total`, `order_payment_date`, `seller_id`, `payment_proofs`, `order_status`) VALUES
-(24, 13, 1, 23, '2024-09-09 20:23:04', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1),
-(25, 14, 1, 24, '2024-09-09 20:23:23', 'ยังไม่จ่ายเงิน', 20000, NULL, NULL, '', 1),
-(26, 13, 1, 25, '2024-09-10 09:56:58', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1),
-(27, 13, 1, 26, '2024-09-10 09:57:11', 'ยังไม่จ่ายเงิน', 5000, NULL, NULL, '', 1),
-(28, 13, 1, 27, '2024-09-10 09:57:29', 'ยังไม่จ่ายเงิน', 35000, NULL, NULL, '', 1),
-(29, 13, 1, 28, '2024-09-11 10:56:19', 'ยังไม่จ่ายเงิน', 35000, NULL, NULL, '', 1),
-(30, 13, 1, 29, '2024-09-12 09:22:12', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1),
-(31, 14, 1, 30, '2024-09-13 09:32:31', NULL, 45000, NULL, NULL, '', 1),
-(32, 14, 1, 31, '2024-09-14 12:03:43', 'เงินสด', 14990, '2024-09-14 21:22:26', 1, '', 1),
-(33, 13, 1, 32, '2024-09-16 11:40:26', 'ยังไม่จ่ายเงิน', 5000, NULL, 1, '', 1),
-(34, 5, 1, 33, '2024-09-16 14:56:20', 'ยังไม่จ่ายเงิน', 25000, NULL, NULL, '', 1),
-(35, 7, 1, 34, '2024-09-17 10:36:50', 'ยังไม่จ่ายเงิน', 5000, NULL, NULL, '', 1);
+INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`, `order_datetime`, `order_payment`, `order_net_total`, `order_payment_date`, `seller_id`, `payment_proofs`, `order_status`, `deposit_amount`, `deposit_payment_type`, `deposit_slip_image`, `deposit_date`) VALUES
+(24, 13, 1, 23, '2024-09-09 20:23:04', 'ยังไม่จ่ายเงิน', 0, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(25, 14, 1, 24, '2024-09-09 20:23:23', 'ยังไม่จ่ายเงิน', 20000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(26, 13, 1, 25, '2024-09-10 09:56:58', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(27, 13, 1, 26, '2024-09-10 09:57:11', 'ยังไม่จ่ายเงิน', 5000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(28, 13, 1, 27, '2024-09-10 09:57:29', 'ยังไม่จ่ายเงิน', 35000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(29, 13, 1, 28, '2024-09-11 10:56:19', 'ยังไม่จ่ายเงิน', 85000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(30, 13, 1, 29, '2024-09-12 09:22:12', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(31, 14, 1, 30, '2024-09-13 09:32:31', NULL, 45000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(32, 14, 1, 31, '2024-09-14 12:03:43', 'ยังไม่จ่ายเงิน', 39900, NULL, 1, '', 1, '0.00', NULL, NULL, NULL),
+(33, 13, 1, 32, '2024-09-16 11:40:26', 'ยังไม่จ่ายเงิน', 5000, NULL, 1, '', 1, '0.00', NULL, NULL, NULL),
+(34, 5, 1, 33, '2024-09-16 14:56:20', 'ยังไม่จ่ายเงิน', 25000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(35, 7, 1, 34, '2024-09-17 10:36:50', 'ยังไม่จ่ายเงิน', 5000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(36, 2, 1, 35, '2024-09-18 11:23:02', 'ยังไม่จ่ายเงิน', 25000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -576,7 +582,6 @@ INSERT INTO `order_course_resources` (`id`, `order_id`, `course_id`, `resource_t
 (249, 31, 8, 'tool', 5, '10.00'),
 (250, 31, 8, 'tool', 3, '10.00'),
 (251, 31, 8, 'accessory', 3, '5.00'),
-(255, 31, 8, 'tool', 14, '3.00'),
 (256, 31, 11, 'tool', 14, '3.00'),
 (258, 32, 7, 'accessory', 7, '15.00'),
 (259, 32, 7, 'drug', 16, '2.00'),
@@ -591,7 +596,14 @@ INSERT INTO `order_course_resources` (`id`, `order_id`, `course_id`, `resource_t
 (395, 35, 8, 'drug', 1, '30.00'),
 (396, 35, 8, 'tool', 5, '1.00'),
 (397, 35, 8, 'tool', 3, '1.20'),
-(398, 35, 8, 'accessory', 3, '1.00');
+(398, 35, 8, 'accessory', 3, '1.00'),
+(402, 36, 12, 'tool', 7, '10.00'),
+(403, 32, 12, 'tool', 10, '5.00'),
+(404, 32, 12, 'drug', 13, '10.00'),
+(405, 29, 8, 'drug', 1, '30.00'),
+(406, 29, 8, 'tool', 5, '1.00'),
+(407, 29, 8, 'tool', 3, '1.20'),
+(408, 29, 8, 'accessory', 3, '1.00');
 
 -- --------------------------------------------------------
 
@@ -617,10 +629,13 @@ INSERT INTO `order_detail` (`od_id`, `oc_id`, `course_id`, `od_amount`, `od_pric
 (33, 29, 8, 1, 35000),
 (68, 31, 8, 1, 35000),
 (69, 31, 11, 1, 10000),
-(70, 32, 7, 1, 14990),
+(70, 32, 7, 1, 14900),
 (87, 33, 8, 1, 5000),
 (91, 34, 12, 1, 25000),
-(92, 35, 8, 1, 5000);
+(92, 35, 8, 1, 5000),
+(93, 36, 12, 1, 25000),
+(94, 32, 12, 1, 25000),
+(95, 29, 9, 1, 50000);
 
 -- --------------------------------------------------------
 
@@ -682,7 +697,8 @@ INSERT INTO `service_queue` (`queue_id`, `branch_id`, `cus_id`, `booking_id`, `q
 (62, 1, 5, 33, 'Q001', '2024-09-16', '11:31:00', 'in_progress', '2024-09-16 04:31:09', '2024-09-16 07:56:20', ''),
 (63, 1, 13, 32, 'Q002', '2024-09-16', '13:00:00', 'in_progress', '2024-09-16 04:41:00', '2024-09-16 04:41:02', ''),
 (64, 1, 14, NULL, 'Q003', '2024-09-16', '18:21:00', 'in_progress', '2024-09-16 11:21:42', '2024-09-16 11:21:46', ''),
-(65, 1, 7, 34, 'Q001', '2024-09-17', '10:36:00', 'in_progress', '2024-09-17 03:36:23', '2024-09-17 09:13:13', '');
+(65, 1, 7, 34, 'Q001', '2024-09-17', '10:36:00', 'in_progress', '2024-09-17 03:36:23', '2024-09-17 09:13:13', ''),
+(66, 1, 2, 35, 'Q001', '2024-09-18', '10:37:00', 'in_progress', '2024-09-18 03:37:50', '2024-09-18 04:23:02', '');
 
 -- --------------------------------------------------------
 
@@ -722,7 +738,9 @@ CREATE TABLE `service_staff_records` (
 
 INSERT INTO `service_staff_records` (`staff_record_id`, `service_id`, `staff_id`, `staff_type`, `staff_df`, `staff_df_type`) VALUES
 (3, 65, 52, 'doctor', '100.00', 'amount'),
-(4, 65, 53, 'doctor', '3.00', 'percent');
+(4, 65, 53, 'doctor', '3.00', 'percent'),
+(5, 66, 52, 'doctor', '100.00', 'amount'),
+(6, 66, 53, 'doctor', '10.00', 'percent');
 
 -- --------------------------------------------------------
 
@@ -1103,7 +1121,7 @@ ALTER TABLE `course`
 -- AUTO_INCREMENT for table `course_bookings`
 --
 ALTER TABLE `course_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `course_resources`
@@ -1157,19 +1175,19 @@ ALTER TABLE `opd_drawings`
 -- AUTO_INCREMENT for table `order_course`
 --
 ALTER TABLE `order_course`
-  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `order_course_resources`
 --
 ALTER TABLE `order_course_resources`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=402;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=412;
 
 --
 -- AUTO_INCREMENT for table `order_detail`
 --
 ALTER TABLE `order_detail`
-  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
+  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
 
 --
 -- AUTO_INCREMENT for table `position`
@@ -1181,7 +1199,7 @@ ALTER TABLE `position`
 -- AUTO_INCREMENT for table `service_queue`
 --
 ALTER TABLE `service_queue`
-  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
 -- AUTO_INCREMENT for table `service_records`
@@ -1193,7 +1211,7 @@ ALTER TABLE `service_records`
 -- AUTO_INCREMENT for table `service_staff_records`
 --
 ALTER TABLE `service_staff_records`
-  MODIFY `staff_record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `staff_record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `stock_transactions`
