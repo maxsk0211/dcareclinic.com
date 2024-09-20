@@ -108,6 +108,20 @@ function format_money($amount) {
 }
 // ตรวจสอบว่าผู้ใช้เป็นผู้ดูแลระบบหรือผู้จัดการหรือไม่
 $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2);
+
+// เพิ่มโค้ดนี้หลังจากที่คุณดึงข้อมูล $customer_data
+$sql_services = "SELECT oc.oc_id, oc.order_datetime, oc.order_net_total, oc.order_payment, 
+                        GROUP_CONCAT(CONCAT(c.course_name, ' (', od.od_amount, ')') SEPARATOR ', ') as courses
+                 FROM order_course oc
+                 JOIN order_detail od ON oc.oc_id = od.oc_id
+                 JOIN course c ON od.course_id = c.course_id
+                 WHERE oc.cus_id = ?
+                 GROUP BY oc.oc_id
+                 ORDER BY oc.order_datetime DESC";
+$stmt_services = $conn->prepare($sql_services);
+$stmt_services->bind_param("i", $customer_data['cus_id']);
+$stmt_services->execute();
+$result_services = $stmt_services->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -433,6 +447,37 @@ $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .table {
+        width: 100%;
+        margin-bottom: 1rem;
+        color: #212529;
+    }
+    .table th,
+    .table td {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+    }
+    .table thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .table tbody + tbody {
+        border-top: 2px solid #dee2e6;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.075);
+    }
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: #f8f9fa;
+    }
 </style>
 </head>
 <body>
@@ -447,7 +492,7 @@ $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                             <div class="col-md-8">
                                 <div class="card customer-info mb-4">
                                     <div class="card-header">
-                                        <h5 class="mb-0">ข้อมูลลูกค้า</h5>
+                                        <h5 class="mb-0 text-white">ข้อมูลลูกค้า</h5>
                                     </div>
                                     <div class="card-body">
                                         <div class="d-flex align-items-center mb-3">
@@ -477,15 +522,15 @@ $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                                 </div>
                                 <div class="card order-info mb-4">
                                      <div class="card-header">
-                                        <h5 class="mb-0">ข้อมูลใบเสร็จ</h5>
+                                        <h5 class="mb-0 text-white">ข้อมูลใบเสร็จ</h5>
                                     </div>
                                     <div class="card-body">
                                         <h6 class="mb-3">เลขที่ใบเสร็จ: <?php echo formatOrderId($order_data['oc_id']); ?></h6>
                                         <ul class="info-list">
-                                            <li><span class="label">สร้างเมื่อ:</span> <span class="value"><?php echo format_datetime($order_data['order_datetime']); ?></span></li>
+                                            <li><span class="label">สร้างเมื่อ:</span> <span class="value"><?php echo thai_date($order_data['order_datetime']).' '.date('H:i', strtotime($order_data['order_datetime'])); ?></span></li>
                                             <li><span class="label">โดย:</span> <span class="value"><?php echo $order_data['users_fname'] . ' ' . $order_data['users_lname']; ?></span></li>
                                             <?php if ($booking_data): ?>
-                                            <li><span class="label">วันที่ Booking คอร์ส:</span> <span class="value"><?php echo format_datetime($booking_data['booking_datetime']); ?></span></li>
+                                            <li><span class="label">วันที่จองคอร์ส:</span> <span class="value"><?php echo thai_date($booking_data['booking_datetime']).' '.date('H:i', strtotime($booking_data['booking_datetime'])); ?></span></li>
                                             <?php endif; ?>
                                             <?php if ($queue_data): ?>
                                             <li><span class="label">คิวที่มาใช้บริการ:</span> <span class="value"><?php echo thai_date($queue_data['queue_date']) . ' ' . date('H:i', strtotime($queue_data['queue_time'])); ?></span></li>
@@ -523,13 +568,15 @@ $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                                             </tr>
                                         </tfoot>
                                     </table>
-                                    <div class="text-end mt-3">
+                                    <?php if ($order_data['deposit_amount'] > 0 && $order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
+                                    <div class="text-end m-3">
                                         <a href="edit-order.php?id=<?php echo $oc_id; ?>" class="btn btn-primary">แก้ไขคำสั่งซื้อ</a>
                                     </div>
+                                    <?php endif ?>
                                 </div>
                                 <div class="card deposit-info mb-4">
                                     <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h5 class="mb-0">ข้อมูลการชำระเงินมัดจำ</h5>
+                                        <h5 class="mb-0 text-white">ข้อมูลการชำระเงินมัดจำ</h5>
                                         <?php if ($order_data['deposit_amount'] > 0): ?>
                                             <span class="badge bg-success">ชำระแล้ว</span>
                                         <?php else: ?>
@@ -575,11 +622,13 @@ $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                                                 <input type="text" class="form-control" value="<?php echo date('d/m/Y H:i:s', strtotime($order_data['deposit_date'])); ?>" readonly>
                                             </div>
                                             <?php endif; ?>
+                                            <?php if ($order_data['deposit_amount'] > 0 && $order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
                                             <?php if($order_data['deposit_amount'] <= 0): ?>
                                             <button type="submit" class="btn btn-primary" id="saveDepositBtn">บันทึกข้อมูลมัดจำ</button>
                                             <?php endif; ?>
-                                            <?php if ($canCancelDeposit): ?>
-                                            <button type="button" class="btn btn-danger" id="cancelDepositBtn">ยกเลิกค่ามัดจำ</button>
+                                                <?php if ($canCancelDeposit): ?>
+                                                    <button type="button" class="btn btn-danger" id="cancelDepositBtn">ยกเลิกค่ามัดจำ</button>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </form>
                                     </div>
@@ -624,7 +673,7 @@ $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                                                 <label for="received_amount" class="form-label">จำนวนเงินที่รับมา</label>
                                                 <input type="number" class="form-control" id="received_amount" name="received_amount" step="0.01" required>
                                             </div>
-                                            <div class="mb-3">
+                                            <div class="mb-3" id="changeSection">
                                                 <label for="change_amount" class="form-label">เงินทอน</label>
                                                 <input type="text" class="form-control" id="change_amount" readonly>
                                             </div>
@@ -664,20 +713,40 @@ $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="side-panel">
-                                    <h5>รายการที่ใช้บริการ</h5>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>เลขที่บริการ</th>
-                                                <th>รายการที่ให้บริการ</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- เพิ่มข้อมูลตามต้องการ -->
-                                        </tbody>
-                                    </table>
-                                    <p>รวมค่ามือ: 0.00 บาท</p>
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">รายการที่ใช้บริการ</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>เลขที่บริการ</th>
+                                                        <th>วันที่และเวลา</th>
+                                                        <th>ราคา/บาท</th>
+                                                        <th>สถานะ</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php while ($service = $result_services->fetch_assoc()): ?>
+                                                    <tr class="clickable-row" data-href="bill.php?id=<?php echo $service['oc_id']; ?>">
+                                                        <td><?php echo 'ORDER-' . str_pad($service['oc_id'], 6, '0', STR_PAD_LEFT); ?></td>
+                                                        <td><?php echo date('d/m/Y H:i', strtotime($service['order_datetime'])); ?></td>
+                                                        <td><?php echo number_format($service['order_net_total'], 2); ?></td>
+                                                        <td>
+                                                            <?php if ($service['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
+                                                                <span class="badge bg-warning">ยังไม่ชำระ</span>
+                                                            <?php else: ?>
+                                                                <span class="badge bg-success">ชำระแล้ว</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                    </tr>
+                                                    <?php endwhile; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="side-panel">
                                     <h5>นัดหมายติดตามผล</h5>
@@ -693,27 +762,6 @@ $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] =
                                             <!-- เพิ่มข้อมูลตามต้องการ -->
                                         </tbody>
                                     </table>
-                                </div>
-                                <div class="side-panel">
-                                    <h5>ชำระเงินมัดจำ</h5>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>ช่องทาง</th>
-                                                <th>จำนวนเงิน</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>รวมทั้งหมด</td>
-                                                <td>0.00 บาท</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <button class="btn btn-primary w-100">ชำระเงินมัดจำ</button>
-                                </div>
-                                <div class="warning-box">
-                                    Warning - โปรดเลือกประเภทการชำระเงิน!
                                 </div>
                             </div>
                         </div>
@@ -787,6 +835,21 @@ function showPaymentSlip(imageName) {
     });
 }
 $(document).ready(function() {
+
+    // จัดการการคลิกที่แถวในตารางรายการที่ใช้บริการ
+    $('.clickable-row').click(function() {
+        window.location = $(this).data('href');
+    });
+
+    function updateDepositButtonVisibility() {
+        var hasPayment = <?php echo json_encode($order_data['order_payment'] != 'ยังไม่จ่ายเงิน'); ?>;
+        if (hasPayment) {
+            $('#cancelDepositBtn').hide();
+        }
+    }
+
+    updateDepositButtonVisibility();
+
     function updateDepositFormState() {
         var depositAmount = parseFloat($('#deposit_amount').val()) || 0;
         var hasDeposit = depositAmount > 0;
@@ -914,7 +977,18 @@ $(document).ready(function() {
   var remainingAmount = <?php echo $total_amount - $order_data['deposit_amount']; ?>;
 
     $('#payment_type').change(function() {
-        $('#paymentSlipSection').toggle($(this).val() === 'เงินโอน');
+        var selectedType = $(this).val();
+        $('#paymentSlipSection').toggle(selectedType === 'เงินโอน');
+        
+        // ซ่อน/แสดงส่วนของเงินทอน
+        if (selectedType === 'เงินสด') {
+            $('#changeSection').show();
+            $('#received_amount').prop('required', true);
+        } else {
+            $('#changeSection').hide();
+            $('#change_amount').val('0.00');
+            $('#received_amount').prop('required', false).val(remainingAmount.toFixed(2));
+        }
     });
 
     $('#received_amount').on('input', function() {
@@ -974,6 +1048,7 @@ $(document).ready(function() {
                         showConfirmButton: false,
                         timer: 1500
                     }).then(() => {
+                        $('#cancelDepositBtn').hide(); // ซ่อนปุ่มยกเลิกค่ามัดจำ
                         location.reload();
                     });
                 } else {

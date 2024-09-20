@@ -64,6 +64,8 @@ function convertToThaiDate($date) {
 
     return "$day $month $year" . ($time ? " $time" : "");
 }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -195,7 +197,7 @@ function convertToThaiDate($date) {
                                         <?php while ($row_booking = mysqli_fetch_object($result_booking)): ?>
                                             <tr class="clickable-row" data-customer-id="<?php echo $row_booking->customer_id; ?>">
                                                 <td></td>
-                                                <td><?php echo formatOrderId($row_booking->id); ?></td>
+                                                <td><?php echo formatOrderId($row_booking->oc_id); ?></td>
                                                 <td><?php echo htmlspecialchars($row_booking->cus_firstname . ' ' . $row_booking->cus_lastname); ?></td>
                                                 <td><?php echo convertToThaiDate($row_booking->booking_datetime); ?></td>
                                                 <td><?php echo $row_booking->users_fname ?? 'N/A'; ?></td>
