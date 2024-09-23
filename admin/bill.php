@@ -568,7 +568,7 @@ $result_services = $stmt_services->get_result();
                                             </tr>
                                         </tfoot>
                                     </table>
-                                    <?php if ($order_data['deposit_amount'] > 0 && $order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
+                                    <?php if ($order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
                                     <div class="text-end m-3">
                                         <a href="edit-order.php?id=<?php echo $oc_id; ?>" class="btn btn-primary">แก้ไขคำสั่งซื้อ</a>
                                     </div>

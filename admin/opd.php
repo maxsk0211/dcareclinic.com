@@ -54,6 +54,45 @@ $food_allergy = $opd_data['food_allergy'] ?? '';
 
 $background_images = glob("../img/drawing/default/*");
 
+// ดึงข้อมูลวันที่ปิดทำการ
+$sql_closures = "SELECT closure_date FROM clinic_closures";
+$result_closures = $conn->query($sql_closures);
+$closed_dates = [];
+while ($row = $result_closures->fetch_object()) {
+    if ($row->closure_date) {
+        $closed_date = date('Y-m-d', strtotime($row->closure_date));
+        if ($closed_date) {
+            $closed_dates[] = $closed_date;
+        }
+    }
+}
+
+// ดึงข้อมูลเวลาทำการ
+$sql_hours = "SELECT * FROM clinic_hours";
+$result_hours = $conn->query($sql_hours);
+$clinic_hours = [];
+$closed_days = [];
+while ($row = $result_hours->fetch_object()) {
+    $clinic_hours[$row->day_of_week] = [
+        'start_time' => $row->start_time,
+        'end_time' => $row->end_time,
+        'is_closed' => $row->is_closed
+    ];
+    if ($row->is_closed == 1) {
+        $closed_days[] = $row->day_of_week;
+    }
+}
+
+// ดึงข้อมูลการจองที่มีอยู่
+$sql_bookings = "SELECT booking_datetime FROM course_bookings WHERE status IN ('pending', 'confirmed')";
+$result_bookings = $conn->query($sql_bookings);
+$booked_slots = [];
+while ($row = $result_bookings->fetch_object()) {
+    if ($row->booking_datetime) {
+        $booked_slots[] = $row->booking_datetime;
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -404,6 +443,20 @@ $background_images = glob("../img/drawing/default/*");
         border: 2px solid #fff;
         box-shadow: 0 0 5px rgba(0,0,0,0.5);
     }
+    .time-slot {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .time-slot.booked {
+        background-color: #ff8785;
+        cursor: not-allowed;
+    }
+    .time-slot.selected {
+        background-color: #8cff85;
+    }
+    .time-slot:hover:not(.disabled) {
+        transform: scale(1.05);
+    }
 </style>
 </head>
 <body>
@@ -539,40 +592,82 @@ $background_images = glob("../img/drawing/default/*");
                             <strong>สถานะ:</strong> 
                             <?php echo $canEditPart2 ? 'คุณสามารถแก้ไขข้อมูลในส่วนนี้ได้' : 'คุณสามารถดูข้อมูลเท่านั้น'; ?>
                         </div>
-                            <form id="opdFormPart2Form" method="post">
-                                <input type="hidden" name="opd_id" id="opd_id" value="">
-                                
-                                <div class="form-section">
-                                    <h3>การตรวจร่างกาย</h3>
-                                    <div class="mb-3">
-                                        <label for="opd_physical" class="form-label">การตรวจร่างกาย</label>
-                                        <button type="button" class="btn btn-primary" onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-section">
+                                            <h3>การตรวจร่างกาย</h3>
+                                            <div class="mb-3">
+                                                <label for="opd_physical" class="form-label">การตรวจร่างกาย</label>
+                                                <button type="button" class="btn btn-primary" onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
+                                            </div>
+                                            <div id="savedDrawings" class="drawing-gallery">
+                                                <!-- รูปภาพที่บันทึกแล้วจะแสดงที่นี่ -->
+                                            </div>
+                                        </div>
+                                    
+                                    <form id="opdFormPart2Form" method="post">
+                                        <input type="hidden" name="opd_id" id="opd_id" value="">
+                                        <input type="hidden" id="saved_drawings" name="saved_drawings" value="">
+
+                                    
+                                        <div class="form-section">
+                                            <h3>การวินิจฉัยและหมายเหตุ</h3>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="opd_diagnose" class="form-label">วินิจฉัย</label>
+                                                        <textarea class="form-control" id="opd_diagnose" name="opd_diagnose" rows="3" required></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="opd_note" class="form-label">หมายเหตุ</label>
+                                                        <textarea class="form-control" id="opd_note" name="opd_note" rows="3"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="text-center">
+                                                <?php if ($canEditPart2): ?>
+                                                    <input type="hidden" id="opd_id" name="opd_id" value="<?php echo $opd_data['opd_id'] ?? ''; ?>">
+                                                    <button type="submit" class="btn btn-submit">บันทึกข้อมูลทั้งหมด</button>
+                                                <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div id="savedDrawings" class="drawing-gallery">
-                                        <!-- รูปภาพที่บันทึกแล้วจะแสดงที่นี่ -->
+                                    </form>
+                                    <div class="col-md-6">
+                                        <div class="form-section">
+                                            <h3>นัดหมายติดตามผล</h3>
+                                            <div class="mb-3">
+                                                <label for="follow_up_date" class="form-label">วันที่นัดติดตามผล</label>
+                                                <input type="text" class="form-control" id="follow_up_date" name="follow_up_date" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">เลือกเวลา</label>
+                                                <div id="timeSlots" class="row text-center">
+                                                    <!-- Time slots will be dynamically added here -->
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="follow_up_time" name="follow_up_time">
+                                            <div class="mb-3">
+                                                <label for="follow_up_note" class="form-label">หมายเหตุการติดตามผล</label>
+                                                <textarea class="form-control" id="follow_up_note" name="follow_up_note" rows="3"></textarea>
+                                            </div>
+                                            <button type="button" class="btn btn-primary" onclick="saveFollowUp()">บันทึกการนัดติดตามผล</button>
+                                        </div>
+
+                                        <div class="form-section">
+                                            <h3>ประวัติการนัดติดตามผล</h3>
+                                            <div id="followUpHistory">
+                                                <!-- ข้อมูลประวัติการนัดติดตามผลจะถูกเพิ่มที่นี่ -->
+                                            </div>
+                                        </div>
                                     </div>
-                                    <input type="hidden" id="saved_drawings" name="saved_drawings" value="">
+
                                 </div>
 
-                                <div class="form-section">
-                                    <h3>การวินิจฉัยและหมายเหตุ</h3>
-                                    <div class="mb-3">
-                                        <label for="opd_diagnose" class="form-label">วินิจฉัย</label>
-                                        <textarea class="form-control" id="opd_diagnose" name="opd_diagnose" rows="3" required></textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="opd_note" class="form-label">หมายเหตุ</label>
-                                        <textarea class="form-control" id="opd_note" name="opd_note" rows="3"></textarea>
-                                    </div>
-                                </div>
                                 <button type="button" class="btn btn-secondary" id="backToPartOne">ย้อนกลับ</button>
-                                <div class="text-center">
-                                <?php if ($canEditPart2): ?>
-                                    <input type="hidden" id="opd_id" name="opd_id" value="<?php echo $opd_data['opd_id'] ?? ''; ?>">
-                                    <button type="submit" class="btn btn-submit">บันทึกข้อมูลทั้งหมด</button>
-                                <?php endif; ?>
-                                </div>
-                            </form>
+
                         </div>
                     </div>
                     <!-- / Content -->
@@ -627,7 +722,10 @@ $background_images = glob("../img/drawing/default/*");
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
-
+     <!-- เพิ่ม import สำหรับ Flatpickr ถ้ายังไม่มี -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
     <!-- Page JS -->
 <script>
 
@@ -643,7 +741,7 @@ const canEditPart2 = <?php echo json_encode($canEditPart2); ?>;
 
 
 
-function msg_ok(message,url){
+function msg_ok(message){
         Swal.fire({
         icon: 'success',
         title: 'แจ้งเตือน!!',
@@ -652,13 +750,7 @@ function msg_ok(message,url){
             confirmButton: 'btn btn-primary waves-effect waves-light'
         },
         buttonsStyling: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            if (url) {
-            window.location.href = url; 
-        }
-        }
-    });
+    })
 }
 
 function msg_error(messageทช){
@@ -743,7 +835,8 @@ $(document).ready(function() {
 
     // จัดการการส่งฟอร์มส่วนที่สอง
     if (canEditPart2) {
-        $('#opdFormPart2Form').on('submit', function(e) {
+        $('#opdFormPart2Form').on('submit.opdForm', function(e) {
+            // console.log('Form submitted');
             e.preventDefault();
             var opdId = $('#opd_id').val(); // ดึงค่า opd_id ที่อัพเดตล่าสุด
             var formData = $(this).serialize() + '&opd_id=' + opdId; // เพิ่ม opd_id ลงในข้อมูลที่จะส่ง
@@ -757,10 +850,23 @@ $(document).ready(function() {
                         // alert('บันทึกข้อมูลทั้งหมดสำเร็จ');
                         // window.location.href = 'service.php?queue_id=' + response.queue_id;
                         // window.location.href = 'queue-management.php';
-                        msg_ok('บันทึกข้อมูลทั้งหมดสำเร็จ','queue-management.php')
+                        // msg_ok('บันทึกข้อมูลทั้งหมดสำเร็จ','queue-management.php');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'แจ้งเตือน!!',
+                            text: 'บันทึกข้อมูลทั้งหมดสำเร็จ',
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = 'queue-management.php'; 
+                            }
+                        });
                     } else {
                         // alert('เกิดข้อผิดพลาด: ' + response.message);
-                        msg_ok('เกิดข้อผิดพลาด: ' + response.message)
+                        msg_error('เกิดข้อผิดพลาด: ' + response.message);
                     }
                 },
                 error: function() {
@@ -961,29 +1067,74 @@ function viewImage(index, images) {
 }
 
 function deleteImage(imageId, imgContainer) {
-    if (confirm('คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้?')) {
-        fetch('sql/delete-drawing.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'id=' + imageId
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                imgContainer.remove();
-                // Update hidden input
-                const savedDrawingsInput = document.getElementById('saved_drawings');
-                let savedDrawings = JSON.parse(savedDrawingsInput.value);
-                savedDrawings = savedDrawings.filter(path => !path.includes(data.deleted_file));
-                savedDrawingsInput.value = JSON.stringify(savedDrawings);
-            } else {
-                msg_error('เกิดข้อผิดพลาดในการลบรูปภาพ: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+    Swal.fire({
+        title: 'คุณแน่ใจหรือไม่?',
+        text: "คุณต้องการลบรูปภาพนี้ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+            confirmButton: 'btn btn-primary waves-effect waves-light me-1',
+            cancelButton: 'btn btn-danger waves-effect waves-light'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('sql/delete-drawing.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'id=' + imageId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    imgContainer.remove();
+                    // Update hidden input
+                    const savedDrawingsInput = document.getElementById('saved_drawings');
+                    let savedDrawings = JSON.parse(savedDrawingsInput.value);
+                    savedDrawings = savedDrawings.filter(path => !path.includes(data.deleted_file));
+                    savedDrawingsInput.value = JSON.stringify(savedDrawings);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ลบสำเร็จ!',
+                        text: 'รูปภาพถูกลบเรียบร้อยแล้ว',
+                        customClass: {
+                            confirmButton: 'btn btn-success waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'ไม่สามารถลบรูปภาพได้: ' + data.message,
+                        customClass: {
+                            confirmButton: 'btn btn-danger waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด!',
+                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์',
+                    customClass: {
+                        confirmButton: 'btn btn-danger waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                });
+            });
+        }
+    });
 }
 
 function openDrawingModal() {
@@ -1170,9 +1321,335 @@ function updateUIBasedOnPermissions() {
     $('#showPartTwo').show();
 }
 
+var clinicHours = <?php echo json_encode($clinic_hours); ?>;
+var closedDays = <?php echo json_encode($closed_days); ?>;
+var closedDates = <?php echo json_encode($closed_dates); ?>;
+var bookedSlots = <?php echo json_encode($booked_slots); ?>;
+
+console.log('Clinic Hours:', clinicHours);
+console.log('Closed Days:', closedDays);
+console.log('Closed Dates:', closedDates);
+console.log('Booked Slots:', bookedSlots);
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Initialize Flatpickr for date selection
+    flatpickr.localize(flatpickr.l10ns.th);
+    const clinicHours = <?php echo json_encode($clinic_hours); ?>;
+    const closedDays = <?php echo json_encode($closed_days); ?>;
+    const closedDates = <?php echo json_encode($closed_dates); ?>;
+    const bookedSlots = <?php echo json_encode($booked_slots); ?>;
+
+
+    console.log('DOM fully loaded');
+    const followUpDateElem = document.getElementById('follow_up_date');
+
+    if (followUpDateElem) {
+        console.log('Initializing Flatpickr');
+        flatpickr("#follow_up_date", {
+            minDate: "today",
+            maxDate: new Date().fp_incr(30), // 30 days from now
+            disable: [
+                function(date) {
+                    // Disable closed dates
+                    const dateString = date.toISOString().split('T')[0];
+                    if (closedDates.includes(dateString)) {
+                        return true;
+                    }
+                    
+                    // Disable closed days of the week
+                    const dayOfWeek = date.toLocaleString('en-us', {weekday: 'long'});
+                    return closedDays.includes(dayOfWeek);
+                }
+            ],
+            dateFormat: "d/m/Y",
+            locale: {
+                ...flatpickr.l10ns.th,
+                reformatAfterEdit: true,
+            },
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.currentYearElement.textContent = parseInt(instance.currentYearElement.textContent) + 543;
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length > 0) {
+                    const thaiDate = formatThaiDate(selectedDates[0]);
+                    instance.input.value = thaiDate;
+                    updateTimeSlots(thaiDate);
+                }
+            },
+            onYearChange: function(selectedDates, dateStr, instance) {
+                setTimeout(function() {
+                    let yearElem = instance.currentYearElement;
+                    yearElem.textContent = parseInt(yearElem.textContent) + 543;
+                }, 0);
+            },
+            formatDate: function(date, format) {
+                return formatThaiDate(date);
+            },
+            parseDate: function(datestr, format) {
+                if (!datestr) return undefined;
+                const parts = datestr.split('/');
+                if (parts.length !== 3) return undefined;
+                const thaiYear = parseInt(parts[2], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const day = parseInt(parts[0], 10);
+                return new Date(thaiYear - 543, month, day);
+            }
+        });
+    } else {
+        console.error('follow_up_date element not found');
+    }
+
+    // Function to update time slots
+    function updateTimeSlots(dateStr) {
+        console.log('Updating time slots for date:', dateStr);
+        const [day, month, year] = dateStr.split('/');
+        const selectedDate = new Date(year - 543, month - 1, day);
+        const dayOfWeek = selectedDate.toLocaleString('en-us', {weekday:'long'});
+
+        console.log('Day of week:', dayOfWeek);
+        console.log('Clinic hours:', clinicHours);
+
+        const hours = clinicHours[dayOfWeek];
+        const timeSlotsContainer = document.getElementById('timeSlots');
+        timeSlotsContainer.innerHTML = '';
+
+        if (hours && hours.is_closed != 1) {
+            const startTime = new Date(`2000-01-01T${hours.start_time}`);
+            const endTime = new Date(`2000-01-01T${hours.end_time}`);
+
+            const now = new Date();
+            const isToday = selectedDate.toDateString() === now.toDateString();
+
+            while (startTime < endTime) {
+                const timeStr = startTime.toTimeString().slice(0, 5);
+                const fullDateStr = `${year - 543}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                const fullDateTimeStr = `${fullDateStr} ${timeStr}:00`;
+                const isBooked = bookedSlots.includes(fullDateTimeStr);
+                
+                const slotDateTime = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), startTime.getHours(), startTime.getMinutes());
+                const isPastTime = isToday && slotDateTime < now;
+
+                const slot = document.createElement('div');
+                slot.className = `col-4 col-sm-3 mb-2`;
+                
+                if (isPastTime) {
+                    slot.innerHTML = `<div class="time-slot btn btn-outline-secondary disabled" data-time="${timeStr}">${timeStr}</div>`;
+                } else if (isBooked) {
+                    slot.innerHTML = `<div class="time-slot btn btn-outline-danger disabled" data-time="${timeStr}">${timeStr}</div>`;
+                } else {
+                    slot.innerHTML = `<div class="time-slot btn btn-outline-primary" data-time="${timeStr}">${timeStr}</div>`;
+                }
+                
+                timeSlotsContainer.appendChild(slot);
+                startTime.setMinutes(startTime.getMinutes() + 15);
+            }
+
+            document.querySelectorAll('.time-slot:not(.disabled)').forEach(slot => {
+                slot.addEventListener('click', function() {
+                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('follow_up_time').value = this.dataset.time;
+                });
+            });
+        } else {
+            console.log('No operating hours found for this day or clinic is closed');
+            timeSlotsContainer.innerHTML = '<p>ไม่มีเวลาทำการในวันที่เลือก หรือคลินิกปิดทำการ</p>';
+        }
+    }
+
+    // Helper function to format date in Thai format
+    function formatThaiDate(date) {
+        const thaiYear = date.getFullYear() + 543;
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${day}/${month}/${thaiYear}`;
+    }
+});
+
+function saveFollowUp() {
+    const followUpDate = $('#follow_up_date').val();
+    const followUpTime = $('#follow_up_time').val();
+    const followUpNote = $('#follow_up_note').val();
+    const opdId = $('#opd_id').val();
+
+    if (!followUpDate || !followUpTime) {
+        Swal.fire({
+            icon: 'error',
+            title: 'ข้อมูลไม่ครบถ้วน',
+            text: 'กรุณาเลือกวันที่และเวลานัดหมาย'
+        });
+        return;
+    }
+
+    $.ajax({
+        url: 'sql/save-follow-up.php',
+        type: 'POST',
+        data: {
+            opd_id: opdId,
+            follow_up_date: followUpDate,
+            follow_up_time: followUpTime,
+            follow_up_note: followUpNote
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกการนัดติดตามผลสำเร็จ',
+                    text: 'ข้อมูลการนัดติดตามผลถูกบันทึกเรียบร้อยแล้ว',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    // รีเซ็ตฟอร์ม
+                    $('#follow_up_date').val('');
+                    $('#follow_up_time').val('');
+                    $('#follow_up_note').val('');
+                    $('#timeSlots').empty();
+                    
+                    // โหลดข้อมูลประวัติการนัดติดตามผลใหม่
+                    loadFollowUpHistory();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถบันทึกการนัดติดตามผลได้: ' + response.message
+                });
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error:', textStatus, errorThrown);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
+            });
+        }
+    });
+}
+
+function loadFollowUpHistory() {
+    const opdId = $('#opd_id').val();
+    $.ajax({
+        url: 'sql/get-follow-up-history.php',
+        type: 'GET',
+        data: { opd_id: opdId },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                updateFollowUpHistoryTable(response.data);
+            } else {
+                console.error('Failed to load follow-up history:', response.message);
+                $('#followUpHistory').html('<p>เกิดข้อผิดพลาดในการโหลดประวัติการนัดติดตามผล</p>');
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error:', textStatus, errorThrown);
+            $('#followUpHistory').html('<p>ไม่สามารถโหลดประวัติการนัดติดตามผลได้</p>');
+        }
+    });
+}
+
+function updateFollowUpHistoryTable(data) {
+    console.log('Updating follow-up history table with data:', data);
+    let historyHtml = '<table class="table">';
+    historyHtml += '<thead><tr><th>วันที่และเวลานัด</th><th>หมายเหตุ</th><th>สถานะ</th><th>การดำเนินการ</th></tr></thead>';
+    historyHtml += '<tbody>';
+    
+    const currentDate = new Date();
+
+    if (data.length > 0) {
+        data.forEach(function(item) {
+            const appointmentDate = new Date(item.booking_datetime_raw);
+            const canCancel = appointmentDate > currentDate && item.status !== 'cancelled';
+
+            historyHtml += `<tr>
+                <td>${item.booking_datetime}</td>
+                <td>${item.note}</td>
+                <td>${getStatusBadge(item.status)}</td>
+                <td>`;
+            
+            if (canCancel) {
+                historyHtml += `<button class="btn btn-danger btn-sm" onclick="cancelFollowUp(${item.id})">ยกเลิก</button>`;
+            } else {
+                historyHtml += `<span class="text-muted">ไม่สามารถยกเลิกได้</span>`;
+            }
+
+            historyHtml += `</td></tr>`;
+        });
+    } else {
+        historyHtml += '<tr><td colspan="4">ไม่พบประวัติการนัดติดตามผล</td></tr>';
+    }
+    
+    historyHtml += '</tbody></table>';
+    $('#followUpHistory').html(historyHtml);
+}
+
+function getStatusBadge(status) {
+    switch(status) {
+        case 'confirmed':
+            return '<span class="badge bg-success">ยืนยันแล้ว</span>';
+        case 'cancelled':
+            return '<span class="badge bg-danger">ยกเลิกแล้ว</span>';
+        case 'completed':
+            return '<span class="badge bg-info">เสร็จสิ้น</span>';
+        default:
+            return '<span class="badge bg-secondary">ไม่ทราบสถานะ</span>';
+    }
+}
+function cancelFollowUp(followUpId) {
+    Swal.fire({
+        title: 'ยืนยันการยกเลิก',
+        text: "คุณแน่ใจหรือไม่ที่จะยกเลิกการนัดติดตามผลนี้?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ยกเลิก!',
+        cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/cancel-follow-up.php',
+                type: 'POST',
+                data: { follow_up_id: followUpId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire(
+                            'ยกเลิกแล้ว!',
+                            'การนัดติดตามผลถูกยกเลิกเรียบร้อยแล้ว',
+                            'success'
+                        ).then(() => {
+                            loadFollowUpHistory();
+                        });
+                    } else {
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด!',
+                            response.message,
+                            'error'
+                        );
+                    }
+                },
+                error: function() {
+                    Swal.fire(
+                        'เกิดข้อผิดพลาด!',
+                        'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+}
+
+
 // เรียกใช้ฟังก์ชันเมื่อโหลดหน้าเว็บ
 $(document).ready(function() {
     updateUIBasedOnPermissions();
+    // โหลดประวัติการนัดติดตามผลเมื่อโหลดหน้า
+    loadFollowUpHistory();
 });
 
 </script>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 20, 2024 at 11:47 AM
+-- Generation Time: Sep 23, 2024 at 06:41 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 5.6.40
 
@@ -242,7 +242,11 @@ INSERT INTO `course_bookings` (`id`, `branch_id`, `cus_id`, `booking_datetime`, 
 (32, 1, 13, '2024-09-16 13:00:00', '2024-09-16 04:40:26', 1, 'confirmed'),
 (33, 1, 5, '2024-09-16 11:31:00', '2024-09-16 07:56:20', 1, 'confirmed'),
 (34, 1, 7, '2024-09-17 10:36:00', '2024-09-17 03:36:50', 1, 'confirmed'),
-(35, 1, 2, '2024-09-18 10:37:00', '2024-09-18 04:23:02', 1, 'confirmed');
+(35, 1, 2, '2024-09-18 10:37:00', '2024-09-18 04:23:02', 1, 'confirmed'),
+(36, 1, 2, '2024-09-27 09:00:00', '2024-09-20 05:43:01', 1, 'confirmed'),
+(37, 1, 2, '2024-09-22 10:30:00', '2024-09-20 05:44:29', 1, 'confirmed'),
+(38, 1, 2, '2024-09-20 22:38:00', '2024-09-20 15:39:57', 1, 'confirmed'),
+(39, 1, 2, '2024-09-23 18:45:00', '2024-09-23 11:40:15', 1, 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -493,7 +497,9 @@ INSERT INTO `opd` (`opd_id`, `queue_id`, `cus_id`, `nurse_id`, `Weight`, `Height
 (21, 58, 13, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-12 02:22:44', '2024-09-12 02:22:46'),
 (22, 59, 14, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-13 02:33:01', '2024-09-13 02:33:05'),
 (23, 60, 14, NULL, 123, 123, 81.3, 123, 123, 123, '123', '', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-14 05:04:22', '2024-09-14 05:04:26'),
-(24, 65, 7, NULL, 123, 123, 81.3, 123, 123, 123, '1', '', 'ไม่สูบ', 'ไม่ดื่ม', '1', '2', NULL, 1, '2024-09-17 03:36:43', '2024-09-17 03:36:46');
+(24, 65, 7, NULL, 123, 123, 81.3, 123, 123, 123, '1', '', 'ไม่สูบ', 'ไม่ดื่ม', '1', '2', NULL, 1, '2024-09-17 03:36:43', '2024-09-17 03:36:46'),
+(25, 67, 2, NULL, 123, 123, 81.3, 123, 123, 123, '123ๅๅๅ', '123ๅๅ', 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 1, '2024-09-20 15:39:19', '2024-09-20 17:46:53'),
+(26, 68, 2, NULL, 123, 123, 81.3, 123, 123, 123, NULL, NULL, 'ไม่สูบ', 'ไม่ดื่ม', '123', '123', NULL, 0, '2024-09-23 11:40:38', '2024-09-23 11:40:38');
 
 -- --------------------------------------------------------
 
@@ -513,7 +519,8 @@ CREATE TABLE `opd_drawings` (
 --
 
 INSERT INTO `opd_drawings` (`id`, `opd_id`, `image_path`, `created_at`) VALUES
-(99, 16, 'opd_drawing_1725981858.png', '2024-09-10 15:24:18');
+(99, 16, 'opd_drawing_1725981858.png', '2024-09-10 15:24:18'),
+(111, 25, 'opd_drawing_1726853547.png', '2024-09-20 17:32:27');
 
 -- --------------------------------------------------------
 
@@ -555,7 +562,11 @@ INSERT INTO `order_course` (`oc_id`, `cus_id`, `users_id`, `course_bookings_id`,
 (32, 14, 1, 31, '2024-09-14 12:03:43', 'ยังไม่จ่ายเงิน', 39900, NULL, 1, '', 1, '0.00', NULL, NULL, NULL),
 (33, 13, 1, 32, '2024-09-16 11:40:26', 'ยังไม่จ่ายเงิน', 5000, NULL, 1, '', 1, '0.00', NULL, NULL, NULL),
 (34, 5, 1, 33, '2024-09-16 14:56:20', 'ยังไม่จ่ายเงิน', 25000, NULL, NULL, '', 1, '0.00', NULL, NULL, '2024-09-19 18:47:11'),
-(36, 2, 1, 35, '2024-09-18 11:23:02', 'ยังไม่จ่ายเงิน', 25000, NULL, NULL, '', 1, '3500.00', 'เงินโอน', '66ec5cc1c2098.jpg', '2024-09-20 00:17:53');
+(36, 2, 1, 35, '2024-09-18 11:23:02', 'เงินโอน', 21500, '2024-09-20 12:27:38', 1, '66ed07ca83fe1.jpg', 1, '3500.00', 'เงินโอน', '66ec5cc1c2098.jpg', '2024-09-20 00:17:53'),
+(37, 2, 1, 36, '2024-09-20 12:43:01', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(38, 2, 1, 37, '2024-09-20 12:44:29', 'บัตรเครดิต', 50000, '2024-09-20 13:57:31', 1, '', 1, '0.00', NULL, NULL, NULL),
+(39, 2, 1, 38, '2024-09-20 22:39:57', 'ยังไม่จ่ายเงิน', 30000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL),
+(40, 2, 1, 39, '2024-09-23 18:40:15', 'ยังไม่จ่ายเงิน', 15000, NULL, NULL, '', 1, '0.00', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -598,7 +609,10 @@ INSERT INTO `order_course_resources` (`id`, `order_id`, `course_id`, `resource_t
 (405, 29, 8, 'drug', 1, '30.00'),
 (406, 29, 8, 'tool', 5, '1.00'),
 (407, 29, 8, 'tool', 3, '1.20'),
-(408, 29, 8, 'accessory', 3, '1.00');
+(408, 29, 8, 'accessory', 3, '1.00'),
+(412, 39, 8, 'drug', 1, '52.00'),
+(413, 39, 8, 'tool', 5, '1.00'),
+(415, 39, 8, 'accessory', 3, '1.00');
 
 -- --------------------------------------------------------
 
@@ -629,7 +643,13 @@ INSERT INTO `order_detail` (`od_id`, `oc_id`, `course_id`, `od_amount`, `od_pric
 (91, 34, 12, 1, 25000),
 (93, 36, 12, 1, 25000),
 (94, 32, 12, 1, 25000),
-(95, 29, 9, 1, 50000);
+(95, 29, 9, 1, 50000),
+(96, 37, 4, 1, 15000),
+(97, 38, 5, 1, 20000),
+(98, 38, 6, 1, 30000),
+(100, 39, 8, 1, 5000),
+(101, 39, 12, 1, 25000),
+(102, 40, 4, 1, 15000);
 
 -- --------------------------------------------------------
 
@@ -692,7 +712,9 @@ INSERT INTO `service_queue` (`queue_id`, `branch_id`, `cus_id`, `booking_id`, `q
 (63, 1, 13, 32, 'Q002', '2024-09-16', '13:00:00', 'in_progress', '2024-09-16 04:41:00', '2024-09-16 04:41:02', ''),
 (64, 1, 14, NULL, 'Q003', '2024-09-16', '18:21:00', 'in_progress', '2024-09-16 11:21:42', '2024-09-16 11:21:46', ''),
 (65, 1, 7, 34, 'Q001', '2024-09-17', '10:36:00', 'in_progress', '2024-09-17 03:36:23', '2024-09-17 09:13:13', ''),
-(66, 1, 2, 35, 'Q001', '2024-09-18', '10:37:00', 'in_progress', '2024-09-18 03:37:50', '2024-09-18 04:23:02', '');
+(66, 1, 2, 35, 'Q001', '2024-09-18', '10:37:00', 'in_progress', '2024-09-18 03:37:50', '2024-09-18 04:23:02', ''),
+(67, 1, 2, 38, 'Q001', '2024-09-20', '22:38:00', 'in_progress', '2024-09-20 15:39:06', '2024-09-20 15:49:50', ''),
+(68, 1, 2, 39, 'Q001', '2024-09-23', '18:45:00', 'in_progress', '2024-09-23 11:40:21', '2024-09-23 11:40:24', '');
 
 -- --------------------------------------------------------
 
@@ -734,7 +756,9 @@ INSERT INTO `service_staff_records` (`staff_record_id`, `service_id`, `staff_id`
 (3, 65, 52, 'doctor', '100.00', 'amount'),
 (4, 65, 53, 'doctor', '3.00', 'percent'),
 (5, 66, 52, 'doctor', '100.00', 'amount'),
-(6, 66, 53, 'doctor', '10.00', 'percent');
+(6, 66, 53, 'doctor', '10.00', 'percent'),
+(7, 67, 52, 'doctor', '200.00', 'amount'),
+(8, 67, 53, 'doctor', '3.00', 'percent');
 
 -- --------------------------------------------------------
 
@@ -1115,7 +1139,7 @@ ALTER TABLE `course`
 -- AUTO_INCREMENT for table `course_bookings`
 --
 ALTER TABLE `course_bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `course_resources`
@@ -1157,31 +1181,31 @@ ALTER TABLE `drug_type`
 -- AUTO_INCREMENT for table `opd`
 --
 ALTER TABLE `opd`
-  MODIFY `opd_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `opd_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `opd_drawings`
 --
 ALTER TABLE `opd_drawings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
 
 --
 -- AUTO_INCREMENT for table `order_course`
 --
 ALTER TABLE `order_course`
-  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `oc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `order_course_resources`
 --
 ALTER TABLE `order_course_resources`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=412;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=419;
 
 --
 -- AUTO_INCREMENT for table `order_detail`
 --
 ALTER TABLE `order_detail`
-  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
+  MODIFY `od_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
 
 --
 -- AUTO_INCREMENT for table `position`
@@ -1193,7 +1217,7 @@ ALTER TABLE `position`
 -- AUTO_INCREMENT for table `service_queue`
 --
 ALTER TABLE `service_queue`
-  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `queue_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT for table `service_records`
@@ -1205,7 +1229,7 @@ ALTER TABLE `service_records`
 -- AUTO_INCREMENT for table `service_staff_records`
 --
 ALTER TABLE `service_staff_records`
-  MODIFY `staff_record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `staff_record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `stock_transactions`
