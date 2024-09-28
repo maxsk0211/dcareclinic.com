@@ -56,6 +56,8 @@ $result = $conn->query($sql);
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="../assets/js/config.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
     <style>
 
     </style>
@@ -103,7 +105,9 @@ $result = $conn->query($sql);
                                         <?php while($row = $result->fetch_assoc()): ?>
                                         <tr>
                                             <td><?php echo 'ORDER-' . str_pad($row['oc_id'], 6, '0', STR_PAD_LEFT); ?></td>
-                                            <td><?php echo date('d/m/Y H:i', strtotime($row['order_datetime'])); ?></td>
+                                            <td data-order="<?php echo date('Y-m-d H:i:s', strtotime($row['order_datetime'])); ?>">
+                                                <?php echo date('d/m/Y H:i', strtotime($row['order_datetime'])); ?>
+                                            </td>
                                             <td><?php echo $row['cus_firstname'] . ' ' . $row['cus_lastname']; ?></td>
                                             <td><?php echo date('d/m/Y H:i', strtotime($row['booking_datetime'])); ?></td>
                                             <td><?php echo $row['order_payment']; ?></td>
@@ -157,11 +161,17 @@ $result = $conn->query($sql);
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
-
+<!-- DataTables JS -->
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
 <script>
     $(document).ready(function() {
         $('#orderTable').DataTable({
             "pageLength": 25,
+            "order": [[1, "desc"]], // เรียงลำดับคอลัมน์ที่ 1 (วันที่สั่งซื้อ) จากมากไปน้อย
+            "columnDefs": [
+                { "type": "date", "targets": 1 } // กำหนดให้คอลัมน์ที่ 1 เป็นประเภทวันที่
+            ],
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
             }

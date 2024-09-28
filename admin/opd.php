@@ -596,9 +596,12 @@ while ($row = $result_bookings->fetch_object()) {
                                     <div class="col-md-6">
                                         <div class="form-section">
                                             <h3>การตรวจร่างกาย</h3>
-                                            <div class="mb-3">
-                                                <label for="opd_physical" class="form-label">การตรวจร่างกาย</label>
-                                                <button type="button" class="btn btn-primary" onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
+                                            <div class="alert alert-warning" id="DrawingModalalert" >
+                                                <p>กรุณาเพิ่มข้อมูล OPD ก่อน</p>
+                                            </div>
+                                            <div class="mb-3" id="DrawingModalbtn" style="display: none;">
+                                                <!-- <label for="opd_physical" class="form-label">การตรวจร่างกาย</label> -->
+                                                <button type="button" class="btn btn-primary"   onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
                                             </div>
                                             <div id="savedDrawings" class="drawing-gallery">
                                                 <!-- รูปภาพที่บันทึกแล้วจะแสดงที่นี่ -->
@@ -636,33 +639,43 @@ while ($row = $result_bookings->fetch_object()) {
                                     </div>
                                     </form>
                                     <div class="col-md-6">
-                                        <div class="form-section">
-                                            <h3>นัดหมายติดตามผล</h3>
-                                            <div class="mb-3">
-                                                <label for="follow_up_date" class="form-label">วันที่นัดติดตามผล</label>
-                                                <input type="text" class="form-control" id="follow_up_date" name="follow_up_date" required>
+                                        
+                                            <div class="form-section">
+                                                <h3>นัดหมายติดตามผล</h3>
+                                                <div class="alert alert-warning" id="DrawingModalalert" >
+                                                    <p>กรุณาเพิ่มข้อมูล OPD ก่อน</p>
+                                                </div>
+                                            <div id="followUpSection" style="display: none;">
+                                                <div class="mb-3">
+                                                    <label for="follow_up_date" class="form-label">วันที่นัดติดตามผล</label>
+                                                    <input type="text" class="form-control" id="follow_up_date" name="follow_up_date" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">เลือกเวลา</label>
+                                                    <div id="timeSlots" class="row text-center">
+                                                        <!-- Time slots will be dynamically added here -->
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" id="follow_up_time" name="follow_up_time">
+                                                <div class="mb-3">
+                                                    <label for="follow_up_note" class="form-label">หมายเหตุการติดตามผล</label>
+                                                    <textarea class="form-control" id="follow_up_note" name="follow_up_note" rows="3"></textarea>
+                                                </div>
+                                                <button type="button" class="btn btn-primary" onclick="saveFollowUp()">บันทึกการนัดติดตามผล</button>
+                                             </div>
+
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">เลือกเวลา</label>
-                                                <div id="timeSlots" class="row text-center">
-                                                    <!-- Time slots will be dynamically added here -->
+
+                                            <div class="form-section">
+                                                <h3>ประวัติการนัดติดตามผล</h3>
+                                                <div class="alert alert-warning" id="DrawingModalalert" >
+                                                    <p>กรุณาเพิ่มข้อมูล OPD ก่อน</p>
+                                                </div>
+                                                <div id="followUpHistory">
+                                                    <!-- ข้อมูลประวัติการนัดติดตามผลจะถูกเพิ่มที่นี่ -->
                                                 </div>
                                             </div>
-                                            <input type="hidden" id="follow_up_time" name="follow_up_time">
-                                            <div class="mb-3">
-                                                <label for="follow_up_note" class="form-label">หมายเหตุการติดตามผล</label>
-                                                <textarea class="form-control" id="follow_up_note" name="follow_up_note" rows="3"></textarea>
-                                            </div>
-                                            <button type="button" class="btn btn-primary" onclick="saveFollowUp()">บันทึกการนัดติดตามผล</button>
                                         </div>
-
-                                        <div class="form-section">
-                                            <h3>ประวัติการนัดติดตามผล</h3>
-                                            <div id="followUpHistory">
-                                                <!-- ข้อมูลประวัติการนัดติดตามผลจะถูกเพิ่มที่นี่ -->
-                                            </div>
-                                        </div>
-                                    </div>
 
                                 </div>
 
@@ -817,6 +830,12 @@ $(document).ready(function() {
                         $('#opdFormPart2').show();
                         loadSavedDrawings(response.opd_id);
                         loadOPDData(response.opd_id, 2);
+
+                        $('#followUpSection').show(); // แสดงส่วนของการนัดหมายติดตามผล
+                        $('#DrawingModalbtn').show(); 
+                        // $('#DrawingModalalert').hide();
+                        document.getElementById("DrawingModalalert").style.display = "none";
+                        loadFollowUpHistory(); // โหลดประวัติการนัดติดตามผล
                     } else {
                         // alert('เกิดข้อผิดพลาด: ' + response.message);
                         msg_error('เกิดข้อผิดพลาด'+response.message);
@@ -890,6 +909,8 @@ $(document).ready(function() {
     // โหลดข้อมูล OPD ที่บันทึกไว้
 function loadOPDData(opdId, part = 1) {
     console.log('Loading OPD data for ID:', opdId, 'Part:', part);
+    // เลือกทุก div ที่มี class "alert alert-warning"
+    const alerts = document.querySelectorAll('.alert.alert-warning');
     $.ajax({
         url: 'sql/get-opd-data.php',
         type: 'GET',
@@ -918,14 +939,41 @@ function loadOPDData(opdId, part = 1) {
                     $('#opd_diagnose').val(response.data.opd_diagnose);
                     $('#opd_note').val(response.data.opd_note);
                     loadSavedDrawings(opdId);
+
+                    // แสดงส่วนของการนัดหมายติดตามผลเมื่อมีข้อมูล OPD
+                    $('#followUpSection').show();
+                    $('#DrawingModalbtn').show();
+                    // $('#DrawingModalalert').hide();
+                    // document.getElementById("DrawingModalalert").style.display = "none";
+                    // วนลูปผ่านทุกองค์ประกอบและซ่อน
+                    alerts.forEach(function(alert) {
+                        alert.style.display = "none";
+                    });
+                    loadFollowUpHistory()
+
                 }
                 console.log('Form updated with OPD data');
             } else {
                 console.error('Failed to load OPD data:', response.message);
+                $('#followUpSection').hide();
+                $('#DrawingModalbtn').hide();
+                // $('#DrawingModalalert').show();
+                // document.getElementById("DrawingModalalert").style.display = "block";
+                // วนลูปผ่านทุกองค์ประกอบและซ่อน
+                alerts.forEach(function(alert) {
+                    alert.style.display = "block";
+                });
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error('AJAX error:', textStatus, errorThrown);
+            $('#followUpSection').hide();
+            $('#DrawingModalbtn').hide();
+            // $('#DrawingModalalert').show();
+                alerts.forEach(function(alert) {
+                    alert.style.display = "block";
+                });
+            // document.getElementById("DrawingModalalert").style.display = "block";
         }
     });
 }
@@ -1531,6 +1579,10 @@ function saveFollowUp() {
 
 function loadFollowUpHistory() {
     const opdId = $('#opd_id').val();
+    if (!opdId) {
+        console.log('No OPD ID available, skipping follow-up history load');
+        return;
+    }
     $.ajax({
         url: 'sql/get-follow-up-history.php',
         type: 'GET',
@@ -1552,7 +1604,7 @@ function loadFollowUpHistory() {
 }
 
 function updateFollowUpHistoryTable(data) {
-    console.log('Updating follow-up history table with data:', data);
+    // console.log('Updating follow-up history table with data:', data);
     let historyHtml = '<table class="table">';
     historyHtml += '<thead><tr><th>วันที่และเวลานัด</th><th>หมายเหตุ</th><th>สถานะ</th><th>การดำเนินการ</th></tr></thead>';
     historyHtml += '<tbody>';

@@ -122,6 +122,8 @@ $stmt_services = $conn->prepare($sql_services);
 $stmt_services->bind_param("i", $customer_data['cus_id']);
 $stmt_services->execute();
 $result_services = $stmt_services->get_result();
+
+
 ?>
 
 <!DOCTYPE html>
@@ -478,6 +480,47 @@ $result_services = $stmt_services->get_result();
     .clickable-row:hover {
         background-color: #f8f9fa;
     }
+    .follow-up-table {
+        width: 100%;
+        margin-bottom: 1rem;
+        color: #212529;
+    }
+    .follow-up-table th,
+    .follow-up-table td {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+    }
+    .follow-up-table thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .follow-up-table tbody + tbody {
+        border-top: 2px solid #dee2e6;
+    }
+    .badge {
+        display: inline-block;
+        padding: 0.25em 0.4em;
+        font-size: 75%;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+    .bg-success {
+        background-color: #28a745;
+    }
+    .bg-danger {
+        background-color: #dc3545;
+    }
+    .bg-info {
+        background-color: #17a2b8;
+    }
+    .bg-secondary {
+        background-color: #6c757d;
+    }
 </style>
 </head>
 <body>
@@ -587,6 +630,7 @@ $result_services = $stmt_services->get_result();
                                         <form id="depositForm" enctype="multipart/form-data">
                                             <input type="hidden" name="order_id" value="<?php echo $oc_id; ?>">
                                             <div class="mb-3">
+                                                <?=$order_data['deposit_amount']; ?>
                                                 <label for="deposit_amount" class="form-label">จำนวนเงินมัดจำ (บาท)</label>
                                                 <input type="number" class="form-control" id="deposit_amount" name="deposit_amount" 
                                                        value="<?php echo $order_data['deposit_amount']; ?>" step="0.01" min="0" required>
@@ -622,11 +666,13 @@ $result_services = $stmt_services->get_result();
                                                 <input type="text" class="form-control" value="<?php echo date('d/m/Y H:i:s', strtotime($order_data['deposit_date'])); ?>" readonly>
                                             </div>
                                             <?php endif; ?>
-                                            <?php if ($order_data['deposit_amount'] > 0 && $order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
-                                            <?php if($order_data['deposit_amount'] <= 0): ?>
+                                            <?php if ($order_data['deposit_amount'] >= 0 && $order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
+                                            <?php if ($order_data['deposit_amount'] == 0): ?>
                                             <button type="submit" class="btn btn-primary" id="saveDepositBtn">บันทึกข้อมูลมัดจำ</button>
-                                            <?php endif; ?>
-                                                <?php if ($canCancelDeposit): ?>
+                                                
+                                            <?php endif ?>
+                                            
+                                                <?php if ($canCancelDeposit and $order_data['deposit_amount'] > 0): ?>
                                                     <button type="button" class="btn btn-danger" id="cancelDepositBtn">ยกเลิกค่ามัดจำ</button>
                                                 <?php endif; ?>
                                             <?php endif; ?>
@@ -715,7 +761,7 @@ $result_services = $stmt_services->get_result();
                             <div class="col-md-4">
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        <h5 class="mb-0">รายการที่ใช้บริการ</h5>
+                                        <h5 class="mb-0 text-white">รายการที่ใช้บริการ</h5>
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">
@@ -748,20 +794,15 @@ $result_services = $stmt_services->get_result();
                                         </div>
                                     </div>
                                 </div>
-                                <div class="side-panel">
-                                    <h5>นัดหมายติดตามผล</h5>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>เลขที่บริการ</th>
-                                                <th>รายการที่ให้บริการ</th>
-                                                <th>วันที่นัดหมาย/ห้วงเวลา</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- เพิ่มข้อมูลตามต้องการ -->
-                                        </tbody>
-                                    </table>
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="card-title text-white">นัดหมายติดตามผล</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="followUpHistory">
+                                            <!-- ข้อมูลนัดหมายติดตามผลจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -835,7 +876,9 @@ function showPaymentSlip(imageName) {
     });
 }
 $(document).ready(function() {
-
+    console.log("Document ready, calling loadFollowUpAppointments");
+    // loadFollowUpAppointments();
+    loadFollowUpHistory();
     // จัดการการคลิกที่แถวในตารางรายการที่ใช้บริการ
     $('.clickable-row').click(function() {
         window.location = $(this).data('href');
@@ -1121,6 +1164,85 @@ function cancelPayment(orderId) {
         }
     });
 }
+
+
+function loadFollowUpHistory() {
+    const orderId = <?php echo json_encode($oc_id); ?>;
+    console.log("Loading follow-up history for order ID:", orderId);
+
+    $.ajax({
+        url: 'sql/get-follow-up-history-bill.php',
+        type: 'GET',
+        data: { order_id: orderId },
+        dataType: 'json',
+        success: function(response) {
+            console.log("AJAX response:", response);
+            if (response.success) {
+                if (response.data.length > 0) {
+                    console.log("Follow-up data received:", response.data);
+                    updateFollowUpHistoryTable(response.data);
+                } else {
+                    console.log("No follow-up data received");
+                    $('#followUpHistory').html('<p>ไม่พบข้อมูลนัดหมายติดตามผล</p>');
+                }
+            } else {
+                console.error('Failed to load follow-up history:', response.message);
+                $('#followUpHistory').html('<p>เกิดข้อผิดพลาดในการโหลดข้อมูลนัดหมายติดตามผล: ' + response.message + '</p>');
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error:', textStatus, errorThrown);
+            $('#followUpHistory').html('<p>ไม่สามารถโหลดข้อมูลนัดหมายติดตามผลได้</p>');
+        }
+    });
+}
+
+function updateFollowUpHistoryTable(data) {
+    console.log("Updating follow-up history table with data:", data);
+    let historyHtml = '<table class="table">';
+    historyHtml += '<thead><tr><th>วันที่และเวลานัด</th><th>หมายเหตุ</th><th>สถานะ</th></tr></thead>';
+    historyHtml += '<tbody>';
+    
+    if (data && data.length > 0) {
+        data.forEach(function(item) {
+            historyHtml += `<tr>
+                <td>${item.booking_datetime}</td>
+                <td>${item.note || '-'}</td>
+                <td>${getStatusBadge(item.status)}</td>
+            </tr>`;
+        });
+    } else {
+        historyHtml += '<tr><td colspan="3" class="text-center">ไม่พบประวัติการนัดติดตามผล</td></tr>';
+    }
+    
+    historyHtml += '</tbody></table>';
+    console.log("Generated HTML:", historyHtml);
+    $('#followUpHistory').html(historyHtml);
+}
+
+// เรียกใช้ฟังก์ชันเมื่อโหลดหน้า
+// $(document).ready(function() {
+//     loadFollowUpHistory();
+// });
+
+
+
+function getStatusBadge(status) {
+    switch(status) {
+        case 'confirmed':
+            return '<span class="badge bg-success">ยืนยันแล้ว</span>';
+        case 'cancelled':
+            return '<span class="badge bg-danger">ยกเลิกแล้ว</span>';
+        case 'completed':
+            return '<span class="badge bg-info">เสร็จสิ้น</span>';
+        case 'pending':
+            return '<span class="badge bg-warning">รอดำเนินการ</span>';
+        default:
+            return '<span class="badge bg-secondary">ไม่ทราบสถานะ</span>';
+    }
+}
+
+
 </script>
 
 </body>

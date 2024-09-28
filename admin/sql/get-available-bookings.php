@@ -1,9 +1,8 @@
 <?php
 session_start();
-// include '../chk-session.php';
 require '../../dbcon.php';
 
-$sql = "SELECT cb.id, cb.booking_datetime, c.cus_firstname, c.cus_lastname 
+$sql = "SELECT cb.id, cb.booking_datetime, c.cus_firstname, c.cus_lastname, cb.is_follow_up 
         FROM course_bookings cb
         JOIN customer c ON cb.cus_id = c.cus_id
         WHERE DATE(cb.booking_datetime) = CURDATE() 
@@ -19,7 +18,8 @@ while ($row = $result->fetch_assoc()) {
         'id' => $row['id'],
         'cus_firstname' => $row['cus_firstname'],
         'cus_lastname' => $row['cus_lastname'],
-        'time' => date('H:i', strtotime($row['booking_datetime']))
+        'time' => date('H:i', strtotime($row['booking_datetime'])),
+        'is_follow_up' => (bool)$row['is_follow_up']
     ];
 }
 

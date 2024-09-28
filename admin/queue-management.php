@@ -15,7 +15,8 @@ function getStatusText($status) {
 
 // ดึงข้อมูลคิวสำหรับวันนี้
 $today = date('Y-m-d');
-$sql = "SELECT sq.*, c.cus_firstname, c.cus_lastname, cb.booking_datetime 
+$sql = "SELECT sq.*, c.cus_firstname, c.cus_lastname, cb.booking_datetime, 
+               IFNULL(cb.is_follow_up, 0) as is_follow_up 
         FROM service_queue sq
         LEFT JOIN customer c ON sq.cus_id = c.cus_id
         LEFT JOIN course_bookings cb ON sq.booking_id = cb.id
@@ -179,6 +180,14 @@ $result_bookings = $conn->query($sql_bookings);
     .queue-table .customer-name {
         font-size: 17px;
     }
+    .follow-up-prefix {
+        color: #007bff;
+        font-weight: bold;
+    }
+    .booking-prefix {
+        color: #28a745;
+        font-weight: bold;
+    }
 </style>
 </head>
 <body>
@@ -228,7 +237,13 @@ $result_bookings = $conn->query($sql_bookings);
                                         <?php while($row = $result->fetch_assoc()): ?>
                                         <tr data-queue-id="<?php echo $row['queue_id']; ?>">
                                             <td class="queue-number"><?php echo $row['queue_number']; ?></td>
-                                            <td class="customer-name"><?php echo $row['cus_firstname'] . ' ' . $row['cus_lastname']; ?></td>
+                                            <td class="customer-name">
+                                                <?php 
+                                                $is_follow_up = isset($row['is_follow_up']) ? $row['is_follow_up'] : 0;
+                                                $prefix = $is_follow_up ? '<span class="follow-up-prefix">[ติดตามผล]</span> ' : '<span class="booking-prefix">[จองคอร์ส]</span> ';
+                                                echo $prefix . $row['cus_firstname'] . ' ' . $row['cus_lastname']; 
+                                                ?>
+                                            </td>
                                             <td><?php echo $row['booking_datetime'] ? date('H:i', strtotime($row['booking_datetime'])) : ($row['queue_time'] ? date('H:i', strtotime($row['queue_time'])) : 'ไม่ระบุ'); ?></td>
                                             <td><span class="queue-status status-badge status-<?php echo $row['service_status']; ?>"><?php echo getStatusText($row['service_status']); ?></span></td>
                                             <td class="action-buttons">
@@ -493,8 +508,10 @@ $(document).ready(function() {
     // เรียกใช้ฟังก์ชันครั้งแรกเพื่อแสดงเวลาทันที
     updateDateTime();
 
+    refreshQueueTable();
     // เรียกใช้ refreshQueueTable ทุก 30 วินาที
     setInterval(refreshQueueTable, 30000);
+
 });
 
 function checkOPDStatus(queueId) {
@@ -609,6 +626,12 @@ function updateQueueRow(queueId, newStatus) {
         
         actionCell.html(actionButtons);
 
+        // เพิ่มการแสดงข้อความ "ติดตามผล" หรือ "จองคอร์ส"
+        const customerNameCell = row.find('td:nth-child(2)');
+        const isFollowUp = row.data('is-follow-up');
+        const prefix = isFollowUp ? '<span class="follow-up-prefix">[ติดตามผล]</span> ' : '<span class="booking-prefix">[จองคอร์ส]</span> ';
+        customerNameCell.html(prefix + customerNameCell.text());
+
         if (newStatus === 'in_progress') {
             checkOPDStatus(queueId);
         }
@@ -697,15 +720,17 @@ function refreshQueueTable() {
                         actionButtons += `<button class="btn btn-sm btn-danger" onclick="confirmCancelQueue(${row.queue_id})">ยกเลิก</button>`;
                     }
                     
+                    const prefix = (row.is_follow_up === true || row.is_follow_up === 1 || row.is_follow_up === '1') 
+                        ? '<span class="follow-up-prefix">[ติดตามผล]</span> ' 
+                        : '<span class="booking-prefix">[จองคอร์ส]</span> ';
+                    
                     tableBody += `
-                        <tr data-queue-id="${row.queue_id}">
-                            <td>${row.queue_number}</td>
-                            <td>${row.cus_firstname} ${row.cus_lastname}</td>
+                        <tr data-queue-id="${row.queue_id}" data-is-follow-up="${row.is_follow_up}">
+                            <td class="queue-number">${row.queue_number}</td>
+                            <td class="customer-name">${prefix}${row.cus_firstname} ${row.cus_lastname}</td>
                             <td>${appointmentTime}</td>
                             <td><span class="queue-status status-badge status-${row.service_status}">${getStatusText(row.service_status)}</span></td>
-                            <td class="action-buttons">
-                                ${actionButtons}
-                            </td>
+                            <td class="action-buttons">${actionButtons}</td>
                         </tr>
                     `;
                 });
@@ -749,7 +774,8 @@ function loadBookings() {
             select.empty();
             select.append('<option value="">เลือกการจอง</option>');
             $.each(data, function(index, booking) {
-                select.append('<option value="' + booking.id + '">' + booking.cus_firstname + ' ' + booking.cus_lastname + ' - ' + booking.time + '</option>');
+                var prefix = booking.is_follow_up ? 'ติดตามผล: ' : 'จองคอร์ส: ';
+                select.append('<option value="' + booking.id + '">' + prefix + booking.cus_firstname + ' ' + booking.cus_lastname + ' - ' + booking.time + '</option>');
             });
         },
         error: function() {
