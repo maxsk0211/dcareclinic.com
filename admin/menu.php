@@ -40,7 +40,6 @@
             </li>
 
             <li class="menu-item">
-
               <a href="javascript:void(0)" class="menu-link menu-toggle">
                 <i class="menu-icon ri-group-fill"></i>
                 <div data-i18n="Dashboards">ลูกค้า</div>
@@ -140,6 +139,27 @@
                 </li>
               </ul>
             </ul>
+            </li>
+
+            <li class="menu-item">
+              <a href="javascript:void(0)" class="menu-link menu-toggle">
+                <i class="menu-icon ri-group-fill"></i>
+                <div data-i18n="Dashboards">สรุปรายรับ - รายจ่าย</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="df.php" class="menu-link" >
+                    <i class="menu-icon tf-icons ri-shopping-cart-2-line"></i>
+                    <div data-i18n="eCommerce">สรุปค่า Doctor fee (DF.)</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="dashboards-crm.html" class="menu-link">
+                    <i class="menu-icon tf-icons ri-donut-chart-fill"></i>
+                    <div data-i18n="CRM">CRM</div>
+                  </a>
+                </li>
+              </ul>
             </li>
 
             <li class="menu-item">
