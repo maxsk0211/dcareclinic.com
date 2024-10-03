@@ -176,7 +176,7 @@ $result_services = $stmt_services->get_result();
     }
 
     .card {
-        border: none;
+/*        border: none;*/
         border-radius: 10px;
         box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         margin-bottom: 1.5rem;
@@ -356,7 +356,7 @@ $result_services = $stmt_services->get_result();
         }
     }
         .card {
-        border: none;
+/*        border: none;*/
         border-radius: 10px;
         box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         margin-bottom: 1.5rem;
@@ -533,12 +533,12 @@ $result_services = $stmt_services->get_result();
                     <div class="container-xxl flex-grow-1 container-p-y">
                         <div class="row">
                             <div class="col-md-8">
-                                <div class="card customer-info mb-4">
+                                <div class="card customer-info mb-4 border-2 border-primary">
                                     <div class="card-header">
                                         <h5 class="mb-0 text-white">ข้อมูลลูกค้า</h5>
                                     </div>
                                     <div class="card-body">
-                                        <div class="d-flex align-items-center mb-3">
+                                        <div class="d-flex align-items-center mb-3 ">
                                             <div class="avatar me-3">
                                                 <?php if (!empty($customer_data['line_picture_url'])): ?>
                                                     <img src="<?php echo $customer_data['line_picture_url']; ?>" alt="Avatar" class="rounded-circle">
@@ -563,7 +563,7 @@ $result_services = $stmt_services->get_result();
                                         </ul>
                                     </div>
                                 </div>
-                                <div class="card order-info mb-4">
+                                <div class="card order-info mb-4 border-2 border-primary">
                                      <div class="card-header">
                                         <h5 class="mb-0 text-white">ข้อมูลใบเสร็จ</h5>
                                     </div>
@@ -617,7 +617,7 @@ $result_services = $stmt_services->get_result();
                                     </div>
                                     <?php endif ?>
                                 </div>
-                                <div class="card deposit-info mb-4">
+                                <div class="card deposit-info mb-4 border-2 border-primary">
                                     <div class="card-header d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0 text-white">ข้อมูลการชำระเงินมัดจำ</h5>
                                         <?php if ($order_data['deposit_amount'] > 0): ?>
@@ -679,7 +679,7 @@ $result_services = $stmt_services->get_result();
                                         </form>
                                     </div>
                                 </div>
-                                <div class="card payment-summary mt-4">
+                                <div class="card payment-summary mt-4 border-2 border-primary">
                                     <h5 class="card-header">สรุปการชำระเงิน</h5>
                                     <div class="card-body">
                                         <div class="summary-box mb-3">
@@ -752,14 +752,17 @@ $result_services = $stmt_services->get_result();
                                             <?php endif; ?>
                                         </div>
                                         <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
-                                        <button type="button" class="btn btn-danger btn-lg mt-3" onclick="cancelPayment(<?php echo $oc_id; ?>)">ยกเลิกการชำระเงิน</button>
+                                            <div class="d-flex justify-content-between mt-3">
+                                                <button id="printReceiptBtn" class="btn btn-primary">พิมพ์ใบเสร็จ</button>
+                                                <button type="button" class="btn btn-danger btn-lg " onclick="cancelPayment(<?php echo $oc_id; ?>)">ยกเลิกการชำระเงิน</button>
+                                            </div>
                                         <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="card mb-4">
+                                <div class="card mb-4 border-2 border-primary">
                                     <div class="card-header">
                                         <h5 class="mb-0 text-white">รายการที่ใช้บริการ</h5>
                                     </div>
@@ -794,7 +797,7 @@ $result_services = $stmt_services->get_result();
                                         </div>
                                     </div>
                                 </div>
-                                <div class="card mb-4">
+                                <div class="card mb-4 border-2 border-primary">
                                     <div class="card-header">
                                         <h5 class="card-title text-white">นัดหมายติดตามผล</h5>
                                     </div>
@@ -803,6 +806,10 @@ $result_services = $stmt_services->get_result();
                                             <!-- ข้อมูลนัดหมายติดตามผลจะถูกเพิ่มที่นี่ด้วย JavaScript -->
                                         </div>
                                     </div>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success btn-lg">OPD</button>
+                                    <button class="btn btn-primary btn-lg">ใบรับรองแพทย์</button>
                                 </div>
                             </div>
                         </div>
@@ -1242,7 +1249,124 @@ function getStatusBadge(status) {
     }
 }
 
+function printReceipt() {
+    var printContent = `
+        <style>
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                font-family: 'Sarabun', sans-serif;
+                padding: 10mm;
+                margin: 0;
+                font-size: 12px;
+                line-height: 1.3;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 3mm;
+            }
+            .logo {
+                width: 40px;
+                height: 40px;
+            }
+            h3 {
+                margin: 5px 0;
+            }
+            p {
+                margin: 3px 0;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 5mm 0;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 4px;
+                text-align: left;
+                font-size: 11px;
+            }
+            .footer {
+                margin-top: 5mm;
+                font-size: 11px;
+            }
+            .text-end {
+                text-align: right;
+            }
+        </style>
+        <div class="header">
+            <img src="../img/d.png" alt="Logo" class="logo">
+            <h3>DEMO CLINIC คลินิก ศัลยกรรม เสริมความงาม</h3>
+            <p>100/1 ซ วิภาวดี 1 รัชดา จังหวัดกรุงเทพ รหัสไปรษณีย์ 10100</p>
+            <p>โทรศัพท์: 0852225450 อีเมล์: demo@gmail.com</p>
+            <p>เลขที่ผู้เสียภาษี: 8888888888 เลขที่ใบอนุญาต: 4221178916</p>
+        </div>
+        <h3 style="text-align: center; margin: 5px 0;">ใบเสร็จรับเงิน [ RECEIPT ]</h3>
+        <p><strong>ชื่อลูกค้า:</strong> นาย ทดสอบ ลูกค้า</p>
+        <p><strong>ที่อยู่:</strong> ตำบล อำเภอ จังหวัด</p>
+        <p><strong>เลขประจำตัวผู้เสียภาษี:</strong> 1700000000001</p>
+        <p><strong>รหัสลูกค้า:</strong> HN000277 เลขที่เอกสาร: 0</p>
+        <div class="text-end">
+            <p><strong>สถานะชำระเงิน:</strong> ชำระเงินแล้ว</p>
+            <p><strong>เลขที่ตำสั่งซื้อ:</strong> RE00212 <strong>วันที่:</strong> 02/08/2567</p>
+        </div>
 
+        <table>
+            <tr>
+                <th>รายการ</th>
+                <th style="text-align: center;">จำนวน</th>
+                <th style="text-align: center;">หน่วย</th>
+                <th style="text-align: center;">จำนวนเงิน</th>
+            </tr>
+            <tr>
+                <td>บอทอกซ์หน้าผาก (นำเข้าเกาหลี)</td>
+                <td style="text-align: center;">1</td>
+                <td style="text-align: center;">ครั้ง/หน่วย</td>
+                <td class="text-end">250</td>
+            </tr>
+            <tr>
+                <td>filler neuramis</td>
+                <td style="text-align: center;">1</td>
+                <td style="text-align: center;">ครั้ง/หน่วย</td>
+                <td class="text-end">5,900</td>
+            </tr>
+            <tr>
+                <td>ค่าบริการทางการแพทย์</td>
+                <td style="text-align: center;">1</td>
+                <td style="text-align: center;">กล่อง</td>
+                <td class="text-end">50</td>
+            </tr>
+        </table>
+
+        <div class="text-end">
+        <p>มัดจำแล้ว : 1,000.00 บาท</p>
+        <p>วันที่มัดจำ : 02/10/2567</p>
+        <p><strong>รวมเป็นเงิน:</strong> 6,200.00 บาท</p>
+        <p><strong>จำนวนเงินชำระสุทธิ:</strong> 6,200.00 บาท</p>
+        <p><strong>วิธีการชำระเงิน:</strong> เงินสด <strong>จำนวนเงิน:</strong> 6,200.00 บาท</p>
+        <p>วันที่ชำระเงิน : 03/10/2567</p>
+        </div>
+        <br><br><br>
+        <div class="footer">
+            <p>ลูกค้า Customer _________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ผู้ตรวจ Auditor _________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ผู้รับเงิน Collector _________________________</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ 02/08/2567 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ 02/08/2567 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ 02/08/2567</p>
+        </div>
+    `;
+
+    var printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>Print Receipt</title>');
+    printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// เพิ่ม Event Listener สำหรับปุ่มพิมพ์ใบเสร็จ
+document.getElementById('printReceiptBtn').addEventListener('click', printReceipt);
 </script>
 
 </body>

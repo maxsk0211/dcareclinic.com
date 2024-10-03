@@ -131,6 +131,27 @@ while ($row = $result_bookings->fetch_object()) {
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="../assets/js/config.js"></script>
 <style>
+@media print {
+    @page {
+        size: A5;
+/*        margin: 10mm; /* กำหนดระยะขอบของหน้า */*/
+    }
+    body {
+        width: 148mm;
+        height: 210mm;
+        margin: 0;
+        padding: 10mm;
+        font-family: Arial, sans-serif;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    td {
+        padding: 2mm;
+        border: 1px solid #ddd;
+    }
+}
     .opd-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -457,7 +478,111 @@ while ($row = $result_bookings->fetch_object()) {
     .time-slot:hover:not(.disabled) {
         transform: scale(1.05);
     }
-</style>
+.gallery-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: flex-start;
+}
+
+.gallery-item {
+    position: relative;
+    width: calc(33.333% - 10px);
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.gallery-item-type {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(220, 53, 69, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: none;
+}
+
+.gallery-item:hover .delete-btn {
+    display: block;
+}
+
+.delete-btn:hover {
+    background-color: rgba(220, 53, 69, 1);
+}
+
+#imageModal .modal-content {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#imageModal .modal-body {
+    padding: 0;
+}
+
+#imageModal .modal-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px 10px 0 0;
+}
+
+#modalImage {
+    width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+#imageModal .modal-image-container:hover #modalImage {
+    transform: scale(1.05);
+}
+
+#imageModal .modal-info {
+    padding: 20px;
+}
+
+#imageModal .modal-footer {
+    border-top: none;
+    padding-top: 0;
+}
+
+    </style>
 </head>
 <body>
     <!-- Layout wrapper -->
@@ -497,6 +622,8 @@ while ($row = $result_bookings->fetch_object()) {
                                 <span>HN: <?php echo 'HN-' . str_pad($queue_data['cus_id'], 6, '0', STR_PAD_LEFT); ?></span>
                                 <span>ชื่อ-นามสกุล: <?php echo $queue_data['cus_firstname'] . ' ' . $queue_data['cus_lastname']; ?></span>
                                 <span>หมายเลขคิว: <?php echo $queue_data['queue_number']; ?></span>
+                                <button id="printButton" class="btn btn-primary">พิมพ์ OPD</button>
+                                <input type="hidden" name="cus_id" value="<?=$queue_data['cus_id']?>">
                             </div>
                         </div>
 
@@ -509,8 +636,8 @@ while ($row = $result_bookings->fetch_object()) {
                             <input type="hidden" name="queue_id" value="<?php echo $queue_id; ?>">
                             <input type="hidden" name="cus_id" value="<?php echo $queue_data['cus_id']; ?>">
                             <input type="hidden" name="course_id" value="<?php echo $queue_data['course_id']; ?>">
-                            
-                            <div class="form-section">
+
+                            <div class="form-section border-2 border-primary">
                                 <h3>ข้อมูลสุขภาพทั่วไป</h3>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
@@ -528,7 +655,7 @@ while ($row = $result_bookings->fetch_object()) {
                                 </div>
                             </div>
 
-                            <div class="form-section">
+                            <div class="form-section border-2 border-primary">
                                 <h3>ข้อมูลสัญญาณชีพ</h3>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
@@ -545,7 +672,7 @@ while ($row = $result_bookings->fetch_object()) {
                                     </div>
                                 </div>
                             </div>
-                             <div class="form-section">
+                             <div class="form-section border-2 border-primary">
                                 <h3>ข้อมูลพฤติกรรมเสี่ยงและการแพ้</h3>
                                 <div class="row">
                                     <div class="col-md-3 mb-3">
@@ -571,7 +698,7 @@ while ($row = $result_bookings->fetch_object()) {
                                         <textarea class="form-control" id="drug_allergy" name="drug_allergy" rows="2"><?php echo htmlspecialchars($drug_allergy); ?></textarea>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label for="food_allergy" class="form-label">แพ้อาหาร</label>
+                                        <label for="food_allergy" class="form-label">โรคประจำตัว</label>
                                         <textarea class="form-control" id="food_allergy" name="food_allergy" rows="2"><?php echo htmlspecialchars($food_allergy); ?></textarea>
                                     </div>
                                 </div>
@@ -582,7 +709,9 @@ while ($row = $result_bookings->fetch_object()) {
                                 <button type="submit" class="btn btn-primary" id="savePartOne">บันทึกข้อมูลเบื้องต้น</button>
                             </div>
                             <?php endif; ?>
-                            <button type="button" class="btn btn-secondary" id="showPartTwo">ถัดไป</button>
+                            <div style="display: none;" id="btnparttwo">
+                                <button type="button" class="btn btn-secondary" id="showPartTwo">ถัดไป</button>  
+                            </div>
                         </form>
 
                         <!-- ส่วนที่สองของฟอร์ม (ซ่อนไว้ก่อน) -->
@@ -594,50 +723,124 @@ while ($row = $result_bookings->fetch_object()) {
                         </div>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <div class="form-section">
-                                            <h3>การตรวจร่างกาย</h3>
-                                            <div class="alert alert-warning" id="DrawingModalalert" >
-                                                <p>กรุณาเพิ่มข้อมูล OPD ก่อน</p>
-                                            </div>
-                                            <div class="mb-3" id="DrawingModalbtn" style="display: none;">
-                                                <!-- <label for="opd_physical" class="form-label">การตรวจร่างกาย</label> -->
-                                                <button type="button" class="btn btn-primary"   onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
-                                            </div>
-                                            <div id="savedDrawings" class="drawing-gallery">
-                                                <!-- รูปภาพที่บันทึกแล้วจะแสดงที่นี่ -->
+                                        <div class="card border-2 border-primary">
+                                            <div class="form-section">
+                                                <h3>การตรวจร่างกาย</h3>
+                                                <div class="alert alert-warning" id="DrawingModalalert" >
+                                                    <p>กรุณาเพิ่มข้อมูล OPD ก่อน</p>
+                                                </div>
+                                                <div class="mb-3" id="DrawingModalbtn" style="display: none;">
+                                                    <!-- <label for="opd_physical" class="form-label">การตรวจร่างกาย</label> -->
+                                                    <button type="button" class="btn btn-primary"   onclick="openDrawingModal()">วาดภาพการตรวจร่างกาย</button>
+                                                </div>
+                                                <div id="savedDrawings" class="drawing-gallery">
+                                                    <!-- รูปภาพที่บันทึกแล้วจะแสดงที่นี่ -->
+                                                </div>
                                             </div>
                                         </div>
-                                    
-                                    <form id="opdFormPart2Form" method="post">
-                                        <input type="hidden" name="opd_id" id="opd_id" value="">
-                                        <input type="hidden" id="saved_drawings" name="saved_drawings" value="">
+                                        <!-- รูป -->
+                                        <div class="card border-2 border-primary">
+                                            <div class="form-section">
+                                                <h3>รูป Before / After</h3>
+                                                <form id="beforeAfterForm" enctype="multipart/form-data">
+                                                    <div class="mb-3">
+                                                        <label for="beforeAfterImage" class="form-label">เลือกรูปภาพ</label>
+                                                        <input type="file" class="form-control" id="beforeAfterImage" name="beforeAfterImage" accept="image/*" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="imageDescription" class="form-label">คำอธิบายรูปภาพ</label>
+                                                        <textarea class="form-control" id="imageDescription" name="imageDescription" rows="3" required></textarea>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">ประเภทรูปภาพ</label>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="imageType" id="imageBefore" value="before" required>
+                                                            <label class="form-check-label" for="imageBefore">
+                                                                Before
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="imageType" id="imageAfter" value="after" required>
+                                                            <label class="form-check-label" for="imageAfter">
+                                                                After
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">บันทึกรูปภาพ</button>
+                                                </form>
+                                            </div>
+                                        </div>
 
-                                    
-                                        <div class="form-section">
-                                            <h3>การวินิจฉัยและหมายเหตุ</h3>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="opd_diagnose" class="form-label">วินิจฉัย</label>
-                                                        <textarea class="form-control" id="opd_diagnose" name="opd_diagnose" rows="3" required></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="opd_note" class="form-label">หมายเหตุ</label>
-                                                        <textarea class="form-control" id="opd_note" name="opd_note" rows="3"></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="text-center">
-                                                <?php if ($canEditPart2): ?>
-                                                    <input type="hidden" id="opd_id" name="opd_id" value="<?php echo $opd_data['opd_id'] ?? ''; ?>">
-                                                    <button type="submit" class="btn btn-submit">บันทึกข้อมูลทั้งหมด</button>
-                                                <?php endif; ?>
+                                        <div class="card border-2 border-primary mt-4">
+                                            <div class="form-section">
+                                                <h3>แกลเลอรี Before / After</h3>
+                                                <div id="beforeAfterGallery" class="row gallery-container">
+                                                    <!-- รูปภาพจะถูกเพิ่มที่นี่ด้วย JavaScript -->
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    </form>
+
+                                        <!-- Modal สำหรับแสดงรูปภาพ -->
+                                        <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-xl">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="imageModalLabel">รายละเอียดรูปภาพ</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="row">
+                                                            <div class="col-md-6 modal-image-container">
+                                                                <img id="modalImage" src="" alt="Before/After Image" class="img-fluid">
+                                                            </div>
+                                                            <div class="col-md-6 modal-info">
+                                                                <h5 id="modalImageType"></h5>
+                                                                <p id="modalImageDescription"></p>
+                                                                <p id="modalImageDateTime"></p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" id="prevImage">ก่อนหน้า</button>
+                                                        <button type="button" class="btn btn-secondary" id="nextImage">ถัดไป</button>
+                                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">ปิด</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- รูป -->
+                                        <div class="card border-2 border-primary">
+                                            <form id="opdFormPart2Form" method="post">
+                                                <input type="hidden" name="opd_id" id="opd_id" value="">
+                                                <input type="hidden" id="saved_drawings" name="saved_drawings" value="">
+
+                                            
+                                                <div class="form-section">
+                                                    <h3>การวินิจฉัยและหมายเหตุ</h3>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="opd_diagnose" class="form-label">วินิจฉัย</label>
+                                                                <textarea class="form-control" id="opd_diagnose" name="opd_diagnose" rows="3" required></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="opd_note" class="form-label">หมายเหตุ</label>
+                                                                <textarea class="form-control" id="opd_note" name="opd_note" rows="3"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-center">
+                                                        <?php if ($canEditPart2): ?>
+                                                            <input type="hidden" id="opd_id" name="opd_id" value="<?php echo $opd_data['opd_id'] ?? ''; ?>">
+                                                            <button type="submit" class="btn btn-submit">บันทึกข้อมูล</button>
+                                                        <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            </form>
+                                        </div>
                                     <div class="col-md-6">
                                         
                                             <div class="form-section">
@@ -731,7 +934,8 @@ while ($row = $result_bookings->fetch_object()) {
     <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/hammer/hammer.js"></script>
     <script src="../assets/vendor/js/menu.js"></script>
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
+    <!-- <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" /> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
@@ -787,7 +991,7 @@ $(document).ready(function() {
             loadOPDData(opdId, 2);  // เพิ่มพารามิเตอร์ 2 เพื่อระบุว่าเป็นส่วนที่ 2
         } else {
             console.error('ไม่พบ OPD ID');
-        }
+        }btnparttwo
         $('#opdFormPart1').hide();
         $('#opdFormPart2').show();
     });
@@ -833,6 +1037,7 @@ $(document).ready(function() {
 
                         $('#followUpSection').show(); // แสดงส่วนของการนัดหมายติดตามผล
                         $('#DrawingModalbtn').show(); 
+                        $('#btnparttwo').show();
                         // $('#DrawingModalalert').hide();
                         document.getElementById("DrawingModalalert").style.display = "none";
                         loadFollowUpHistory(); // โหลดประวัติการนัดติดตามผล
@@ -934,6 +1139,7 @@ function loadOPDData(opdId, part = 1) {
                     // กำหนดค่าให้กับ textarea fields
                     $('#drug_allergy').val(response.data.drug_allergy);
                     $('#food_allergy').val(response.data.food_allergy);
+                    $('#btnparttwo').show();
                 }
                 if (part === 2) {
                     $('#opd_diagnose').val(response.data.opd_diagnose);
@@ -943,6 +1149,7 @@ function loadOPDData(opdId, part = 1) {
                     // แสดงส่วนของการนัดหมายติดตามผลเมื่อมีข้อมูล OPD
                     $('#followUpSection').show();
                     $('#DrawingModalbtn').show();
+                    $('#btnparttwo').show();
                     // $('#DrawingModalalert').hide();
                     // document.getElementById("DrawingModalalert").style.display = "none";
                     // วนลูปผ่านทุกองค์ประกอบและซ่อน
@@ -957,6 +1164,7 @@ function loadOPDData(opdId, part = 1) {
                 console.error('Failed to load OPD data:', response.message);
                 $('#followUpSection').hide();
                 $('#DrawingModalbtn').hide();
+                $('#btnparttwo').hide();
                 // $('#DrawingModalalert').show();
                 // document.getElementById("DrawingModalalert").style.display = "block";
                 // วนลูปผ่านทุกองค์ประกอบและซ่อน
@@ -969,6 +1177,7 @@ function loadOPDData(opdId, part = 1) {
             console.error('AJAX error:', textStatus, errorThrown);
             $('#followUpSection').hide();
             $('#DrawingModalbtn').hide();
+            $('#btnparttwo').hide();
             // $('#DrawingModalalert').show();
                 alerts.forEach(function(alert) {
                     alert.style.display = "block";
@@ -1702,6 +1911,323 @@ $(document).ready(function() {
     updateUIBasedOnPermissions();
     // โหลดประวัติการนัดติดตามผลเมื่อโหลดหน้า
     loadFollowUpHistory();
+
+});
+
+$(document).ready(function() {
+    // โหลดรูปภาพ Before/After เมื่อโหลดหน้า
+    loadBeforeAfterImages();
+
+    // จัดการการส่งฟอร์มรูปภาพ Before/After
+    $('#beforeAfterForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        formData.append('opd_id', $('#opd_id').val());
+
+        $.ajax({
+            url: 'sql/save-before-after-image.php',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire('สำเร็จ', 'บันทึกรูปภาพเรียบร้อยแล้ว', 'success');
+                    $('#beforeAfterForm')[0].reset();
+                    loadBeforeAfterImages();
+                } else {
+                    Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกรูปภาพได้', 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+            }
+        });
+    });
+
+    $('#prevImage').click(function() {
+        if (currentImageIndex > 0) {
+            currentImageIndex--;
+            updateModalContent();
+        }
+    });
+
+    $('#nextImage').click(function() {
+        if (currentImageIndex < currentImages.length - 1) {
+            currentImageIndex++;
+            updateModalContent();
+        }
+    });
+});
+
+
+// เพิ่มหรือปรับปรุงส่วนนี้
+let currentImageIndex = 0;
+function loadBeforeAfterImages() {
+    var opdId = $('#opd_id').val();
+    $.ajax({
+        url: 'sql/get-before-after-images.php',
+        type: 'GET',
+        data: { opd_id: opdId },
+        success: function(response) {
+            if (response.success) {
+                currentImages = response.images;
+                var gallery = $('#beforeAfterGallery');
+                gallery.empty();
+                response.images.forEach(function(image, index) {
+                    gallery.append(`
+                        <div class="gallery-item">
+                            <img src="../img/before-after/${image.image_path}" alt="${image.image_type}" 
+                                 onclick="showImageModal(${index})">
+                            <span class="gallery-item-type">${image.image_type}</span>
+                            <button class="delete-btn" onclick="deleteImage(${image.id}, this)">&times;</button>
+                        </div>
+                    `);
+                });
+            } else {
+                $('#beforeAfterGallery').html('<p>ไม่พบรูปภาพ</p>');
+            }
+        },
+        error: function() {
+            $('#beforeAfterGallery').html('<p>เกิดข้อผิดพลาดในการโหลดรูปภาพ</p>');
+        }
+    });
+}
+
+function deleteImage(imageId, button) {
+    event.stopPropagation(); // ป้องกันการเปิด modal
+    Swal.fire({
+        title: 'คุณแน่ใจหรือไม่?',
+        text: "คุณต้องการลบรูปภาพนี้ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/delete-before-after-image.php',
+                type: 'POST',
+                data: { id: imageId },
+                success: function(response) {
+                    if (response.success) {
+                        $(button).closest('.gallery-item').remove();
+                        Swal.fire('ลบแล้ว!', 'รูปภาพถูกลบเรียบร้อยแล้ว', 'success');
+                    } else {
+                        Swal.fire('ผิดพลาด!', 'ไม่สามารถลบรูปภาพได้', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('ผิดพลาด!', 'เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                }
+            });
+        }
+    });
+}
+
+function showImageModal(index) {
+    currentImageIndex = index;
+    updateModalContent();
+    $('#imageModal').modal('show');
+}
+
+function updateModalContent() {
+    const image = currentImages[currentImageIndex];
+    $('#modalImage').attr('src', `../img/before-after/${image.image_path}`);
+    $('#modalImageType').text(image.image_type.charAt(0).toUpperCase() + image.image_type.slice(1));
+    $('#modalImageDescription').text(image.description);
+    $('#modalImageDateTime').text('บันทึกเมื่อ: ' + image.created_at);
+}
+
+document.getElementById('printButton').addEventListener('click', function() {
+  var opdId = $('#opd_id').val();
+  var cusId = $('input[name="cus_id"]').val();
+
+  if (!cusId) {
+    alert('ไม่พบข้อมูล Customer ID');
+    return;
+  }
+
+  console.log('Sending request with cus_id:', cusId, 'and opd_id:', opdId);
+
+  $.ajax({
+    url: 'sql/get-print-data.php',
+    type: 'GET',
+    data: { opd_id: opdId, cus_id: cusId },
+    dataType: 'json',
+    success: function(data) {
+      if(data.error) {
+        console.error('Error:', data.error);
+        alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + data.error);
+        return;
+      }
+
+      var printContent = `
+        <style>
+            @page {
+                size: A5 landscape;
+                margin: 0;
+            }
+            body {
+                font-family: 'Sarabun', sans-serif;
+                line-height: 1.3;
+                margin: 0;
+                padding: 5mm;
+                width: 200mm;
+                height: 138mm;
+                font-size: 9pt;
+            }
+            .container {
+                border: 1px solid #ccc;
+                padding: 5mm;
+                height: 128mm;
+            }
+            h1 {
+                text-align: center;
+                margin: 0 0 3mm 0;
+                font-size: 14pt;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 3mm;
+                font-size: 10pt;
+            }
+            th, td {
+                border: 1px solid #ccc;
+                padding: 1.5mm;
+                text-align: left;
+                vertical-align: top;
+            }
+            .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 2mm;
+            }
+            .info-item {
+                margin-bottom: 1mm;
+            }
+            .info-item:nth-child(3n) {
+                text-align: right;
+            }
+            .measurement-table th {
+                background-color: #e6e6e6;
+            }
+            .diagnosis-table {
+                margin-top: 3mm;
+            }
+            .checkbox-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 2mm;
+                margin-top: 2mm;
+            }
+            .checkbox-item {
+                display: flex;
+                align-items: center;
+            }
+            .checkbox {
+                width: 4mm;
+                height: 4mm;
+                border: 1px solid #000;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 1mm;
+                font-size: 8pt;
+            }
+        </style>
+        <div class="container">
+            <h1>ใบตรวจรักษาผู้ป่วย (OPD)</h1>
+            <div class="info-grid">
+                <div class="info-item"><strong>รหัสผู้ป่วย:</strong> ${data.customer.hn || ''}</div>
+                <div class="info-item"><strong>เพศ:</strong> ${data.customer.cus_gender || ''} <strong>อายุ:</strong> ${data.age || ''}</div>
+                <div class="info-item"><strong>วันที่:</strong> ${data.currentDate || ''}</div>
+                <div class="info-item"><strong>ชื่อ:</strong> ${data.customer.cus_firstname || ''} ${data.customer.cus_lastname || ''}</div>
+                <div class="info-item"><strong>กรุ๊ปเลือด:</strong> ${data.customer.cus_blood || ''}</div>
+                <div class="info-item"><strong>สถานพยาบาล:</strong> DEMO CLINIC</div>
+                <div class="info-item"><strong>เลขที่บัตรประชาชน:</strong> ${data.customer.cus_id_card_number || ''}</div>
+                <div class="info-item"><strong>ที่อยู่:</strong> ${data.customer.cus_address || ''}</div>
+                <div class="info-item"><strong>ลักษณะการให้บริการ:</strong> คลินิก ศัลยกรรม</div>
+                <div class="info-item"></div>
+                <div class="info-item">${data.customer.cus_district || ''} ${data.customer.cus_city || ''} ${data.customer.cus_province || ''}</div>
+                <div class="info-item">เสริมความงาม</div>
+                <div class="info-item"><strong>เบอร์โทร:</strong> ${data.customer.cus_tel || ''}</div>
+                <div class="info-item">${data.customer.cus_postal_code || ''}</div>
+                <div class="info-item"><strong>เลขที่ใบอนุญาต:</strong> 42211789168</div>
+                <div class="info-item"><strong>โรคประจำตัว:</strong> ${data.opd.food_allergy || ''}</div>
+                <div class="info-item"><strong>แพ้ยา:</strong> ${data.opd.drug_allergy || ''}</div>
+                <div class="info-item"><strong>ที่อยู่:</strong> 100/1 ซ วิภาวดี 1 รัชดา จังหวัดกรุงเทพ</div>
+                <div class="info-item"><strong>(พิมพ์เมื่อ: ${data.printDateTime || ''})</strong></div>
+                <div class="info-item"></div>
+                <div class="info-item">รหัสไปรษณีย์ 10100</div>
+            </div>
+            <div class="checkbox-grid">
+                <div class="checkbox-item">
+                    <span class="checkbox">${data.opd && data.opd.opd_smoke === 'สูบ' ? '✓' : ''}</span>
+                    <span>สูบบุหรี่</span>
+                </div>
+                <div class="checkbox-item">
+                    <span class="checkbox">${data.opd && data.opd.opd_smoke === 'ไม่สูบ' ? '✓' : ''}</span>
+                    <span>ไม่สูบบุหรี่</span>
+                </div>
+                <div class="checkbox-item">
+                    <span class="checkbox">${data.opd && data.opd.opd_alcohol === 'ดื่ม' ? '✓' : ''}</span>
+                    <span>ดื่มสุรา</span>
+                </div>
+                <div class="checkbox-item">
+                    <span class="checkbox">${data.opd && data.opd.opd_alcohol === 'ไม่ดื่ม' ? '✓' : ''}</span>
+                    <span>ไม่ดื่มสุรา</span>
+                </div>
+            </div>
+            <table class="measurement-table">
+                <tr>
+                    <th>Weight/น้ำหนัก</th>
+                    <th>Height/ส่วนสูง</th>
+                    <th>BMI/ค่าดัชนีมวลกาย</th>
+                    <th>FBS (mg/dL)</th>
+                    <th>ความดันโลหิต (mmHg)</th>
+                    <th>ชีพจร (ครั้ง/นาที)</th>
+                </tr>
+                <tr style="height: 45px">
+                    <td>${data.opd ? (data.opd.Weight || '') : ''} ${data.opd && data.opd.Weight ? 'กิโลกรัม' : ''}</td>
+                    <td>${data.opd ? (data.opd.Height || '') : ''} ${data.opd && data.opd.Height ? 'เซนติเมตร' : ''}</td>
+                    <td>${data.opd ? (data.opd.BMI || '') : ''}</td>
+                    <td>${data.opd ? (data.opd.FBS || '') : ''}</td>
+                    <td>${data.opd ? (data.opd.Systolic || '') : ''}</td>
+                    <td>${data.opd ? (data.opd.Pulsation || '') : ''}</td>
+                </tr>
+            </table>
+            <table class="measurement-table">
+                <tr>
+                    <th>วินิจฉัย</th>
+                    <th>หมายเหตุ</th>
+                </tr>
+                <tr style="height: 110px">
+                    <td>${data.opd ? (data.opd.opd_diagnose || '') : ''}</td>
+                    <td>${data.opd ? (data.opd.opd_note || '') : ''}</td>
+                </tr>
+            </table>
+        </div>
+      `;
+
+      var printWindow = window.open('', '', 'height=600,width=800');
+      printWindow.document.write('<html><head><title>Print OPD</title>');
+      printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">');
+      printWindow.document.write('</head><body>');
+      printWindow.document.write(printContent);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error('AJAX error:', textStatus, errorThrown);
+      console.log('Response Text:', jqXHR.responseText);
+      alert('เกิดข้อผิดพลาดในการดึงข้อมูลสำหรับการพิมพ์: ' + textStatus);
+    }
+  });
 });
 
 </script>

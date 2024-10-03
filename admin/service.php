@@ -34,14 +34,12 @@ $queue_data = $result->fetch_assoc();
 $cus_id = $queue_data['cus_id'];
 
 // ดึงข้อมูลคอร์สที่เคยจอง
-$sql_courses = "SELECT DISTINCT od.od_id, od.course_id, c.course_name, c.course_price, cb.booking_datetime,
-                       CASE WHEN cu.id IS NOT NULL THEN 1 ELSE 0 END AS is_used,
-                       cu.queue_id AS used_queue_id, cu.used_date
+$sql_courses = "SELECT DISTINCT od.od_id, od.course_id, c.course_name, c.course_price, cb.booking_datetime
+                       
                 FROM course_bookings cb
                 JOIN order_course oc ON cb.id = oc.course_bookings_id
                 JOIN order_detail od ON oc.oc_id = od.oc_id
                 JOIN course c ON od.course_id = c.course_id
-                LEFT JOIN course_usage cu ON od.od_id = cu.od_id
                 WHERE cb.cus_id = '$cus_id'
                 AND cb.booking_datetime >= CURDATE()
                 AND cb.status = 'confirmed'
@@ -412,11 +410,10 @@ $result_courses->data_seek(0);
                                                 <h6 class="course-list-title">รายการคอร์ส:</h6>
                                                 <ul class="course-list">
                                                 <?php
-                                                $sql_details = "SELECT od.od_id, c.course_name, od.od_amount, od.od_price,
-                                                       CASE WHEN cu.id IS NOT NULL THEN 1 ELSE 0 END AS is_used
+                                                $sql_details = "SELECT od.od_id, c.course_name, od.od_amount, od.od_price
                                                 FROM order_detail od
                                                 JOIN course c ON od.course_id = c.course_id
-                                                LEFT JOIN course_usage cu ON od.od_id = cu.od_id AND cu.queue_id = '$queue_id'
+                                                
                                                 WHERE od.oc_id = '{$order['oc_id']}'";
                                                 $result_details = $conn->query($sql_details);
                                                 $result_details->data_seek(0);
@@ -427,9 +424,6 @@ $result_courses->data_seek(0);
                                                             <span class="course-name"><?php echo $detail['course_name']; ?></span>
                                                             <span class="course-price"><?php echo number_format($detail['od_price'], 2); ?> บาท</span>
                                                         </div>
-                                                        <?php if($detail['is_used']): ?>
-                                                            <span class="badge bg-info">ใช้บริการแล้ว</span>
-                                                        <?php endif; ?>
                                                     </li>
                                                 <?php endwhile; ?>
                                                 </ul>
