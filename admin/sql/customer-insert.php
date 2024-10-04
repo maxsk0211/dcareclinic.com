@@ -13,13 +13,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $cus_title = mysqli_real_escape_string($conn, $_POST['cus_title']);
     $cus_gender = mysqli_real_escape_string($conn, $_POST['cus_gender']);
     $cus_nickname = mysqli_real_escape_string($conn, $_POST['cus_nickname']);
-    $cus_line_id = mysqli_real_escape_string($conn, $_POST['cus_line_id']);
+    // $cus_line_id = mysqli_real_escape_string($conn, $_POST['cus_line_id']);
     $cus_email = mysqli_real_escape_string($conn, $_POST['cus_email']);
     $cus_blood = mysqli_real_escape_string($conn, $_POST['cus_blood']);
     $cus_tel = mysqli_real_escape_string($conn, $_POST['cus_tel']);
-    $cus_drugallergy = mysqli_real_escape_string($conn, $_POST['cus_drugallergy']);
-    $cus_congenital = mysqli_real_escape_string($conn, $_POST['cus_congenital']);
-    $cus_remark = mysqli_real_escape_string($conn, $_POST['cus_remark']);
+    // $cus_drugallergy = mysqli_real_escape_string($conn, $_POST['cus_drugallergy']);
+    // $cus_congenital = mysqli_real_escape_string($conn, $_POST['cus_congenital']);
+    // $cus_remark = mysqli_real_escape_string($conn, $_POST['cus_remark']);
     $cus_address = mysqli_real_escape_string($conn, $_POST['cus_address']);
     $cus_district = mysqli_real_escape_string($conn, $_POST['cus_district']);
     $cus_city = mysqli_real_escape_string($conn, $_POST['cus_city']);
@@ -76,13 +76,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         cus_title, 
         cus_gender, 
         cus_nickname, 
-        cus_line_id, 
+        -- cus_line_id, 
         cus_email, 
         cus_blood, 
         cus_tel, 
-        cus_drugallergy, 
-        cus_congenital, 
-        cus_remark, 
+        -- cus_drugallergy, 
+        -- cus_congenital, 
+        -- cus_remark, 
         cus_address, 
         cus_district, 
         cus_city, 
@@ -97,13 +97,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         '$cus_title', 
         '$cus_gender', 
         '$cus_nickname', 
-        '$cus_line_id', 
+        -- '$cus_line_id', 
         '$cus_email', 
         '$cus_blood', 
         '$cus_tel', 
-        '$cus_drugallergy', 
-        '$cus_congenital', 
-        '$cus_remark', 
+        -- '$cus_drugallergy', 
+        -- '$cus_congenital', 
+        -- '$cus_remark', 
         '$cus_address', 
         '$cus_district', 
         '$cus_city', 

@@ -73,40 +73,149 @@ if (isset($_GET['drug_id'])) {
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
 
 
-    <style>
-        body { background-color: #f8f9fa; }
-        .drug-detail-card {
-            background-color: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .drug-info-label {
-            font-weight: bold;
-            color: #6c757d;
-        }
-        .drug-info-value {
-            font-weight: normal;
-            color: #212529;
-        }
-        .status-badge {
-            font-size: 0.9rem;
-            padding: 5px 10px;
-        }
-        .detail-section {
-            background-color: #f1f3f5;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .stock-table {
-            font-size: 0.9rem;
-        }
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .container-xxl {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 0 30px rgba(0,0,0,0.15);
+    }
+    .card-header {
+        background-color: #4e73df;
+        color: white;
+        border-bottom: none;
+        padding: 20px 25px;
+    }
+    .card-title {
+        margin-bottom: 0;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+    .card-body {
+        padding: 30px;
+    }
+    .drug-info-section {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .drug-info-title {
+        color: #4e73df;
+        font-weight: 600;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #4e73df;
+        padding-bottom: 5px;
+    }
+    .drug-info-item {
+        margin-bottom: 15px;
+    }
+    .drug-info-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    .drug-info-value {
+        color: #6c757d;
+    }
+    .drug-image {
+        max-width: 200px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    .drug-image:hover {
+        transform: scale(1.05);
+    }
+    .badge {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 30px;
+    }
+    .badge-success {
+        background-color: #1cc88a;
+        color: white;
+    }
+    .badge-danger {
+        background-color: #e74a3b;
+        color: white;
+    }
+    .btn {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+    }
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+        transform: translateY(-2px);
+    }
+    .table {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    .table thead th {
+        background-color: #4e73df;
+        color: white;
+        border: none;
+        padding: 15px;
+        font-weight: 600;
+    }
+    .table tbody tr {
+        background-color: #ffffff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .table tbody tr:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .table td {
+        border: none;
+        padding: 15px;
+        vertical-align: middle;
+    }
+    .modal-content {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+    }
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #ced4da;
+        padding: 10px 15px;
+    }
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
+        border-color: #4e73df;
+    }
         .swal2-container {
           z-index: 1091 !important; /* หรือค่าที่สูงกว่า z-index ของ modal */
         }
-    </style>
+</style>
 </head>
 <body>
 
@@ -134,15 +243,15 @@ if (isset($_GET['drug_id'])) {
            <!-- Content -->
 
             <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card border-2 border-primary">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title">รายละเอียดยา</h5>
+            <a href="drug.php" class="btn btn-secondary">
+                <i class="ri-arrow-left-line me-1"></i> ย้อนกลับ
+            </a>
+        </div>
 
-    <div class="container mt-4">
-        <div class="drug-detail-card">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">คลังยา ประจำสาขา</h2>
-                <a href="drug.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
-            </div>
 <?php 
-
 function formatId($id) {
     // ตรวจสอบว่า $id เป็นตัวเลขหรือไม่
     if (!is_numeric($id)) {
@@ -161,66 +270,77 @@ function formatId($id) {
 
     return $formattedId;
 }
-
  ?>
+        <div class="card-body">
             <div class="row">
-                <div class="col-md-6">
-                    <div class="detail-section">
-                        <p><span class="drug-info-label">รหัส:</span> <span class="drug-info-value"><?php echo formatId($drug->drug_id); ?></span></p>
-                        <p><span class="drug-info-label">ชื่อ:</span> <span class="drug-info-value"><?php echo $drug->drug_name; ?></span></p>
-                        <p><span class="drug-info-label">กลุ่ม:</span> <span class="drug-info-value"><?php echo $drug->drug_type_name; ?></span></p>
-                        <p><span class="drug-info-label">ประเภท:</span> <span class="drug-info-value"><?php echo $drug->drug_properties; ?></span></p>
-                        <p><span class="drug-info-label">หมวดหมู่:</span> <span class="drug-info-value"><?php echo $drug->drug_advice; ?></span></p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="detail-section">
-                        <p class=""><span class="drug-info-label">จำนวนคงเหลือ:</span> <span class="drug-info-value"><?php echo $drug->drug_amount." ".$drug->unit_name; ?></span></p>
-                        <p><span class="drug-info-label">หน่วยนับ:</span> <span class="drug-info-value"><?php echo $drug->unit_name; ?></span></p>
-                        <p><span class="drug-info-label">ราคาต้นทุน/<?= $drug->unit_name?>:</span> <span class="drug-info-value"><?php echo number_format($drug->drug_cost, 2); ?> บาท</span></p>
-                        <p>
+                <div class="col-md-4">
+                    <div class="drug-info-section">
+                        <h6 class="drug-info-title">ข้อมูลทั่วไป</h6>
+                        <div class="drug-info-item">
+                            <span class="drug-info-label">รหัสยา:</span>
+                            <span class="drug-info-value"><?php echo formatId($drug->drug_id); ?></span>
+                        </div>
+                        <div class="drug-info-item">
+                            <span class="drug-info-label">ชื่อยา:</span>
+                            <span class="drug-info-value"><?php echo $drug->drug_name; ?></span>
+                        </div>
+                        <div class="drug-info-item">
+                            <span class="drug-info-label">ประเภท:</span>
+                            <span class="drug-info-value"><?php echo $drug->drug_type_name; ?></span>
+                        </div>
+                        <div class="drug-info-item">
                             <span class="drug-info-label">สถานะ:</span>
-                            <span class="badge <?php echo $drug->drug_status == 1 ? 'bg-success' : 'bg-danger'; ?> status-badge">
-                                <?php echo $drug->drug_status == 1 ? 'พร้อมใช้งาน' : 'ไม่พร้อมใช้งาน'; ?>
-                            </span>
-                        </p>
-                        <p><span class="drug-info-label">รูปภาพ:</span><br>
-                            <?php if (!empty($drug->drug_pic)): ?>
-                                <img src="../img/drug/<?php echo $drug->drug_pic; ?>" alt="รูปภาพยา" style="max-width: 100px; max-height: 100px;">
+                            <?php if ($drug->drug_status == 1): ?>
+                                <span class="badge badge-success">พร้อมใช้งาน</span>
                             <?php else: ?>
-                                ไม่มีรูปภาพ
+                                <span class="badge badge-danger">ไม่พร้อมใช้งาน</span>
                             <?php endif; ?>
-                        </p>
+                        </div>
+                    </div>
+                    <?php if (!empty($drug->drug_pic)): ?>
+                        <img src="../img/drug/<?php echo $drug->drug_pic; ?>" alt="รูปภาพยา" class="drug-image img-fluid mt-3">
+                    <?php endif; ?>
+                </div>
+                <div class="col-md-8">
+                    <div class="drug-info-section">
+                        <h6 class="drug-info-title">รายละเอียดยา</h6>
+                        <div class="drug-info-item">
+                            <span class="drug-info-label">คุณสมบัติ:</span>
+                            <span class="drug-info-value"><?php echo $drug->drug_properties; ?></span>
+                        </div>
+                        <div class="drug-info-item">
+                            <span class="drug-info-label">วิธีใช้:</span>
+                            <span class="drug-info-value"><?php echo $drug->drug_advice; ?></span>
+                        </div>
+                        <div class="drug-info-item">
+                            <span class="drug-info-label">ข้อควรระวัง:</span>
+                            <span class="drug-info-value"><?php echo $drug->drug_warning; ?></span>
+                        </div>
+                    </div>
+                    <div class="drug-info-section">
+                        <h6 class="drug-info-title">ข้อมูลคงคลัง</h6>
+                        <div class="drug-info-item">
+                            <span class="drug-info-label">จำนวนคงเหลือ:</span>
+                            <span class="drug-info-value"><?php echo $drug->drug_amount." ".$drug->unit_name; ?></span>
+                        </div>
+                        <div class="drug-info-item">
+                            <span class="drug-info-label">ราคาต้นทุน/<?= $drug->unit_name?>:</span>
+                            <span class="drug-info-value"><?php echo number_format($drug->drug_cost, 2); ?> บาท</span>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="detail-section">
-                        <h5>วิธีใช้</h5>
-                        <p><?php echo $drug->drug_advice; ?></p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="detail-section">
-                        <h5>ข้อควรระวัง</h5>
-                        <p><?php echo $drug->drug_warning; ?></p>
-                    </div>
-                </div>
-            </div>
+        </div>
+    </div>
 
             <div class="mt-4">
-                <div class="d-flex justify-content-between">
-                    <h5>ข้อมูลสต็อก</h5>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">เพิ่มสต๊อก</button>
-                </div>
+
                 <!-- Modal -->
 <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="addStockModalLabel">เพิ่มสต๊อก</h5>
+        <h5 class="modal-title text-white" id="addStockModalLabel">เพิ่มสต๊อก</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -281,23 +401,22 @@ function formatId($id) {
 
 <!-- Modal -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">ยืนยันข้อมูล</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-          </button>
-      </div>
-      <div class="modal-body">
-        <div class="text-center text-danger h2">การบันทึกข้อมูลไม่สามารถแก้ไขหรือลบได้!</div>
-        <div class="text-center text-danger h4">ท่านต้องการยืนยันข้อมูลหรือไม่!</div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-target="#addStockModal" data-bs-toggle="modal" data-bs-dismiss="modal">กลับ</button>
-        <button type="button" class="btn btn-danger" onclick="submitAddStock()">ยืนยัน</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">เพิ่มสต็อก</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+              <div class="modal-body">
+                <div class="text-center text-danger h2">การบันทึกข้อมูลไม่สามารถแก้ไขหรือลบได้!</div>
+                <div class="text-center text-danger h4">ท่านต้องการยืนยันข้อมูลหรือไม่!</div>
+              </div>    
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-target="#addStockModal" data-bs-toggle="modal" data-bs-dismiss="modal">กลับ</button>
+                <button type="button" class="btn btn-danger" onclick="submitAddStock()">ยืนยัน</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 
@@ -315,43 +434,42 @@ $stock_result = mysqli_query($conn, $stock_sql);
 // ตรวจสอบว่ามีข้อมูลสต็อกหรือไม่
 if (mysqli_num_rows($stock_result) > 0) {
     ?>
-    <div class="mt-4">
-        <h5>ประวัติการทำรายการสต็อก</h5>
-        <table class="table table-hover table-primary table-striped">
-            <thead>
-                <tr>
-                    <th>วันที่ทำรายการ</th>
-                    <th>ผู้ทำรายการ</th>
-                    <th>จำนวน</th>
-                    <th>ต้นทุนต่อหน่วย</th>
-                    <th>วันหมดอายุ</th>
-                    <th>หมายเหตุ</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php while ($stock = mysqli_fetch_object($stock_result)) { ?>
-                <tr>
-                    <td><?php echo date('d/m/Y H:i', strtotime($stock->transaction_date)); ?></td>
-                    <td><?php echo $stock->users_fname . ' ' . $stock->users_lname; ?></td>
-                    <td><?php echo number_format($stock->quantity, 2); ?></td>
-                    <td><?php echo number_format($stock->cost_per_unit, 2)." บาท"; ?></td>
-                    <td><?php if ($stock->expiry_date == NULL){ echo "ไม่พบวันหมดอายุ"; }else{
-                        $date_obj = $stock->expiry_date;
-                        $date_obj = DateTime::createFromFormat('Y-m-d', $date_obj);
-                        if ($date_obj) {
-                            $date_obj->modify('+543 years'); // แปลงจาก ค.ศ. เป็น พ.ศ.
-                            $date_thai = $date_obj->format('d/m/Y');
-                            echo $date_thai; // output: 31/08/2567
-                        } else {
-                            echo "รูปแบบวันที่ไม่ถูกต้อง";
-                        }
-                    } ?></td>
-                    <td><?php echo $stock->notes; ?></td>
-                </tr>
-            <?php } ?>
-            </tbody>
-        </table>
+<div class="card mt-4 border-2 border-primary">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title">ข้อมูลสต็อก</h5>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">
+            <i class="ri-add-line me-1"></i> เพิ่มสต็อก
+        </button>
     </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>วันที่ทำรายการ</th>
+                        <th>ผู้ทำรายการ</th>
+                        <th>จำนวน</th>
+                        <th>ต้นทุนต่อหน่วย</th>
+                        <th>วันหมดอายุ</th>
+                        <th>หมายเหตุ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($stock = mysqli_fetch_object($stock_result)) { ?>
+                    <tr>
+                        <td><?php echo date('d/m/Y H:i', strtotime($stock->transaction_date)); ?></td>
+                        <td><?php echo $stock->users_fname . ' ' . $stock->users_lname; ?></td>
+                        <td><?php echo number_format($stock->quantity, 2); ?></td>
+                        <td><?php echo number_format($stock->cost_per_unit, 2)." บาท"; ?></td>
+                        <td><?php echo ($stock->expiry_date) ? date('d/m/Y', strtotime($stock->expiry_date)) : 'ไม่ระบุ'; ?></td>
+                        <td><?php echo $stock->notes; ?></td>
+                    </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
     <?php
 } else {
     echo "<p>ไม่พบข้อมูลการทำรายการสต็อก</p>";

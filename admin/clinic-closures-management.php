@@ -3,8 +3,9 @@ session_start();
 include 'chk-session.php';
 require '../dbcon.php';
 
+$branch_id=$_SESSION['branch_id'];
 // ดึงข้อมูลวันที่ปิดทำการจากฐานข้อมูล
-$sql = "SELECT * FROM clinic_closures ORDER BY closure_date DESC";
+$sql = "SELECT * FROM clinic_closures WHERE branch_id='$branch_id' ORDER BY closure_date DESC";
 $result = $conn->query($sql);
 $clinic_closures = $result->fetch_all(MYSQLI_ASSOC);
 
@@ -29,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $closure_id = $_POST['closure_id'];
         
         // ตรวจสอบว่าวันที่นี้มีอยู่แล้วหรือไม่ (ยกเว้นรายการที่กำลังแก้ไข)
-        $check_sql = "SELECT id FROM clinic_closures WHERE closure_date = ? AND id != ?";
+        $check_sql = "SELECT id FROM clinic_closures WHERE closure_date = ? AND id != ? and branch_id='$branch_id'";
         $check_stmt = $conn->prepare($check_sql);
         $check_stmt->bind_param("si", $closure_date_sql, $closure_id);
         $check_stmt->execute();
@@ -41,13 +42,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
         
-        $sql = "UPDATE clinic_closures SET closure_date = ?, reason = ? WHERE id = ?";
+        $sql = "UPDATE clinic_closures SET closure_date = ?, reason = ? WHERE id = ? and branch_id='$branch_id'";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ssi", $closure_date_sql, $reason, $closure_id);
     } else {
         // เพิ่มข้อมูลใหม่
         // ตรวจสอบว่าวันที่นี้มีอยู่แล้วหรือไม่
-        $check_sql = "SELECT id FROM clinic_closures WHERE closure_date = ?";
+        $check_sql = "SELECT id FROM clinic_closures WHERE closure_date = ? and branch_id='$branch_id'";
         $check_stmt = $conn->prepare($check_sql);
         $check_stmt->bind_param("s", $closure_date_sql);
         $check_stmt->execute();
@@ -59,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
         
-        $sql = "INSERT INTO clinic_closures (closure_date, reason) VALUES (?, ?)";
+        $sql = "INSERT INTO clinic_closures (closure_date, reason, branch_id) VALUES (?, ?, '$branch_id')";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ss", $closure_date_sql, $reason);
     }

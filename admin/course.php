@@ -50,7 +50,7 @@
     <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 
     <!-- Page CSS -->
-
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Helpers -->
     <script src="../assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
@@ -61,10 +61,97 @@
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
 
     <!-- datatables -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css"> 
 
+<style>
+  body {
+    background-color: #f8f9fa;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
 
+  .card:hover {
+    box-shadow: 0 0 30px rgba(0,0,0,0.15);
+  }
+
+  .card-header {
+    background-color: #4e73df;
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 20px;
+  }
+  
+  .btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+  }
+  
+  .btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+  }
+  
+  .table {
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+  }
+  
+  .table thead th {
+    border: none;
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .table tbody tr {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.075);
+    border-radius: 5px;
+    transition: all 0.2s ease;
+  }
+  
+  .table tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .table tbody td {
+    border: none;
+    vertical-align: middle;
+    background-color: white;
+  }
+  
+  .table tbody td:first-child {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+  }
+  
+  .table tbody td:last-child {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }
+  
+  .badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+  }
+  
+  .text-warning, .text-danger {
+    transition: color 0.2s ease;
+  }
+  
+  .text-warning:hover, .text-danger:hover {
+    opacity: 0.7;
+  }
+</style>
   </head>
 
   <body>
@@ -95,9 +182,11 @@
 
               <!-- Users List Table -->
               <div class="card">
-                <div class="card-header border-bottom d-flex justify-content-between">
-                  <h5 class="card-title mb-0 alert alert-danger">ข้อมูลคอร์สในระบบทั้งหมด</h5>
-                  <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCourseModal">เพิ่มคอร์ส</button>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="card-title mb-0 alert alert-info">ข้อมูลคอร์สในระบบทั้งหมด</h5>
+                  <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                    <i class="ri-add-line me-1"></i> เพิ่มคอร์ส
+                  </button>
                 </div>
 <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -218,21 +307,22 @@
 </div>
                 
 
-                <div class="card-datatable table-responsive">
-    <table id="coursesTable" class="table table-striped table-bordered table-hover">
-    <thead>
-        <tr>
-            <th class="text-center">ลำดับ</th>
-            <th class="text-center">รหัส</th>
-            <th>ชื่อคอร์ส</th>
-            <th>หมวดหมู่</th>
-            <th>ราคาคอร์ส</th>
-            <th>จำนวนที่ใช้</th>
-            <th>สถานะ</th>
-            <th class="text-center">ตัวเลือก</th>
-        </tr>
-    </thead>
-    <tbody>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="coursesTable" class="table table-hover">
+          <thead>
+            <tr>
+              <!-- <th class="text-center">ลำดับ</th> -->
+              <th class="text-center">รหัส</th>
+              <th>ชื่อคอร์ส</th>
+              <th>หมวดหมู่</th>
+              <th>ราคาคอร์ส</th>
+              <th>จำนวนที่ใช้</th>
+              <th>สถานะ</th>
+              <th class="text-center">ตัวเลือก</th>
+            </tr>
+          </thead>
+          <tbody>
         <?php
 
         function formatId($id) {
@@ -257,22 +347,19 @@
 
         $i = 1;
         $branch_id=$_SESSION['branch_id'];
-        if($_SESSION['position_id']==1){
-            $sql_show_courses = "SELECT * FROM `course` ORDER BY `course`.`course_id` ASC";
-        }else{
-            $sql_show_courses = "SELECT * FROM `course` where branch_id='$branch_id' ORDER BY `course`.`course_id` ASC";
-        }
+        $sql_show_courses = "SELECT * FROM `course` where branch_id='$branch_id' ORDER BY `course`.`course_id` ASC";
+
         $result_show_courses = $conn->query($sql_show_courses);
         while ($row = $result_show_courses->fetch_object()) {
         ?>
         <tr> 
-            <td class="text-center"><a href="course-detail.php?id=<?= $row->course_id ?>"><?= $i++ ?></a></td>
+            <!-- <td class="text-center"><a href="course-detail.php?id=<?= $row->course_id ?>"><?= $i++ ?></a></td> -->
             <td class="text-center"><a href="course-detail.php?id=<?= $row->course_id ?>"><?= formatId($row->course_id); ?></a></td>
             <td><a href="course-detail.php?id=<?= $row->course_id ?>"><?= $row->course_name ?></a></td>
             <td><a href="course-detail.php?id=<?= $row->course_id ?>">
                 <?php
                 $course_type_id = $row->course_type_id;
-                $sql_course_type = "SELECT course_type_name FROM course_type WHERE course_type_id = $course_type_id";
+                $sql_course_type = "SELECT course_type_name FROM course_type WHERE course_type_id = $course_type_id ";
                 $result_course_type = $conn->query($sql_course_type);
                 $course_type_name = $result_course_type->fetch_object()->course_type_name;
                 ?>
@@ -436,6 +523,7 @@
         ?>
     </tbody>
 </table>
+</div>
                 </div>
 
 
@@ -492,17 +580,18 @@
 
     <!-- datatables -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+    <!-- <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script> -->
     <script src="../assets/vendor/libs/cleavejs/cleave.js"></script>
     <script src="../assets/vendor/libs/cleavejs/cleave-phone.js"></script>
-
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
 
 
 
@@ -658,23 +747,14 @@
     <script>
 $(document).ready(function() {
     $('#coursesTable').DataTable({
-        // ภาษาไทย
-        language: {
-            "lengthMenu": "แสดง _MENU_ แถวต่อหน้า",
-            "zeroRecords": "ไม่พบข้อมูล",
-            "info": "แสดงหน้า _PAGE_ จาก _PAGES_",
-            "infoEmpty": "ไม่มีข้อมูล",
-            "infoFiltered": "(กรองข้อมูลจาก _MAX_ รายการทั้งหมด)",
-            "search": "ค้นหา:",
-            "paginate": {
-                "first": "หน้าแรก",
-                "last": "หน้าสุดท้าย",
-                "next": "ถัดไป",
-                "previous": "ก่อนหน้า"
+             "pageLength": 25,
+            "order": [[1, "desc"]], // เรียงลำดับคอลัมน์ที่ 1 (วันที่สั่งซื้อ) จากมากไปน้อย
+            "columnDefs": [
+                { "type": "date", "targets": 1 } // กำหนดให้คอลัมน์ที่ 1 เป็นประเภทวันที่
+            ],
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
             }
-        },
-        lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"] ],
-        pagingType: 'full_numbers'
     });
 
 

@@ -1,7 +1,7 @@
 <?php
 session_start();
 require '../../dbcon.php';
-
+$branch_id=$_SESSION['branch_id'];
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -61,14 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // สร้างคำสั่งซื้อใหม่
-    $sql_create_order = "INSERT INTO order_course (cus_id, users_id, course_bookings_id, order_datetime, order_payment, order_net_total, order_status) 
-                         VALUES (?, ?, ?, NOW(), 'ยังไม่จ่ายเงิน', 0, 1)";
+    $sql_create_order = "INSERT INTO order_course (branch_id, cus_id, users_id, course_bookings_id, order_datetime, order_payment, order_net_total, order_status) 
+                         VALUES (?, ?, ?, ?, NOW(), 'ยังไม่จ่ายเงิน', 0, 1)";
     $stmt_create_order = $conn->prepare($sql_create_order);
     if (!$stmt_create_order) {
         echo json_encode(['success' => false, 'message' => 'การเตรียมคำสั่ง SQL สร้างคำสั่งซื้อผิดพลาด: ' . $conn->error]);
         exit;
     }
-    $stmt_create_order->bind_param("iii", $cus_id, $_SESSION['users_id'], $booking_id);
+    $stmt_create_order->bind_param("iiii",$branch_id , $cus_id, $_SESSION['users_id'], $booking_id);
     if (!$stmt_create_order->execute()) {
         echo json_encode(['success' => false, 'message' => 'การสร้างคำสั่งซื้อผิดพลาด: ' . $stmt_create_order->error]);
         exit;

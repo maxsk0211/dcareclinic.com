@@ -64,7 +64,189 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
 
+<style>
+  body {
+    background-color: #f8f9fa;
+  }
 
+  .container-xxl {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .card:hover {
+    box-shadow: 0 0 30px rgba(0,0,0,0.15);
+  }
+
+  .card-header {
+    background-color: #4e73df;
+    color: white;
+    border-bottom: none;
+    padding: 20px 25px;
+  }
+
+  .card-title {
+    margin-bottom: 0;
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+
+  .card-body {
+    padding: 30px;
+  }
+
+  .btn {
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-info {
+    background-color: #36b9cc;
+    border-color: #36b9cc;
+    color: white;
+  }
+
+  .btn-info:hover, .btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .btn-info:hover {
+    background-color: #2a9aab;
+    border-color: #2a9aab;
+  }
+
+  .btn-warning {
+    background-color: #f6c23e;
+    border-color: #f6c23e;
+    color: #333;
+  }
+
+  .btn-warning:hover {
+    background-color: #dda20a;
+    border-color: #dda20a;
+  }
+
+  .table-responsive {
+    border-radius: 15px;
+    overflow: hidden;
+  }
+
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table thead th {
+    background-color: #4e73df;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    padding: 15px;
+    vertical-align: middle;
+  }
+
+  .table tbody tr {
+    transition: all 0.3s ease;
+  }
+
+  .table tbody tr:nth-of-type(even) {
+    background-color: #f8f9fa;
+  }
+
+  .table tbody tr:hover {
+    background-color: #e8eaf6;
+    transform: scale(1.01);
+  }
+
+  .table td {
+    vertical-align: middle;
+    border: none;
+    padding: 15px;
+  }
+
+  .table td a {
+    color: #4e73df;
+    transition: color 0.3s ease;
+  }
+
+  .table td a:hover {
+    color: #224abe;
+    text-decoration: none;
+  }
+
+  .badge {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 30px;
+  }
+
+  .badge-success {
+    background-color: #1cc88a;
+    color: white;
+  }
+
+  .badge-danger {
+    background-color: #e74a3b;
+    color: white;
+  }
+
+  .text-primary, .text-danger {
+    transition: all 0.3s ease;
+  }
+
+  .text-primary:hover, .text-danger:hover {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+
+  .modal-content {
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.1);
+  }
+
+  .modal-header {
+    background-color: #4e73df;
+    color: white;
+    border-radius: 15px 15px 0 0;
+  }
+
+  .modal-title {
+    font-weight: 600;
+  }
+
+  .modal-footer {
+    border-top: none;
+  }
+
+  .form-control, .form-select {
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
+    border-color: #4e73df;
+  }
+</style>
   </head>
 
   <body>
@@ -95,11 +277,17 @@
 
               <!-- Users List Table -->
               <div class="card">
-                <div class="card-header border-bottom d-flex justify-content-between">
-                  <h5 class="card-title mb-0 alert alert-danger">ข้อมูลยาในระบบทั้งหมด</h5>
-                  <div>
-                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addDrugModal">เพิ่มยา</button>
-                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addUnitModal">จัดการหน่วยนับ</button>
+                <div class="card mb-4">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 text-white">ข้อมูลยาในระบบทั้งหมด</h5>
+                    <div>
+                      <button type="button" class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#addDrugModal">
+                        <i class="ri-medicine-bottle-line me-1"></i> เพิ่มยา
+                      </button>
+                      <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                        <i class="ri-scales-line me-1"></i> จัดการหน่วยนับ
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -118,11 +306,11 @@ $unit_sql = "SELECT * FROM unit";
 $unit_result = mysqli_query($conn, $unit_sql);
 
  ?>
-<div class="modal fade" id="addDrugModal" tabindex="-1" aria-labelledby="addDrugModalLabel" aria-hidden="true">
+<div class="modal fade" id="addDrugModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="addDrugModalLabel">เพิ่มยาใหม่</h5>
+        <h5 class="modal-title text-white">เพิ่มยาใหม่</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -212,7 +400,7 @@ $unit_result = mysqli_query($conn, $unit_sql);
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="addUnitModalLabel">จัดการหน่วยนับ</h5>
+        <h5 class="modal-title text-white" id="addUnitModalLabel ">จัดการหน่วยนับ</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -269,21 +457,22 @@ $unit_result = mysqli_query($conn, $unit_sql);
 <!-- end modal -->
 
 
-    <div class="container">
-                <div class="card-datatable table-responsive">
-    <table id="drugTable" class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>รหัสยา</th>
-                    <th>ชื่อยา</th>
-                    <th>สาขา</th>
-                    <th>ประเภทยา</th>
-                    <th>จำนวนคงเหลือ/หน่วยนับ</th>
-                    <th>สถานะ</th>
-                    <th>จัดการ</th>
-                </tr>
-            </thead>
-            <tbody>
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="drugTable" class="table table-hover">
+        <thead>
+          <tr>
+            <th>รหัสยา</th>
+            <th>ชื่อยา</th>
+            <th>สาขา</th>
+            <th>ประเภทยา</th>
+            <th>จำนวนคงเหลือ/หน่วยนับ</th>
+            <th>สถานะ</th>
+            <th class="text-center">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
                 <?php 
                 $branch_id=$_SESSION['branch_id'];
                 // ดึงข้อมูลยาทั้งหมด
@@ -322,24 +511,30 @@ function formatId($id) {
                     <td><a href="drug-detail.php?drug_id=<?= $row->drug_id?>"><?php echo $row->branch_name; ?></a></td>
                     <td><a href="drug-detail.php?drug_id=<?= $row->drug_id?>"><?php echo $row->drug_type_name; ?></a></td>
                     <td><a href="drug-detail.php?drug_id=<?= $row->drug_id?>"><?php echo $row->drug_amount." ".$row->unit_name; ?></a></td>
-                    <td><?php echo ($row->drug_status == 1) ? '<span class="badge bg-success">พร้อมใช้งาน</span>' : '<span class="badge bg-danger">ไม่พร้อมใช้งาน</span>'; ?></td>
                     <td>
-                        <a href="" class="text-primary" data-bs-toggle="modal" data-bs-target="#editDrugModal<?php echo $row->drug_id; ?>">
-                            <i class="ri-edit-line"></i>
-                        </a>
-                        <a href="" class="text-danger" onClick="confirmDelete('sql/drug-delete.php?id=<?php echo $row->drug_id; ?>'); return false;">
-                            <i class="ri-delete-bin-6-line"></i>
-                        </a>
+                      <?php if ($row->drug_status == 1): ?>
+                        <span class="badge badge-success">พร้อมใช้งาน</span>
+                      <?php else: ?>
+                        <span class="badge badge-danger">ไม่พร้อมใช้งาน</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="text-center">
+                      <a href="#" class="text-primary me-2" data-bs-toggle="modal" data-bs-target="#editDrugModal<?php echo $row->drug_id; ?>">
+                        <i class="ri-edit-line"></i>
+                      </a>
+                      <a href="#" class="text-danger" onClick="confirmDelete('sql/drug-delete.php?id=<?php echo $row->drug_id; ?>'); return false;">
+                        <i class="ri-delete-bin-6-line"></i>
+                      </a>
                     </td>
                 </tr>
 
 
                 <!-- update  modal -->
-                <div class="modal fade" id="editDrugModal<?php echo $row->drug_id; ?>" tabindex="-1" aria-labelledby="editDrugModalLabel" aria-hidden="true">
+<div class="modal fade" id="editDrugModal<?php echo $row->drug_id; ?>" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editDrugModalLabel">แก้ไขข้อมูลยา</h5>
+        <h5 class="modal-title text-white">แก้ไขข้อมูลยา</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -443,7 +638,7 @@ function formatId($id) {
         </table>
                 </div>
 </div>
-
+</div>
               </div>
             </div>
             <!--/ Content -->

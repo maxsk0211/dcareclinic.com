@@ -8,13 +8,14 @@ $order_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if (!$order_id) {
     die("ไม่พบข้อมูลคำสั่งซื้อ");
 }
+$branch_id=$_SESSION['branch_id'];
 
 // ดึงข้อมูลคำสั่งซื้อ
 $sql = "SELECT oc.*, c.cus_firstname, c.cus_lastname, cb.booking_datetime
         FROM order_course oc
         JOIN course_bookings cb ON oc.course_bookings_id = cb.id
         JOIN customer c ON cb.cus_id = c.cus_id
-        WHERE oc.oc_id = $order_id";
+        WHERE oc.oc_id = $order_id and oc.branch_id='$branch_id'";
 $result = $conn->query($sql);
 
 if ($result->num_rows == 0) {

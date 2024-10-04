@@ -57,13 +57,105 @@
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="../assets/js/config.js"></script>
     <!-- sweet Alerts 2 -->
-    <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/> -->
+<link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
 
     <!-- datatables -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
+<style>
+  body {
+    background-color: #f8f9fa;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
 
+  .card:hover {
+    box-shadow: 0 0 30px rgba(0,0,0,0.15);
+  }
+
+  .card-header {
+    background-color: #4e73df;
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 20px;
+  }
+
+  .btn-primary {
+    background-color: #4e73df;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background-color: #2e59d9;
+    transform: translateY(-2px);
+  }
+
+  .table {
+    border-collapse: separate;
+    border-spacing: 0 15px;
+  }
+
+  .table thead th {
+    border-bottom: none;
+    background-color: #f1f3f9;
+    color: #4e73df;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+  }
+
+  .table tbody tr {
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+
+  .table tbody tr:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+
+  .table td, .table th {
+    vertical-align: middle;
+    border: none;
+    padding: 15px;
+  }
+
+  .badge {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    border-radius: 30px;
+  }
+
+  .modal-content {
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.1);
+  }
+
+  .modal-header {
+    background-color: #4e73df;
+    color: white;
+    border-radius: 15px 15px 0 0;
+  }
+
+  .form-control, .form-select {
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+  }
+
+  .form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
+    border-color: #4e73df;
+  }
+</style>
 
   </head>
 
@@ -91,19 +183,21 @@
 
            <!-- Content -->
 
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="container-xxl flex-grow-1 container-p-y  ">
 
               <!-- Users List Table -->
               <div class="card">
                 <div class="card-header border-bottom d-flex justify-content-between">
                   <h5 class="card-title mb-0 alert alert-info">ข้อมูลลูกค้าในระบบทั้งหมด</h5>
-                  <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCustomerModal">เพิ่มลูกค้า</button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                      <i class="ri-user-add-line me-1"></i> เพิ่มผู้ใช้งาน
+                    </button>
                 </div>
                 <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addCustomerModalLabel">เพิ่มข้อมูลลูกค้า</h5>
+                <h5 class="modal-title text-white" id="addCustomerModalLabel">เพิ่มข้อมูลลูกค้า</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -160,12 +254,12 @@
                                 <input type="text" class="form-control border-primary" id="cus_nickname" name="cus_nickname">
                             </div>
                         </div>
-                        <div class="col-md-6">
+<!--                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="cus_line_id" class="form-label">Line ID:</label>
                                 <input type="text" class="form-control border-primary" id="cus_line_id" name="cus_line_id">
                             </div>
-                        </div>
+                        </div> -->
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="cus_email" class="form-label">อีเมล:</label>
@@ -194,7 +288,7 @@
                                 <input type="tel" class="form-control border-primary" id="cus_tel" name="cus_tel" required>
                             </div>
                         </div>
-                        <div class="col-md-6">
+<!--                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="cus_drugallergy" class="form-label">ประวัติการแพ้ยา:</label>
                                 <input type="text" class="form-control border-primary" id="cus_drugallergy" name="cus_drugallergy">
@@ -211,7 +305,7 @@
                                 <label for="cus_remark" class="form-label">หมายเหตุ:</label>
                                 <textarea class="form-control border-primary" id="cus_remark" name="cus_remark"></textarea>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="col-12">
                             <div class="mb-3">
                                 <label for="cus_address" class="form-label">ที่อยู่:</label>
@@ -242,12 +336,12 @@
                                 <input type="text" class="form-control border-primary" id="cus_postal_code" name="cus_postal_code">
                             </div>
                         </div>
-                        <div class="col-md-6">
+<!--                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="cus_image" class="form-label">รูปภาพ:</label>
                                 <input type="file" class="form-control border-primary" id="cus_image" name="cus_image">
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
@@ -303,7 +397,7 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editCustomerModalLabel<?= $row->cus_id ?>">แก้ไขข้อมูลลูกค้า</h5>
+                        <h5 class="modal-title text-white" id="editCustomerModalLabel<?= $row->cus_id ?>">แก้ไขข้อมูลลูกค้า</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -372,12 +466,12 @@
                                         <input type="text" class="form-control" id="cus_nickname" name="cus_nickname" value="<?= $row->cus_nickname ?>">
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+<!--                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_line_id" class="form-label">Line ID:</label>
                                         <input type="text" class="form-control" id="cus_line_id" name="cus_line_id" value="<?= $row->cus_line_id ?>">
                                     </div>
-                                </div>
+                                </div> -->
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_email" class="form-label">อีเมล:</label>
@@ -406,7 +500,7 @@
                                         <input type="tel" class="form-control" id="cus_tel" name="cus_tel" value="<?= $row->cus_tel ?>" required>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+<!--                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_drugallergy" class="form-label">ประวัติการแพ้ยา:</label>
                                         <input type="text" class="form-control" id="cus_drugallergy" name="cus_drugallergy" value="<?= $row->cus_drugallergy ?>">
@@ -423,7 +517,7 @@
                                         <label for="cus_remark" class="form-label">หมายเหตุ:</label>
                                         <textarea class="form-control" id="cus_remark" name="cus_remark"><?= $row->cus_remark ?></textarea>
                                     </div>
-                                </div>
+                                </div> -->
                                 <div class="col-12">
                                     <div class="mb-3">
                                         <label for="cus_address" class="form-label">ที่อยู่:</label>
@@ -457,9 +551,9 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_image" class="form-label">รูปภาพ:</label>
-                                        <input type="file" class="form-control" id="cus_image" name="cus_image">
-                                        <?php if (!empty($row->cus_image)): ?>
-                                            <img src="../img/customer/<?= $row->cus_image ?>" alt="รูปภาพลูกค้า" width="100">
+                                        <!-- <input type="file" class="form-control" id="line_picture_url" name="line_picture_url"> -->
+                                        <?php if (!empty($row->line_picture_url)): ?>
+                                            <img src="<?= $row->line_picture_url ?>" alt="รูปภาพลูกค้า" width="100">
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -514,9 +608,9 @@
 
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
+     <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
     <!-- build:js assets/vendor/js/core.js -->
-    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <!-- <script src="../assets/vendor/libs/jquery/jquery.js"></script> -->
     <script src="../assets/vendor/libs/popper/popper.js"></script>
     <script src="../assets/vendor/js/bootstrap.js"></script>
     <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
@@ -536,22 +630,19 @@
 
     <!-- datatables -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+    <!-- <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script> -->
+    <!-- <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script> -->
     <script src="../assets/vendor/libs/cleavejs/cleave.js"></script>
     <script src="../assets/vendor/libs/cleavejs/cleave-phone.js"></script>
-
-
-
-
-
-
+<!-- DataTables JS -->
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
 
 
 
@@ -642,25 +733,15 @@
     <script>
 $(document).ready(function() {
     $('#customersTable').DataTable({ 
-
-        // ภาษาไทย
-        language: {
-            "lengthMenu": "แสดง _MENU_ แถวต่อหน้า",
-            "zeroRecords": "ไม่พบข้อมูล",
-            "info": "แสดงหน้า _PAGE_ จาก _PAGES_",
-            "infoEmpty": "ไม่มีข้อมูล",
-            "infoFiltered": "(กรองข้อมูลจาก _MAX_ รายการทั้งหมด)",
-            "search": "ค้นหา:",
-            "paginate": {
-                "first": "หน้าแรก",
-                "last": "หน้าสุดท้าย",
-                "next": "ถัดไป",
-                "previous": "ก่อนหน้า"
+            "pageLength": 25,
+            "order": [[1, "desc"]], // เรียงลำดับคอลัมน์ที่ 1 (วันที่สั่งซื้อ) จากมากไปน้อย
+            "columnDefs": [
+                { "type": "date", "targets": 1 } // กำหนดให้คอลัมน์ที่ 1 เป็นประเภทวันที่
+            ],
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
             }
-        },
-        lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"] ],
-        pagingType: 'full_numbers'
-    });
+        });
 });
 
 

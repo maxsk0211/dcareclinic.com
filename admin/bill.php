@@ -79,7 +79,7 @@ $stmt_booking->execute();
 $booking_result = $stmt_booking->get_result();
 $booking_data = $booking_result->fetch_assoc();
 
-$sql_queue = "SELECT sq.queue_date, sq.queue_time 
+$sql_queue = "SELECT sq.queue_date, sq.queue_time, sq.queue_id
               FROM service_queue sq
               WHERE sq.booking_id = ?";
 $stmt_queue = $conn->prepare($sql_queue);
@@ -808,8 +808,19 @@ $result_services = $stmt_services->get_result();
                                     </div>
                                 </div>
                                 <div class="d-grid gap-2">
-                                    <button class="btn btn-success btn-lg">OPD</button>
-                                    <button class="btn btn-primary btn-lg">ใบรับรองแพทย์</button>
+
+                                    <?php if ($queue_data['queue_id']): ?>
+                                        <a href="opd.php?queue_id=<?php echo $queue_data['queue_id']; ?>" class="btn btn-success btn-lg">OPD</a>
+                                    <?php else: ?>
+                                        <button class="btn btn-success btn-lg" disabled>OPD (ไม่พบข้อมูลคิว)</button>
+                                    <?php endif; ?>
+                                    <div class="mb-3">
+                                        <select id="doctorSelect" class="form-select">
+                                            <option value="">เลือกแพทย์</option>
+                                            <!-- ตัวเลือกแพทย์จะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                                        </select>
+                                    </div>
+                                    <button id="printMedicalCertificateBtn" class="btn btn-secondary">พิมพ์ใบรับรองแพทย์</button>
                                 </div>
                             </div>
                         </div>
@@ -845,7 +856,8 @@ $result_services = $stmt_services->get_result();
     <script src="../assets/vendor/js/menu.js"></script>
 
     <!-- Vendors JS -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+    <!-- <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
@@ -1250,8 +1262,25 @@ function getStatusBadge(status) {
 }
 
 function printReceipt() {
-    var printContent = `
-        <style>
+    $.ajax({
+        url: 'sql/get-receipt-data.php',
+        type: 'GET',
+        data: { oc_id: <?php echo $oc_id; ?> },
+        dataType: 'json',
+        success: function(receiptData) {
+            if (receiptData) {
+                var currentDate = new Date();
+                var printDateTime = currentDate.toLocaleString('th-TH', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit', 
+                    hour12: false 
+                });
+                var printContent = `
+<style>
             @page {
                 size: A4;
                 margin: 0;
@@ -1295,78 +1324,274 @@ function printReceipt() {
             .text-end {
                 text-align: right;
             }
+            .print-datetime {
+                position: fixed;
+                bottom: 10mm;
+                right: 10mm;
+                font-size: 10px;
+                color: #888;
+            }
         </style>
-        <div class="header">
-            <img src="../img/d.png" alt="Logo" class="logo">
-            <h3>DEMO CLINIC คลินิก ศัลยกรรม เสริมความงาม</h3>
-            <p>100/1 ซ วิภาวดี 1 รัชดา จังหวัดกรุงเทพ รหัสไปรษณีย์ 10100</p>
-            <p>โทรศัพท์: 0852225450 อีเมล์: demo@gmail.com</p>
-            <p>เลขที่ผู้เสียภาษี: 8888888888 เลขที่ใบอนุญาต: 4221178916</p>
-        </div>
-        <h3 style="text-align: center; margin: 5px 0;">ใบเสร็จรับเงิน [ RECEIPT ]</h3>
-        <p><strong>ชื่อลูกค้า:</strong> นาย ทดสอบ ลูกค้า</p>
-        <p><strong>ที่อยู่:</strong> ตำบล อำเภอ จังหวัด</p>
-        <p><strong>เลขประจำตัวผู้เสียภาษี:</strong> 1700000000001</p>
-        <p><strong>รหัสลูกค้า:</strong> HN000277 เลขที่เอกสาร: 0</p>
-        <div class="text-end">
-            <p><strong>สถานะชำระเงิน:</strong> ชำระเงินแล้ว</p>
-            <p><strong>เลขที่ตำสั่งซื้อ:</strong> RE00212 <strong>วันที่:</strong> 02/08/2567</p>
-        </div>
+                    <div class="header">
+                        <img src="../img/d.png" alt="Logo" class="logo">
+                        <h3>DEMO CLINIC คลินิก ศัลยกรรม เสริมความงาม</h3>
+                        <p>100/1 ซ วิภาวดี 1 รัชดา จังหวัดกรุงเทพ รหัสไปรษณีย์ 10100</p>
+                        <p>โทรศัพท์: 0852225450 อีเมล์: demo@gmail.com</p>
+                        <p>เลขที่ผู้เสียภาษี: 8888888888 เลขที่ใบอนุญาต: 4221178916</p>
+                    </div>
+                    <h3 style="text-align: center; margin: 5px 0;">ใบเสร็จรับเงิน [ RECEIPT ]</h3>
+                    <p><strong>ชื่อลูกค้า:</strong> ${receiptData.cus_title} ${receiptData.cus_firstname} ${receiptData.cus_lastname}</p>
+                    <p><strong>ที่อยู่:</strong> ${receiptData.full_address}</p>
+                    <p><strong>เลขประจำตัวผู้เสียภาษี:</strong> ${receiptData.cus_id_card_number}</p>
+                    <p><strong>รหัสลูกค้า:</strong> HN-${String(receiptData.cus_id).padStart(6, '0')} </p>
+                    <div class="text-end">
+                        <p><strong>สถานะชำระเงิน:</strong> ${receiptData.order_payment}</p>
+                        <p><strong>เลขที่คำสั่งซื้อ:</strong> ORDER-${String(receiptData.oc_id).padStart(6, '0')} <strong>วันที่:</strong> ${new Date(receiptData.order_datetime).toLocaleDateString('th-TH')}</p>
+                    </div>
 
-        <table>
-            <tr>
-                <th>รายการ</th>
-                <th style="text-align: center;">จำนวน</th>
-                <th style="text-align: center;">หน่วย</th>
-                <th style="text-align: center;">จำนวนเงิน</th>
-            </tr>
-            <tr>
-                <td>บอทอกซ์หน้าผาก (นำเข้าเกาหลี)</td>
-                <td style="text-align: center;">1</td>
-                <td style="text-align: center;">ครั้ง/หน่วย</td>
-                <td class="text-end">250</td>
-            </tr>
-            <tr>
-                <td>filler neuramis</td>
-                <td style="text-align: center;">1</td>
-                <td style="text-align: center;">ครั้ง/หน่วย</td>
-                <td class="text-end">5,900</td>
-            </tr>
-            <tr>
-                <td>ค่าบริการทางการแพทย์</td>
-                <td style="text-align: center;">1</td>
-                <td style="text-align: center;">กล่อง</td>
-                <td class="text-end">50</td>
-            </tr>
-        </table>
+                    <table>
+                        <tr>
+                            <th>รหัสคอร์ส</th>
+                            <th>รายการ</th>
+                            <th style="text-align: center;">จำนวน</th>
+                            <th style="text-align: center;">หน่วย</th>
+                            <th style="text-align: center;">จำนวนเงิน</th>
+                        </tr>
+                    ${receiptData.items_array.map(item => `
+                        <tr>
+                            <td>${item.course_id}</td>
+                            <td>${item.course_name}</td>
+                            <td style="text-align: center;">${item.amount}</td>
+                            <td style="text-align: center;">ครั้ง/หน่วย</td>
+                            <td class="text-end">${parseFloat(item.price).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        </tr>
+                    `).join('')}
+                    </table>
 
-        <div class="text-end">
-        <p>มัดจำแล้ว : 1,000.00 บาท</p>
-        <p>วันที่มัดจำ : 02/10/2567</p>
-        <p><strong>รวมเป็นเงิน:</strong> 6,200.00 บาท</p>
-        <p><strong>จำนวนเงินชำระสุทธิ:</strong> 6,200.00 บาท</p>
-        <p><strong>วิธีการชำระเงิน:</strong> เงินสด <strong>จำนวนเงิน:</strong> 6,200.00 บาท</p>
-        <p>วันที่ชำระเงิน : 03/10/2567</p>
-        </div>
-        <br><br><br>
-        <div class="footer">
-            <p>ลูกค้า Customer _________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ผู้ตรวจ Auditor _________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ผู้รับเงิน Collector _________________________</p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ 02/08/2567 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ 02/08/2567 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ 02/08/2567</p>
-        </div>
-    `;
+                    <div class="text-end">
+                        <p><strong>รวมเป็นเงิน:</strong> ${parseFloat(receiptData.order_net_total).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
+                        <p>มัดจำแล้ว : ${parseFloat(receiptData.deposit_amount).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
+                        <p>วันที่มัดจำ : ${receiptData.deposit_date ? new Date(receiptData.deposit_date).toLocaleString('th-TH') : '-'}</p>
+                        <p><strong>จำนวนเงินชำระสุทธิ:</strong> ${(parseFloat(receiptData.order_net_total) - parseFloat(receiptData.deposit_amount)).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
+                        <p><strong>วิธีการชำระเงิน:</strong> ${receiptData.order_payment} <strong>จำนวนเงิน:</strong> ${parseFloat(receiptData.order_net_total).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
+                        <p>วันที่ชำระเงิน : ${receiptData.order_payment_date ? new Date(receiptData.order_payment_date).toLocaleString('th-TH') : '-'}</p>
+                    </div>
+                    <br><br><br>
+                    <div class="footer">
+                        <p>ลูกค้า Customer _________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ผู้ตรวจ Auditor _________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ผู้รับเงิน Collector _________________________</p>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ ${new Date().toLocaleDateString('th-TH')} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ ${new Date().toLocaleDateString('th-TH')} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ ${new Date().toLocaleDateString('th-TH')}</p>
+                    </div>
+                    <div class="print-datetime">
+                        พิมพ์เมื่อ: ${printDateTime}
+                    </div>
+                `;
 
-    var printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Print Receipt</title>');
-    printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(printContent);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
+                var printWindow = window.open('', '', 'height=600,width=800');
+                printWindow.document.write('<html><head><title>Print Receipt</title>');
+                printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContent);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.print();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่พบข้อมูลใบเสร็จ'
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'เกิดข้อผิดพลาดในการดึงข้อมูลใบเสร็จ'
+            });
+        }
+    });
 }
 
 // เพิ่ม Event Listener สำหรับปุ่มพิมพ์ใบเสร็จ
 document.getElementById('printReceiptBtn').addEventListener('click', printReceipt);
+
+$(document).ready(function() {
+    // โหลดรายชื่อแพทย์
+    loadDoctors();
+
+    // จัดการการเลือกแพทย์
+    $('#doctorSelect').change(function() {
+        $('#printMedicalCertificateBtn').prop('disabled', !$(this).val());
+    });
+
+    // แก้ไข Event Listener สำหรับปุ่มพิมพ์ใบรับรองแพทย์
+    $('#printMedicalCertificateBtn').click(function() {
+        var selectedDoctor = $('#doctorSelect').val();
+        if (selectedDoctor) {
+            printMedicalCertificate(selectedDoctor);
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'แจ้งเตือน',
+                text: 'กรุณาเลือกแพทย์ก่อนพิมพ์ใบรับรองแพทย์'
+            });
+        }
+    });
+});
+
+function loadDoctors() {
+    $.ajax({
+        url: 'sql/get-doctors.php', // สร้างไฟล์นี้เพื่อดึงรายชื่อแพทย์จากฐานข้อมูล
+        type: 'GET',
+        dataType: 'json',
+        success: function(doctors) {
+            var select = $('#doctorSelect');
+            doctors.forEach(function(doctor) {
+                select.append($('<option>', {
+                    value: doctor.id,
+                    text: doctor.name
+                }));
+            });
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถโหลดรายชื่อแพทย์ได้'
+            });
+        }
+    });
+}
+
+function printMedicalCertificate(doctorId) {
+    var queueId = <?php echo $queue_data['queue_id']; ?>;
+    if (!queueId) {
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ไม่พบข้อมูลคิว ไม่สามารถพิมพ์ใบรับรองแพทย์ได้',
+        });
+        return;
+    }
+    $.ajax({
+        url: 'sql/get-medical-certificate-data.php',
+        type: 'GET',
+        data: { 
+            doctor_id: doctorId,
+            oc_id: <?php echo $oc_id; ?>
+        },
+        dataType: 'json',
+        success: function(data) {
+            if (data.success) {
+                var currentDate = new Date();
+                var thaiDate = currentDate.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                var printContent = `
+                <style>
+                    @page {
+                        size: A4;
+                        margin: 0;
+                    }
+                    body {
+                        font-family: 'Sarabun', sans-serif;
+                        font-size: 16px;
+                        line-height: 1.5;
+                        padding: 40px;
+                    }
+                    h1 {
+                        text-align: center;
+                        font-size: 24px;
+                        margin-bottom: 20px;
+                    }
+                    .header, .content, .footer {
+                        margin-bottom: 20px;
+                    }
+                    .header {
+                        text-align: center;
+                    }
+                    .signature {
+                        text-align: right;
+                        margin-top: 50px;
+                    }
+                    .footer {
+                        font-size: 14px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    td {
+                        padding: 5px;
+                        border: 1px solid #000;
+                    }
+                </style>
+                <h1>ใบรับรองแพทย์</h1>
+                <div class="header">
+                    <p>สถานที่ตรวจ DEMO CLINIC</p>
+                    <p>วันที่ ${thaiDate}</p>
+                </div>
+                <div class="content">
+                    <p>ข้าพเจ้า ${data.doctor.name}</p>
+                    <p>ใบอนุญาตประกอบวิชาชีพเวชกรรมเลขที่ ${data.doctor.license_number} สถานที่ประกอบวิชาชีพเวชกรรมอยู่ที่ 100/1 ซ รื่นรมส์ 1 รัชดา จังหวัดกรุงเทพ รหัสไปรษณีย์ 10100</p>
+                    <p>ได้ตรวจร่างกาย: ${data.customer.cus_title} ${data.customer.cus_firstname} ${data.customer.cus_lastname} หมายเลขบัตรประชาชน: ${data.customer.cus_id_card_number}</p>
+                    
+                    
+                    <p>แล้วเมื่อวันที่ ${new Date(data.queue.queue_date).toLocaleDateString('th-TH')} มีรายละเอียดดังนี้</p>
+                    <table>
+                        <tr>
+                            <td>น้ำหนักตัว ${data.opd.Weight} กก.</td>
+                            <td>ส่วนสูง ${data.opd.Height} เซนติเมตร</td>
+                            <td>ความดันโลหิต ${data.opd.Systolic} มม.ปรอท</td>
+                            <td>ชีพจร ${data.opd.Pulsation} ครั้ง/นาที</td>
+                        </tr>
+                    </table>
+                    <p>อาการ/วินิจฉัย ขอรับรองว่า: ${data.opd.opd_diagnose || '-'}</p>
+                    <p>สรุปความเห็นและข้อแนะนำของแพทย์: ${data.opd.opd_note || '-'}</p>
+                </div>
+                <div class="signature">
+                    <p>ลงชื่อ ............................................</p>
+                    <p>${data.doctor.name}</p>
+                    <p>แพทย์ผู้ตรวจร่างกาย</p>
+                </div>
+                <div class="footer">
+                    <p>หมายเหตุ</p>
+                    <p>(1) ต้องเป็นแพทย์ซึ่งได้ขึ้นทะเบียนรับใบอนุญาตประกอบวิชาชีพเวชกรรม</p>
+                    <p>(2) ให้แสดงว่าเป็นผู้มีร่างกายสมบรูณ์เพียงใด ใบรับรองแพทย์ฉบับนี้ให้ใช้ได้ 1 เดือนนับแต่่วันที่ตรวจร่างกาย</p>
+                </div>
+                `;
+
+                var printWindow = window.open('', '', 'height=800,width=800');
+                printWindow.document.write('<html><head><title>ใบรับรองแพทย์</title>');
+                printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContent);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.print();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถดึงข้อมูลได้: ' + data.message
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'เกิดข้อผิดพลาดในการดึงข้อมูล: '
+            });
+        }
+    });
+}
+
+// เพิ่ม Event Listener สำหรับปุ่มพิมพ์ใบรับรองแพทย์
+document.getElementById('printMedicalCertificateBtn').addEventListener('click', printMedicalCertificate);
 </script>
 
 </body>

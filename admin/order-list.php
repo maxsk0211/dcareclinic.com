@@ -6,13 +6,14 @@ require '../dbcon.php';
 // เพิ่ม error reporting เพื่อ debug
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+$branch_id=$_SESSION['branch_id'];
 // คิวรี่ข้อมูลจากตาราง order_course และตารางที่เกี่ยวข้อง
 $sql = "SELECT oc.oc_id, oc.order_datetime, c.cus_firstname, c.cus_lastname, 
                oc.order_payment, oc.order_net_total, cb.booking_datetime
         FROM order_course oc
         JOIN customer c ON oc.cus_id = c.cus_id
         JOIN course_bookings cb ON oc.course_bookings_id = cb.id
+        WHERE oc.branch_id='$branch_id'
         ORDER BY oc.order_datetime DESC";
 $result = $conn->query($sql);
 ?>

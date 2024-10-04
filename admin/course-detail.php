@@ -93,209 +93,251 @@ if (isset($_GET['id'])) {
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
 
     <!-- Page CSS -->
-    <style>
-        .course-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        .course-image:hover {
-            transform: scale(1.03);
-        }
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        .card-header {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 20px;
-        }
-        .card-body {
-            padding: 30px;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            transition: all 0.3s ease;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            border-color: #545b62;
-        }
-
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 0 30px rgba(0,0,0,0.2);
+    }
+    .card-header {
+        background-color: #4e73df;
+        color: white;
+        border-bottom: none;
+        padding: 20px 25px;
+    }
+    .card-body {
+        padding: 30px;
+    }
+    .course-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    .course-image:hover {
+        transform: scale(1.05);
+    }
+    .course-quick-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .info-item {
+        background-color: #e8eaf6;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .info-item:hover {
+        background-color: #c5cae9;
+        transform: translateY(-5px);
+    }
+    .info-item label {
+        display: block;
+        margin-bottom: 5px;
+        color: #3f51b5;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    .info-item .value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #303f9f;
+    }
+    .course-details-modern {
+        background-color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        padding: 25px;
+        margin-top: 20px;
+    }
+    .detail-item {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    .detail-item label {
+        display: block;
+        font-weight: 600;
+        color: #3f51b5;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    .detail-content {
+        font-size: 1rem;
+        color: #424242;
+        background-color: #f5f5f5;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    textarea.detail-content {
+        min-height: 100px;
+        resize: vertical;
+    }
+    .badge-status {
+        display: inline-block;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 20px;
+        text-transform: uppercase;
+    }
+    .badge-status.active {
+        background-color: #4caf50;
+        color: white;
+    }
+    .badge-status.inactive {
+        background-color: #f44336;
+        color: white;
+    }
+    .date-info {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+    }
+    .date-item {
+        flex: 1;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #545b62;
+        transform: translateY(-2px);
+    }
+    @media (max-width: 768px) {
         .course-quick-info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: 1fr;
         }
-        .course-quick-info .info-item {
-            background-color: #f0f4f8;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
+        .date-info {
+            flex-direction: column;
         }
-        .course-quick-info .info-item label {
-            display: block;
-            margin-bottom: 5px;
-            color: #718096;
-            font-size: 0.9rem;
-        }
-        .course-quick-info .info-item .value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #2d3748;
-        }
+    }
+    .table-responsive {
+        margin-top: 30px;
+        background-color: #fff;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .table {
+        margin-bottom: 0;
+    }
+    .table thead th {
+        background-color: #4e73df;
+        color: #ffffff;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        padding: 15px;
+    }
+    .table tbody tr:nth-of-type(even) {
+        background-color: #f8f9fa;
+    }
+    .table tbody tr:hover {
+        background-color: #e8eaf6;
+        transition: background-color 0.3s ease;
+    }
+    .table td {
+        vertical-align: middle;
+        border: none;
+        padding: 15px;
+    }
+    .table tfoot tr {
+        background-color: #e8eaf6;
+        font-weight: bold;
+    }
+    .table tfoot td {
+        border-top: 2px solid #4e73df;
+    }
+    
+    /* สไตล์สำหรับปุ่มในตาราง */
+    .table .btn {
+        padding: 5px 10px;
+        font-size: 0.9rem;
+        border-radius: 20px;
+    }
+    .table .btn-info {
+        background-color: #36b9cc;
+        border-color: #36b9cc;
+        color: #ffffff;
+    }
+    .table .btn-info:hover {
+        background-color: #2a9aab;
+        border-color: #2a9aab;
+    }
+    
+    /* สไตล์สำหรับ badge ในตาราง */
+    .badge {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-radius: 20px;
+    }
+    .badge-success {
+        background-color: #1cc88a;
+        color: #ffffff;
+    }
+    .badge-danger {
+        background-color: #e74a3b;
+        color: #ffffff;
+    }
 
-        .course-details-modern {
-            background-color: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            padding: 25px;
-            margin-top: 20px;
-        }
-        .course-details-modern .detail-item {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .course-details-modern .detail-item:last-child {
-            border-bottom: none;
-        }
-        .course-details-modern label {
-            display: block;
-            font-weight: 600;
-            color: #344767;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        .course-details-modern .detail-content {
-            font-size: 1rem;
-            color: #2d3748;
-            background-color: #f8f9fa;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-        }
-        .course-details-modern textarea.detail-content {
-            min-height: 100px;
-            resize: vertical;
-        }
-        .course-details-modern .badge-status {
-            display: inline-block;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            border-radius: 20px;
-            text-transform: uppercase;
-        }
-        .course-details-modern .badge-status.active {
-            background-color: #48bb78;
-            color: white;
-        }
-        .course-details-modern .badge-status.inactive {
-            background-color: #f56565;
-            color: white;
-        }
-        .course-details-modern .date-info {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-        }
-        .course-details-modern .date-info .date-item {
-            flex: 1;
-        }
-        @media (max-width: 768px) {
-            .course-details-modern .date-info {
-                flex-direction: column;
-            }
-        }
-        .modal-content {
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  }
-  
-  .modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-  }
-  
-  .modal-title {
-    color: #495057;
-    font-weight: 600;
-  }
-  
-  .form-label {
-    font-weight: 500;
-    color: #495057;
-  }
-  
-  .form-select, .form-control {
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    padding: 10px 15px;
-  }
-  
-  .input-group .form-select {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-  
-  .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-  }
-  
-  .btn-primary:hover {
-    background-color: #0056b3;
-    border-color: #0056b3;
-  }
+    /* สไตล์สำหรับไอคอนในตาราง */
+    .table .ri-delete-bin-6-line,
+    .table .ri-edit-box-line {
+        font-size: 1.2rem;
+        transition: color 0.3s ease;
+    }
+    .table .ri-delete-bin-6-line:hover {
+        color: #e74a3b;
+    }
+    .table .ri-edit-box-line:hover {
+        color: #4e73df;
+    }
 
-.table {
-    width: 100%;
-    margin-bottom: 1rem;
-    color: #212529;
-    vertical-align: top;
-    border-color: #dee2e6;
-}
-.table > :not(caption) > * > * {
-    padding: 0.5rem 0.5rem;
-    background-color: var(--bs-table-bg);
-    border-bottom-width: 1px;
-    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
-}
-.table-bordered > :not(caption) > * {
-    border-width: 1px 0;
-}
-.table-bordered > :not(caption) > * > * {
-    border-width: 0 1px;
-}
-.table-hover > tbody > tr:hover > * {
-    --bs-table-accent-bg: rgba(0, 0, 0, 0.075);
-    color: var(--bs-table-hover-color);
-}
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-.card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border-radius: 0.25rem;
-}
-.card-header {
-    background-color: rgba(0, 0, 0, 0.03);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-}
-.card-title {
-    margin-bottom: 0;
-}
+    /* สไตล์สำหรับ card ที่ครอบตาราง */
+    .card-resources {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        margin-top: 30px;
+    }
+    .card-resources .card-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .card-resources .card-title {
+        margin-bottom: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
 </style>
 
     <!-- Helpers -->
@@ -315,7 +357,7 @@ if (isset($_GET['id'])) {
                     <div class="container-xxl flex-grow-1 container-p-y">
                         <div class="card">
                             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                                <h4 class="mb-0">รายละเอียดคอร์ส</h4>
+                                <h4 class="mb-0 text-white">รายละเอียดคอร์ส</h4>
                                 <a href="course.php" class="btn btn-secondary">
                                     <i class="ri-arrow-left-line me-1"></i> ย้อนกลับ
                                 </a>
@@ -323,7 +365,7 @@ if (isset($_GET['id'])) {
                             <div class="card-body">
                                 <div class="row g-4">
                                     <div class="col-md-5 d-flex justify-content-center align-items-start">
-                                        <img src="../../img/course/<?= $row->course_pic ?>" alt="รูปภาพคอร์ส" class="course-image">
+                                        <img src="../../img/course/<?= $row->course_pic ?>" alt="รูปภาพคอร์ส" class="course-image img-fluid">
                                     </div>
                                     <div class="col-md-7">
                                         <div class="course-quick-info">
@@ -393,18 +435,19 @@ if (isset($_GET['id'])) {
                                 <!-- modal -->
 <?php
 // ดึงข้อมูลยา
+echo $branch_id = $_SESSION['branch_id'];
 $course_id = $_GET['id'];
-$drug_sql = "SELECT d.drug_id as id, d.drug_name as name, u.unit_name as unit FROM drug d LEFT JOIN unit u ON d.drug_unit_id = u.unit_id WHERE d.drug_status = 1";
+$drug_sql = "SELECT d.drug_id as id, d.drug_name as name, u.unit_name as unit FROM drug d LEFT JOIN unit u ON d.drug_unit_id = u.unit_id WHERE d.drug_status = 1 and d.branch_id='$branch_id'";
 $drug_result = $conn->query($drug_sql);
 $drugs = $drug_result->fetch_all(MYSQLI_ASSOC);
 
 // ดึงข้อมูลเครื่องมือ
-$tool_sql = "SELECT t.tool_id as id, t.tool_name as name, u.unit_name as unit FROM tool t LEFT JOIN unit u ON t.tool_unit_id = u.unit_id WHERE t.tool_status = 1";
+$tool_sql = "SELECT t.tool_id as id, t.tool_name as name, u.unit_name as unit FROM tool t LEFT JOIN unit u ON t.tool_unit_id = u.unit_id WHERE t.tool_status = 1 and t.branch_id='$branch_id'";
 $tool_result = $conn->query($tool_sql);
 $tools = $tool_result->fetch_all(MYSQLI_ASSOC);
 
 // ดึงข้อมูลอุปกรณ์
-$accessory_sql = "SELECT a.acc_id as id, a.acc_name as name, u.unit_name as unit FROM accessories a LEFT JOIN unit u ON a.acc_unit_id = u.unit_id WHERE a.acc_status = 1";
+$accessory_sql = "SELECT a.acc_id as id, a.acc_name as name, u.unit_name as unit FROM accessories a LEFT JOIN unit u ON a.acc_unit_id = u.unit_id WHERE a.acc_status = 1 and a.branch_id='$branch_id'";
 $accessory_result = $conn->query($accessory_sql);
 $accessories = $accessory_result->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -496,17 +539,17 @@ while ($row = $result->fetch_object()) {
 $stmt->close();
 ?>
 
-<div class="card mt-4">
+<div class="card card-resources">
     <div class="card-header">
-        <div class="d-flex justify-content-between">
-            <h5 class="card-title">ทรัพยากรที่ใช้ในคอร์ส</h5>
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addResourceModal">เพิ่มทรัพยากรสำหรับคอร์ส</button>
-        </div>
+        <h5 class="card-title text-white">ทรัพยากรที่ใช้ในคอร์ส</h5>
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addResourceModal">
+            <i class="ri-add-line me-1"></i> เพิ่มทรัพยากร
+        </button>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="table-light">
+            <table class="table table-hover">
+                <thead>
                     <tr>
                         <th>ประเภท</th>
                         <th>ชื่อทรัพยากร</th>
@@ -527,15 +570,20 @@ $stmt->close();
                         <td><?php echo number_format($resource->unit_cost, 2); ?> บาท</td>
                         <td><?php echo number_format($resource->total_cost, 2); ?> บาท</td>
                         <td>
-                            <a href="" class="text-danger" onClick="confirmDelete('sql/course-resource-delete.php?id=<?php echo $resource->resource_id; ?>&course_id=<?php echo $course_id; ?>'); return false;"><i class="ri-delete-bin-6-line"></i></a>
+                            <a href="#" class="text-warning me-2" data-bs-toggle="modal" data-bs-target="#editResourceModal<?php echo $resource->id; ?>">
+                                <i class="ri-edit-box-line"></i>
+                            </a>
+                            <a href="#" class="text-danger" onClick="confirmDelete('sql/course-resource-delete.php?id=<?php echo $resource->id; ?>&course_id=<?php echo $course_id; ?>'); return false;">
+                                <i class="ri-delete-bin-6-line"></i>
+                            </a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot>
-                    <tr class="table-primary">
-                        <th colspan="5" class="text-end">ต้นทุนรวมทั้งหมด:</th>
-                        <th><?php echo number_format($total_cost, 2); ?> บาท</th>
+                    <tr>
+                        <td colspan="5" class="text-end">ต้นทุนรวมทั้งหมด:</td>
+                        <td colspan="2"><strong><u><?php echo number_format($total_cost, 2); ?></u> บาท</strong></td>
                     </tr>
                 </tfoot>
             </table>

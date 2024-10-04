@@ -3,9 +3,9 @@ session_start();
 
 include 'chk-session.php'; // ตรวจสอบสิทธิ์การเข้าถึงสำหรับ admin
 require '../dbcon.php'; // เชื่อมต่อฐานข้อมูล
-
+$branch_id=$_SESSION['branch_id'];
 // ดึงข้อมูลเวลาทำการปัจจุบันจากฐานข้อมูล
-$sql = "SELECT * FROM clinic_hours ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')";
+$sql = "SELECT * FROM clinic_hours where branch_id='$branch_id' ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')";
 $result = $conn->query($sql);
 $clinic_hours = $result->fetch_all(MYSQLI_ASSOC);
 
@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $end_time = $data['end_time'];
         $is_closed = isset($data['is_closed']) ? 1 : 0;
 
-        $update_sql = "UPDATE clinic_hours SET start_time = ?, end_time = ?, is_closed = ? WHERE day_of_week = ?";
+        $update_sql = "UPDATE clinic_hours SET start_time = ?, end_time = ?, is_closed = ? WHERE day_of_week = ? and branch_id='$branch_id'";
         $stmt = $conn->prepare($update_sql);
         $stmt->bind_param("ssss", $start_time, $end_time, $is_closed, $day);
 
