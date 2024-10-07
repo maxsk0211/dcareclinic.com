@@ -25,10 +25,10 @@
               </a>
               <ul class="menu-sub">
                 <li class="menu-item">
-                  <a href="order-list-to-day.php" class="menu-link">
+<!--                   <a href="order-list-to-day.php" class="menu-link">
                     <i class="menu-icon tf-icons ri-file-line"></i>
                     <div data-i18n="Page 2">จัดการใบสั่งซื้อประจำวัน</div>
-                  </a>
+                  </a> -->
                 </li>
                 <li class="menu-item">
                   <a href="order-list.php" class="menu-link">
@@ -51,12 +51,12 @@
                     <div data-i18n="eCommerce">ข้อมูลลูกค้า</div>
                   </a>
                 </li>
-                <li class="menu-item">
+<!--                 <li class="menu-item">
                   <a href="dashboards-crm.html" class="menu-link">
                     <i class="menu-icon tf-icons ri-donut-chart-fill"></i>
                     <div data-i18n="CRM">CRM</div>
                   </a>
-                </li>
+                </li> -->
               </ul>
             </li>
 
@@ -153,21 +153,26 @@
                     <div data-i18n="eCommerce">สรุปค่า Doctor fee (DF.)</div>
                   </a>
                 </li>
-                <li class="menu-item">
+<!--                 <li class="menu-item">
                   <a href="dashboards-crm.html" class="menu-link">
                     <i class="menu-icon tf-icons ri-donut-chart-fill"></i>
                     <div data-i18n="CRM">CRM</div>
                   </a>
-                </li>
+                </li> -->
               </ul>
             </li>
-
             <li class="menu-item">
+                <a href="manage-rooms.php" class="menu-link">
+                    <i class="menu-icon tf-icons ri-calendar-todo-fill"></i>
+                    <div data-i18n="จัดการคิว">จัดการห้อง</div>
+                </a>
+            </li>
+<!--             <li class="menu-item">
               <a href="page-2.html" class="menu-link">
                 <i class="menu-icon tf-icons ri-file-line"></i>
                 <div data-i18n="Page 2">Page 2</div>
               </a>
-            </li>
+            </li> -->
           </ul>
         </div>
       </aside>  

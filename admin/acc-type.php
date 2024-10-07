@@ -58,6 +58,112 @@
     <!-- sweet Alerts 2 -->
     <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
+    <style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .container-xxl {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 0 30px rgba(0,0,0,0.15);
+    }
+    .card-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 20px;
+    }
+    .card-title {
+        margin-bottom: 0;
+        font-weight: 600;
+    }
+    .card-body {
+        padding: 30px;
+    }
+    .btn {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-success {
+        background-color: #1cc88a;
+        border-color: #1cc88a;
+    }
+    .btn-success:hover {
+        background-color: #17a673;
+        border-color: #17a673;
+        transform: translateY(-2px);
+    }
+    .form-control {
+        border-radius: 10px;
+        border: 1px solid #d1d3e2;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
+    }
+    .table {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    .table thead th {
+        background-color: #4e73df;
+        color: white;
+        border: none;
+        padding: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .table tbody tr {
+        background-color: #ffffff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .table tbody tr:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .table td {
+        border: none;
+        padding: 15px;
+        vertical-align: middle;
+    }
+    .text-warning, .text-danger {
+        transition: all 0.3s ease;
+    }
+    .text-warning:hover, .text-danger:hover {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+    .modal-content {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+    }
+    .modal-title {
+        font-weight: 600;
+    }
+    .modal-footer {
+        border-top: none;
+    }
+</style>
   </head>
 
   <body>
@@ -85,88 +191,89 @@
             <div class="container-xxl flex-grow-1 container-p-y">
 
               <!-- Users List Table -->
-              <div class="card">
-                <div class="card-header border-bottom d-flex justify-content-between">
-                  <h5 class="card-title mb-0 alert alert-danger">ข้อมูลประเภทอุปกรณ์การแพทย์ในระบบทั้งหมด</h5>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title text-white">เพิ่มประเภทอุปกรณ์การแพทย์</h5>
                 </div>
-
-                <div class="row">
-                  <div class="offset-md-4">
-                    <form action="sql/acc-type-insert.php" method="post" class="d-flex align-items-center"> 
-                      <div>
-                        <label for="acc_type_name" class="col-form-label">ชื่อประเภทอุปกรณ์การแพทย์ : </label>
-                      </div>
-                      <div>
-                        <input type="text" name="acc_type_name" id="acc_type_name" class="form-control" aria-describedby="ชื่อประเภทอุปกรณ์การแพทย์" required max="50">
-                      </div>
-                      <div>
-                        <button type="submit" class="btn btn-success">บันทึก</button>
-                      </div>
+                <div class="card-body">
+                    <form action="sql/acc-type-insert.php" method="post" class="row g-3 align-items-center">
+                        <div class="col-auto mt-4">
+                            <label for="acc_type_name" class="visually-hidden">ชื่อประเภทอุปกรณ์การแพทย์</label>
+                            <input type="text" name="acc_type_name" id="acc_type_name" class="form-control" placeholder="ชื่อประเภทอุปกรณ์การแพทย์" required maxlength="50">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-success">
+                                <i class="ri-add-line me-1"></i> บันทึก
+                            </button>
+                        </div>
                     </form>
-                  </div>
-                </div>
-
-                
-                <div class="row">
-                  <div class="offset-md-4 col-md-4">
-                    
-                    <div class="card-datatable table-responsive">
-    <table id="accTypesTable" class="table table-striped table-bordered table-hover">
-        <thead>
-            <tr>
-                <th class="text-center">คำสั่ง</th>
-                <th class="text-center">#</th>
-                <th>ชื่อประเภทอุปกรณ์การแพทย์</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            $i = 1; // ตัวแปรนับลำดับ
-            $sql_show_acc_types = "SELECT * FROM `acc_type` ORDER BY `acc_type`.`acc_type_id` ASC";
-            $result_show_acc_types = $conn->query($sql_show_acc_types);
-            while ($row = $result_show_acc_types->fetch_object()) {
-            ?>
-            <tr>
-                <td class="text-center">
-                    <a href="#" class="text-warning" data-bs-toggle="modal" data-bs-target="#editAccTypeModal<?= $row->acc_type_id ?>"><i class="ri-edit-box-line"></i></a>
-                    <a href="" class="text-danger" onClick="rusure('sql/acc-type-delete.php?id=<?php echo $row->acc_type_id; ?>'); return false;"><i class="ri-delete-bin-6-line"></i></a>
-                </td>
-                <td class="text-center"><?= $i++ ?></td>
-                <td><?= $row->acc_type_name ?></td>
-            </tr>
-
-            <div class="modal fade" id="editAccTypeModal<?= $row->acc_type_id ?>" tabindex="-1" aria-labelledby="editAccTypeModalLabel<?= $row->acc_type_id ?>" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editAccTypeModalLabel<?= $row->acc_type_id ?>">แก้ไขประเภทอุปกรณ์การแพทย์</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="editAccTypeForm<?= $row->acc_type_id ?>" method="post" action="sql/acc-type-update.php">
-                                <input type="hidden" name="acc_type_id" value="<?= $row->acc_type_id ?>">
-                                <div class="mb-3">
-                                    <label for="acc_type_name" class="form-label">ชื่อประเภทอุปกรณ์การแพทย์:</label>
-                                    <input type="text" class="form-control" id="acc_type_name" name="acc_type_name" value="<?= $row->acc_type_name ?>" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary">บันทึก</button>
-                            </form>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <?php
-            }
-            ?>
-        </tbody>
-    </table>
+                
+                <div class="card">
+    <div class="card-header">
+        <h5 class="card-title text-white">รายการประเภทอุปกรณ์การแพทย์ทั้งหมด</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="accTypesTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="text-center">ลำดับ</th>
+                        <th>ชื่อประเภทอุปกรณ์การแพทย์</th>
+                        <th class="text-center">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $i = 1; // ตัวแปรนับลำดับ
+                    $sql_show_acc_types = "SELECT * FROM `acc_type` ORDER BY `acc_type`.`acc_type_id` ASC";
+                    $result_show_acc_types = $conn->query($sql_show_acc_types);
+                    while ($row = $result_show_acc_types->fetch_object()) {
+                    ?>
+                    <tr>
+                        <td class="text-center"><?= $i++ ?></td>
+                        <td><?= $row->acc_type_name ?></td>
+                        <td class="text-center">
+                            <a href="#" class="text-warning me-2" data-bs-toggle="modal" data-bs-target="#editAccTypeModal<?= $row->acc_type_id ?>">
+                                <i class="ri-edit-box-line"></i>
+                            </a>
+                            <a href="#" class="text-danger" onClick="confirmDelete('sql/acc-type-delete.php?id=<?php echo $row->acc_type_id; ?>'); return false;">
+                                <i class="ri-delete-bin-6-line"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <div class="modal fade" id="editAccTypeModal<?= $row->acc_type_id ?>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">แก้ไขประเภทอุปกรณ์การแพทย์</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAccTypeForm<?= $row->acc_type_id ?>" method="post" action="sql/acc-type-update.php">
+                    <input type="hidden" name="acc_type_id" value="<?= $row->acc_type_id ?>">
+                    <div class="mb-3">
+                        <label for="acc_type_name" class="form-label">ชื่อประเภทอุปกรณ์การแพทย์</label>
+                        <input type="text" class="form-control" id="acc_type_name" name="acc_type_name" value="<?= $row->acc_type_name ?>" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary" form="editAccTypeForm<?= $row->acc_type_id ?>">บันทึก</button>
+            </div>
+        </div>
+    </div>
+</div>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-                  </div>
-                </div>
-
-              </div>
             </div>
             <!--/ Content -->
 
@@ -195,7 +302,7 @@
 
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- build:js assets/vendor/js/core.js -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -216,6 +323,24 @@
     <!-- Page JS -->
 
     <script type="text/javascript">
+              // ลบข้อมูล
+   function confirmDelete(url) {
+        Swal.fire({
+            title: 'คุณแน่ใจหรือไม่?',
+            text: "คุณจะไม่สามารถย้อนกลับการกระทำนี้ได้!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        })
+    } 
+    
     // msg error
     <?php if(isset($_SESSION['msg_error'])){ ?>
     window.onload = function() {
@@ -248,28 +373,8 @@
       });
     <?php unset($_SESSION['msg_ok']); } ?>
 
-        // ลบข้อมูล
-          function rusure(url) {
-           Swal.fire({
-              title: 'คุณแน่ใจหรือไม่ที่จะลบข้อมูล?',
-              text: "การลบจะทำให้ข้อมูลหาย ไม่สามารถกู้คืนมาได้!",
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
-              customClass: {
-                confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
-                cancelButton: 'btn btn-outline-secondary waves-effect'
-              },
-              buttonsStyling: false
-            }).then((result) => {
-              if (result.isConfirmed) {
-                top.location = url;
-              }
-            });
-          };
-    </script>
+   
+  </script>
 
     <!-- ล้าง session -->
     <?php 

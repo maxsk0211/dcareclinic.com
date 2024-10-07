@@ -61,8 +61,7 @@
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
 
     <!-- datatables -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css"> 
 
 <style>
   body {
@@ -79,7 +78,7 @@
   }
 
   .card {
-    border: none;
+/*    border: none;*/
     border-radius: 15px;
     box-shadow: 0 0 20px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
@@ -93,7 +92,7 @@
   .card-header {
     background-color: #4e73df;
     color: white;
-    border-bottom: none;
+/*    border-bottom: none;*/
     padding: 20px 25px;
   }
 
@@ -276,7 +275,7 @@
             <div class="container-xxl flex-grow-1 container-p-y">
 
               <!-- Users List Table -->
-              <div class="card">
+              <div class="card border-2 border-primary">
                 <div class="card mb-4">
                   <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 text-white">ข้อมูลยาในระบบทั้งหมด</h5>
@@ -670,7 +669,7 @@ function formatId($id) {
 
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- build:js assets/vendor/js/core.js -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -691,17 +690,13 @@ function formatId($id) {
     <!-- Page JS -->
 
     <!-- datatables -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../assets/vendor/libs/cleavejs/cleave.js"></script>
     <script src="../assets/vendor/libs/cleavejs/cleave-phone.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+
+
 
 
 

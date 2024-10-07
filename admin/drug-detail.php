@@ -85,7 +85,7 @@ if (isset($_GET['drug_id'])) {
         to { opacity: 1; }
     }
     .card {
-        border: none;
+/*        border: none;*/
         border-radius: 15px;
         box-shadow: 0 0 20px rgba(0,0,0,0.1);
         overflow: hidden;
@@ -97,7 +97,7 @@ if (isset($_GET['drug_id'])) {
     .card-header {
         background-color: #4e73df;
         color: white;
-        border-bottom: none;
+/*        border-bottom: none;*/
         padding: 20px 25px;
     }
     .card-title {
@@ -245,7 +245,7 @@ if (isset($_GET['drug_id'])) {
             <div class="container-xxl flex-grow-1 container-p-y">
     <div class="card border-2 border-primary">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title">รายละเอียดยา</h5>
+            <h5 class="card-title text-white">รายละเอียดยา</h5>
             <a href="drug.php" class="btn btn-secondary">
                 <i class="ri-arrow-left-line me-1"></i> ย้อนกลับ
             </a>
@@ -436,7 +436,7 @@ if (mysqli_num_rows($stock_result) > 0) {
     ?>
 <div class="card mt-4 border-2 border-primary">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title">ข้อมูลสต็อก</h5>
+        <h5 class="card-title text-white">ข้อมูลสต็อก</h5>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">
             <i class="ri-add-line me-1"></i> เพิ่มสต็อก
         </button>

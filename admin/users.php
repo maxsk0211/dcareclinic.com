@@ -66,7 +66,133 @@
 
 
 
-
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .container-xxl {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 0 30px rgba(0,0,0,0.15);
+    }
+    .card-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 20px;
+    }
+    .card-title {
+        margin-bottom: 0;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+    .card-body {
+        padding: 30px;
+    }
+    .btn {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+    }
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+        transform: translateY(-2px);
+    }
+    .table-responsive {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .table {
+        margin-bottom: 0;
+    }
+    .table thead th {
+        background-color: #4e73df;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        padding: 15px;
+    }
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+    .table tbody tr:nth-of-type(even) {
+        background-color: #f8f9fa;
+    }
+    .table tbody tr:hover {
+        background-color: #e8eaf6;
+        transform: scale(1.01);
+    }
+    .table td {
+        vertical-align: middle;
+        border: none;
+        padding: 15px;
+    }
+    .badge {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-radius: 30px;
+    }
+    .badge-success {
+        background-color: #1cc88a;
+        color: white;
+    }
+    .badge-danger {
+        background-color: #e74a3b;
+        color: white;
+    }
+    .text-primary, .text-danger {
+        transition: all 0.3s ease;
+    }
+    .text-primary:hover, .text-danger:hover {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+    .modal-content {
+        border-radius: 15px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.1);
+    }
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .modal-title {
+        font-weight: 600;
+    }
+    .modal-footer {
+        border-top: none;
+    }
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #ced4da;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
+        border-color: #4e73df;
+    }
+</style>
   </head>
 
   <body>
@@ -94,80 +220,75 @@
            <!-- Content -->
 
             <div class="container-xxl flex-grow-1 container-p-y">
-
-              <!-- Users List Table -->
-              <div class="card">
-                <div class="card-header border-bottom d-flex justify-content-between">
-                  <h5 class="card-title mb-0 alert alert-primary">ข้อมูลผู้ใช้งานในระบบทั้งหมด</h5>
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">เพิ่มผู้ใช้งาน</button>
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-white">ข้อมูลผู้ใช้งานในระบบทั้งหมด</h5>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <i class="ri-user-add-line me-1"></i> เพิ่มผู้ใช้งาน
+                        </button>
+                    </div>
                 </div>
-                <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="addUserModalLabel">เพิ่มผู้ใช้งาน</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                         <form action="sql/users-insert.php" method="post"> 
-                          <?php if ($_SESSION['position_id']==1): ?>
-                            <?php 
+                <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">เพิ่มผู้ใช้งาน</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="sql/users-insert.php" method="post">
+                    <?php if ($_SESSION['position_id']==1): ?>
+                      <?php 
 
-                            $sql_branch = "SELECT branch_id, branch_name FROM branch";
-                            $result_branch = $conn->query($sql_branch);
-                            
-                             ?>
-                             <label class="form-label" for="branchDropdown">เลือกสาขา</label>
-                             <select class="form-select border-primary mb-3" id="branchDropdown" required name="branch_id">
-                              <option disabled selected value="" >โปรดเลือก</option>
-                              <?php while ($row_branch = $result_branch->fetch_object()) {
-                                echo "<option value='" . $row_branch->branch_id . "'>" . $row_branch->branch_name . "</option>";
-                              } ?>
-                            </select>
-                          <?php else :  ?>
+                      $sql_branch = "SELECT branch_id, branch_name FROM branch";
+                      $result_branch = $conn->query($sql_branch);
+                      
+                       ?>
+                       <label class="form-label" for="branchDropdown">เลือกสาขา</label>
+                       <select class="form-select border-primary mb-3" id="branchDropdown" required name="branch_id">
+                        <option disabled selected value="" >โปรดเลือก</option>
+                        <?php while ($row_branch = $result_branch->fetch_object()) {
+                          echo "<option value='" . $row_branch->branch_id . "'>" . $row_branch->branch_name . "</option>";
+                        } ?>
+                      </select>
+                    <?php else :  ?>
 
-                             <div class="alert alert-solid-danger text-center h3">ชื่อสาขา : <?php echo $row_branch->branch_name; ?></div>
-                             <input type="hidden" name="branch_id" value="<?php echo $row_branch->branch_id; ?>">
+                       <div class="alert alert-solid-danger text-center h3">ชื่อสาขา : <?php echo $row_branch->branch_name; ?></div>
+                       <input type="hidden" name="branch_id" value="<?php echo $row_branch->branch_id; ?>">
 
-                          <?php endif ?>
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="mb-3">
-                                <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
-                                <input type="text" class="form-control border-primary" id="username" name="users_username" required max="50" value="<?php if(isset($_SESSION['chk_users_username'])){echo $_SESSION['chk_users_username'];} ?>">
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="mb-3">
-                                <label for="password" class="form-label">รหัสผ่าน</label>
-                                <input type="password" class="form-control border-primary" id="password" name="users_password" required max="50">
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="mb-3">
-                                <label for="fname" class="form-label">ชื่อ</label>
-                                <input type="text" class="form-control border-primary" id="fname" name="users_fname" required value="<?php if(isset($_SESSION['chk_users_fname'])){echo $_SESSION['chk_users_fname'];} ?>">
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="mb-3">
-                                <label for="lname" class="form-label">นามสกุล</label>
-                                <input type="text" class="form-control border-primary" id="lname" name="users_lname" required value="<?php if(isset($_SESSION['chk_users_lname'])){echo $_SESSION['chk_users_lname'];} ?>"> 
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="mb-3">
-                                <label for="nickname" class="form-label">ชื่อเล่น</label>
-                                <input type="text" class="form-control border-primary" id="nickname" name="users_nickname" required value="<?php if(isset($_SESSION['chk_users_nickname'])){echo $_SESSION['chk_users_nickname'];} ?>">
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="mb-3">
-                                <label for="tel" class="form-label">โทร</label>
-                                <input type="tel" class="form-control border-primary" id="tel" name="users_tel" required value="<?php if(isset($_SESSION['chk_users_tel'])){echo $_SESSION['chk_users_tel'];} ?>">
-                              </div>
-                            </div>
-                            <div class="col-md-6">
+                    <?php endif ?>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="users_username" class="form-label">ชื่อผู้ใช้งาน</label>
+                            <input type="text" class="form-control" id="users_username" name="users_username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="users_password" class="form-label">รหัสผ่าน</label>
+                            <input type="password" class="form-control" id="users_password" name="users_password" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="users_fname" class="form-label">ชื่อ</label>
+                            <input type="text" class="form-control" id="users_fname" name="users_fname" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="users_lname" class="form-label">นามสกุล</label>
+                            <input type="text" class="form-control" id="users_lname" name="users_lname" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="users_nickname" class="form-label">ชื่อเล่น</label>
+                            <input type="text" class="form-control" id="users_nickname" name="users_nickname" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="users_tel" class="form-label">เบอร์โทร</label>
+                            <input type="tel" class="form-control" id="users_tel" name="users_tel" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
                               <script>
                                 function createLabelAndInput() {
                                   var dropdown = document.getElementById("position");
@@ -196,76 +317,81 @@
                                   }
                                 }
                               </script>
-                              <div class="mb-3">
-                                <label for="position" class="form-label">ตำแหน่ง</label>
-                                <?php 
-                                 if($_SESSION['position_id']==1){
-                                     $sql_position="SELECT * FROM position";
-                                 }else{
-                                    $sql_position="SELECT * FROM position WHERE position_name!='ผู้ดูแลระบบ'and position_name!='ผู้จัดการคลินิก'";
-                                 }
-                                $result_position=mysqli_query($conn,$sql_position);
+                            <label for="position_id" class="form-label">ตำแหน่ง</label>
+                            <?php 
+                             if($_SESSION['position_id']==1){
+                                 $sql_position="SELECT * FROM position";
+                             }else{
+                                $sql_position="SELECT * FROM position WHERE position_name!='ผู้ดูแลระบบ'and position_name!='ผู้จัดการคลินิก'";
+                             }
+                            $result_position=mysqli_query($conn,$sql_position);
 
-                                 ?>
-                                  <select id="position" name="position_id" required class="form-select border-primary" onchange="createLabelAndInput()">
-                                    <option value="" disabled selected>โปรดเลือก</option>
-                                <?php while ($row_position=mysqli_fetch_object($result_position)) { ?>
-                                    <option value="<?php echo $row_position->position_id; ?>"><?php echo $row_position->position_name; ?></option>
-                                <?php } ?>
-                                  </select>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="mb-3">
-                                <div id="inputContainer"></div> 
-                              </div>
-                            </div>
-                            <div class="col-md-6"></div>
-                          </div>
-
-
-                          <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                            <button type="submit" class="btn btn-primary">บันทึก</button>
-                          </div>
-
-                        </form>
-                      </div>
+                             ?>
+                              <select id="position" name="position_id" required class="form-select border-primary" onchange="createLabelAndInput()">
+                                <option value="" disabled selected>โปรดเลือก</option>
+                            <?php while ($row_position=mysqli_fetch_object($result_position)) { ?>
+                                <option value="<?php echo $row_position->position_id; ?>"><?php echo $row_position->position_name; ?></option>
+                            <?php } ?>
+                              </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="users_license" class="form-label">ใบประกอบวิชาชีพ</label>
+                            <input type="text" class="form-control" id="users_license" name="users_license">
+                        </div>
                     </div>
-                  </div>
-                </div>
+                    <div class="mb-3">
+                        <label for="branch_id" class="form-label">สาขา</label>
+                        <select class="form-select" id="branch_id" name="branch_id" required>
+                            <option value="" disabled selected>โปรดเลือก</option>
+                            <?php while ($row_branch = mysqli_fetch_object($result_branch)) { ?>
+                                <option value="<?php echo $row_branch->branch_id; ?>"><?php echo $row_branch->branch_name; ?></option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
                 
 
-                <div class="card-datatable table-responsive">
-    <table id="usersTable" class="table table-striped table-bordered table-hover">
-        <thead class="table-primary">
-            <tr>
-                <th class="text-center">คำสั่ง</th>
-                <th class="text-center">#</th>
-                <th>ผู้ใช้งาน</th>
-                <th>ชื่อ - นามสกุล</th>
-                <th>ชื่อเล่น</th>
-                <th>เบอร์โทร</th>
-                <th>ตำแหน่ง</th>
-                <th>ใบอนุญาต</th>
-                <th>สาขา</th>
-                <th>สถานะ</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            $i=1;
-            $position_id=$_SESSION['position_id'];
-            $branch_id=$_SESSION['branch_id'];
-            if($position_id==1){
-                $sql_show_users="SELECT * FROM `users` ORDER BY `users`.`users_id` ASC";
-            }elseif($position_id==2){
-              $sql_show_users="SELECT * FROM `users` WHERE branch_id='$branch_id' ORDER BY `users`.`users_id` ASC";
-            }
-            $result_show_users=$conn->query($sql_show_users);
-            while ($row_show_users = $result_show_users->fetch_object()) {
-            ?>
-            <tr <?php if($row_show_users->position_id==1){ ?>class="table-danger"<?php }elseif($row_show_users->position_id==2){ ?>class="table-warning"<?php } ?>>
+                <div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="usersTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="text-center">คำสั่ง</th>
+                        <th class="text-center">#</th>
+                        <th>ผู้ใช้งาน</th>
+                        <th>ชื่อ - นามสกุล</th>
+                        <th>ชื่อเล่น</th>
+                        <th>เบอร์โทร</th>
+                        <th>ตำแหน่ง</th>
+                        <th>ใบอนุญาต</th>
+                        <th>สาขา</th>
+                        <th>สถานะ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $i=1;
+
+                    $position_id=$_SESSION['position_id'];
+                    $branch_id=$_SESSION['branch_id'];
+                    if($position_id==1){
+                        $sql_show_users="SELECT * FROM `users` ORDER BY `users`.`users_id` ASC";
+                    }elseif($position_id==2){
+                      $sql_show_users="SELECT * FROM `users` WHERE branch_id='$branch_id' ORDER BY `users`.`users_id` ASC";
+                    }
+                    $result_show_users=$conn->query($sql_show_users);
+                    while ($row_show_users = $result_show_users->fetch_object()) {
+                    ?>
+                    <tr <?php if($row_show_users->position_id==1){ ?>class="table-danger"<?php }elseif($row_show_users->position_id==2){ ?>class="table-warning"<?php } ?>>
                 <td class="text-center">
                     <a href="#" class="text-warning" data-bs-toggle="modal" data-bs-target="#editModal<?php echo $row_show_users->users_id; ?>"><i class="ri-edit-box-line"></i></a>
                     <a href="" class="text-danger" onClick="confirmDelete('sql/user-delete.php?id=<?php echo $row_show_users->users_id; ?>'); return false;"><i class="ri-delete-bin-6-line"></i></a>
@@ -293,7 +419,7 @@
                     $result_branch = $conn->query($sql_branch);
                     $branch_name = $result_branch->fetch_object()->branch_name;
                     ?>
-                    <?php echo $branch_name; ?>
+                    <?php if($branch_name!=null){ echo $branch_name; } ?>
                 </td>
                 <td class="text-center">
                   <?php if ($row_show_users->users_status==1): ?>
@@ -302,11 +428,12 @@
                     <span class="badge bg-danger">ไม่พร้อมใช้งาน</span>
                   <?php endif ?>
             </tr>
-  <div class="modal fade" id="editModal<?php echo $row_show_users->users_id; ?>" tabindex="-1" aria-labelledby="editModalLabel<?php echo $row_show_users->users_id; ?>" aria-hidden="true">
+
+            <div class="modal fade" id="editModal<?php echo $row_show_users->users_id; ?>" tabindex="-1" aria-labelledby="editModalLabel<?php echo $row_show_users->users_id; ?>" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel<?php echo $row_show_users->users_id; ?>">แก้ไขข้อมูลพนักงาน</h5>
+                <h5 class="modal-title text-white" id="editModalLabel<?php echo $row_show_users->users_id; ?>">แก้ไขข้อมูลพนักงาน</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -419,12 +546,11 @@
         </div>
     </div>
 
-            <?php
-            }
-            ?>
-        </tbody>
-    </table>
-                </div>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 
               </div>
@@ -484,9 +610,9 @@
     <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
     <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script> -->
     <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
 
 

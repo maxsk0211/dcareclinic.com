@@ -809,7 +809,7 @@ $result_services = $stmt_services->get_result();
                                 </div>
                                 <div class="d-grid gap-2">
 
-                                    <?php if ($queue_data['queue_id']): ?>
+                                    <?php if (isset($queue_data['queue_id'])): ?>
                                         <a href="opd.php?queue_id=<?php echo $queue_data['queue_id']; ?>" class="btn btn-success btn-lg">OPD</a>
                                     <?php else: ?>
                                         <button class="btn btn-success btn-lg" disabled>OPD (ไม่พบข้อมูลคิว)</button>

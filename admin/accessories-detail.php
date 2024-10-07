@@ -71,6 +71,143 @@ if (isset($_GET['acc_id'])) {
     <!-- datatables -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
+    <style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .container-xxl {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 0 30px rgba(0,0,0,0.15);
+    }
+    .card-header {
+        background-color: #4e73df;
+        color: white;
+        border-bottom: none;
+        padding: 20px 25px;
+    }
+    .card-title {
+        margin-bottom: 0;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+    .card-body {
+        padding: 30px;
+    }
+    .accessory-info-section {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .accessory-info-title {
+        color: #4e73df;
+        font-weight: 600;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #4e73df;
+        padding-bottom: 5px;
+    }
+    .accessory-info-item {
+        margin-bottom: 15px;
+    }
+    .accessory-info-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    .accessory-info-value {
+        color: #6c757d;
+    }
+    .badge {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 30px;
+    }
+    .badge-success {
+        background-color: #1cc88a;
+        color: white;
+    }
+    .badge-danger {
+        background-color: #e74a3b;
+        color: white;
+    }
+    .btn {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+    }
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+        transform: translateY(-2px);
+    }
+    .table {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    .table thead th {
+        background-color: #4e73df;
+        color: white;
+        border: none;
+        padding: 15px;
+        font-weight: 600;
+    }
+    .table tbody tr {
+        background-color: #ffffff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .table tbody tr:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .table td {
+        border: none;
+        padding: 15px;
+        vertical-align: middle;
+    }
+    .modal-content {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+    }
+    .modal-title {
+        font-weight: 600;
+    }
+    .modal-footer {
+        border-top: none;
+    }
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #ced4da;
+        padding: 10px 15px;
+    }
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
+        border-color: #4e73df;
+    }
+</style>
 
 
     <style>
@@ -135,13 +272,16 @@ if (isset($_GET['acc_id'])) {
 
             <div class="container-xxl flex-grow-1 container-p-y">
 
-    <div class="container mt-4">
-        <div class="drug-detail-card">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">คลังอุปกรณ์ ประจำสาขา</h2>
-                <a href="drug.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
-            </div>
-<?php 
+    <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title text-white">รายละเอียดอุปกรณ์การแพทย์</h5>
+            <a href="accessories.php" class="btn btn-secondary">
+                <i class="ri-arrow-left-line me-1"></i> ย้อนกลับ
+            </a>
+        </div>
+        <div class="card-body">
+            <?php 
 
 function formatId($id) {
     // ตรวจสอบว่า $id เป็นตัวเลขหรือไม่
@@ -161,106 +301,115 @@ function formatId($id) {
 
     return $formattedId;
 }
-
- ?>
+?>
             <div class="row">
                 <div class="col-md-6">
-                    <div class="detail-section">
-                        <p><span class="drug-info-label">รหัส:</span> <span class="drug-info-value"><?php echo formatId($acc->acc_id); ?></span></p>
-                        <p><span class="drug-info-label">ชื่อ:</span> <span class="drug-info-value"><?php echo $acc->acc_name; ?></span></p>
-                        <p><span class="drug-info-label">กลุ่ม:</span> <span class="drug-info-value"><?php echo $acc->acc_type_name; ?></span></p>
-                        <p><span class="drug-info-label">คุณสมบัติอุปกรณ์:</span> <span class="drug-info-value"><?php echo $acc->acc_properties; ?></span></p>
-                        <p><span class="drug-info-label">หมวดหมู่:</span> <span class="drug-info-value"><?php echo $acc->acc_type_name; ?></span></p>
+                    <div class="accessory-info-section">
+                        <h6 class="accessory-info-title">ข้อมูลทั่วไป</h6>
+                        <div class="accessory-info-item">
+                            <span class="accessory-info-label">รหัสอุปกรณ์:</span>
+                            <span class="accessory-info-value"><?php echo formatId($acc->acc_id); ?></span>
+                        </div>
+                        <div class="accessory-info-item">
+                            <span class="accessory-info-label">ชื่ออุปกรณ์:</span>
+                            <span class="accessory-info-value"><?php echo $acc->acc_name; ?></span>
+                        </div>
+                        <div class="accessory-info-item">
+                            <span class="accessory-info-label">ประเภท:</span>
+                            <span class="accessory-info-value"><?php echo $acc->acc_type_name; ?></span>
+                        </div>
+                        <div class="accessory-info-item">
+                            <span class="accessory-info-label">สถานะ:</span>
+                            <?php if ($acc->acc_status == 1): ?>
+                                <span class="badge badge-success">พร้อมใช้งาน</span>
+                            <?php else: ?>
+                                <span class="badge badge-danger">ไม่พร้อมใช้งาน</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="detail-section">
-                        <p class=""><span class="drug-info-label">จำนวนคงเหลือ:</span> <span class="drug-info-value"><?php echo $acc->acc_amount." ".$acc->unit_name; ?></span></p>
-                        <p><span class="drug-info-label">หน่วยนับ:</span> <span class="drug-info-value"><?php echo $acc->unit_name; ?></span></p>
-                        <p><span class="drug-info-label">ราคาต้นทุน/<?= $acc->unit_name?>:</span> <span class="drug-info-value"><?php echo number_format($acc->acc_cost, 2); ?> บาท</span></p>
-                        <p>
-                            <span class="drug-info-label">สถานะ:</span>
-                            <span class="badge <?php echo $acc->acc_status == 1 ? 'bg-success' : 'bg-danger'; ?> status-badge">
-                                <?php echo $acc->acc_status == 1 ? 'พร้อมใช้งาน' : 'ไม่พร้อมใช้งาน'; ?>
-                            </span>
-                        </p>
-                        <p><span class="drug-info-label">รูปภาพ:</span><br>
-                            <?php if (!empty($drug->drug_pic)): ?>
-                                <img src="../img/drug/<?php echo $drug->drug_pic; ?>" alt="รูปภาพยา" style="max-width: 100px; max-height: 100px;">
-                            <?php else: ?>
-                                ไม่มีรูปภาพ
-                            <?php endif; ?>
-                        </p>
+                    <div class="accessory-info-section">
+                        <h6 class="accessory-info-title">รายละเอียดอุปกรณ์</h6>
+                        <div class="accessory-info-item">
+                            <span class="accessory-info-label">คุณสมบัติ:</span>
+                            <span class="accessory-info-value"><?php echo $acc->acc_properties; ?></span>
+                        </div>
+                    </div>
+                    <div class="accessory-info-section">
+                        <h6 class="accessory-info-title">ข้อมูลคงคลัง</h6>
+                        <div class="accessory-info-item">
+                            <span class="accessory-info-label">จำนวนคงเหลือ:</span>
+                            <span class="accessory-info-value"><?php echo $acc->acc_amount." ".$acc->unit_name; ?></span>
+                        </div>
+                        <div class="accessory-info-item">
+                            <span class="accessory-info-label">ราคาต้นทุน/<?= $acc->unit_name?>:</span>
+                            <span class="accessory-info-value"><?php echo number_format($acc->acc_cost, 2); ?> บาท</span>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
 
             <div class="mt-4">
-                <div class="d-flex justify-content-between">
-                    <h5>ข้อมูลสต็อก</h5>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">เพิ่มสต๊อก</button>
-                </div>
-                <!-- Modal -->
-<div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addStockModalLabel">เพิ่มสต๊อก</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addStockForm" action="sql/stock-insert.php" method="post">
-          <div class="row mb-3">
-            <div class="col-md-6">
-               <label for="transaction_date" class="form-label">วันที่ทำรายการ</label>
-                <input type="text" class="form-control " id="transaction_date" name="transaction_date" readonly >
-            </div>
-            <div class="col-md-6">
-                <div class="form-label">รหัส-ขื่อยา</div>
-                <input type="text" class="form-control text-danger fw-bold" value="<?php echo formatId($acc->acc_id)." - ".$acc->acc_name; ?>">
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="quantity" class="form-label">จำนวนรับเข้า (<?= $acc->unit_name ?>)</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="quantity" name="quantity" step="0.01" required>
-                <span class="input-group-text"><?= $acc->unit_name ?></span>
-               </div>
-            </div>
-          
-            <div class="col-md-6">
-              <label for="cost_per_unit" class="form-label">ต้นทุนต่อหน่วย</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit" step="0.01" required>
-                <span class="input-group-text">บาท</span>
-              </div> 
-            </div>
-           </div>          
-          <div class="row mb-3">
 
-            <div class="col-md-6">
-              <label for="expiry_date" class="form-label">วันหมดอายุ (พ.ศ.)</label>
-              <input type="text" class="form-control date-mask" id="expiry_date" name="expiry_date" placeholder="dd/mm/yyyy">
+                <!-- Modal -->
+<div class="modal fade" id="addStockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">เพิ่มสต็อก</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
-          <div class="mb-3">
-            <label for="notes" class="form-label">หมายเหตุ</label>
-            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-          </div>
-          <input type="hidden" name="users_id" value="<?= $_SESSION['users_id']; ?>">
-          <input type="hidden" name="stock_type" value="accessory">
-          <input type="hidden" name="related_id" value="<?= $_GET['acc_id']; ?>">
-          <input type="hidden" name="branch_id" value="<?= $_SESSION['branch_id']; ?>">
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-        <button class="btn btn-primary" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-dismiss="modal">บันทึกข้อมูล</button>
-      </div>
+            <div class="modal-body">
+                <form id="addStockForm" action="sql/stock-insert.php" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="transaction_date" class="form-label">วันที่ทำรายการ</label>
+                            <input type="text" class="form-control" id="transaction_date" name="transaction_date" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">รหัส-ชื่ออุปกรณ์</label>
+                            <input type="text" class="form-control" value="<?php echo formatId($acc->acc_id)." - ".$acc->acc_name; ?>" readonly>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label">จำนวนรับเข้า (<?= $acc->unit_name ?>)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="quantity" name="quantity" step="0.01" required>
+                                <span class="input-group-text"><?= $acc->unit_name ?></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cost_per_unit" class="form-label">ต้นทุนต่อหน่วย</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit" step="0.01" required>
+                                <span class="input-group-text">บาท</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expiry_date" class="form-label">วันหมดอายุ (พ.ศ.)</label>
+                        <input type="text" class="form-control date-mask" id="expiry_date" name="expiry_date" placeholder="dd/mm/yyyy">
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">หมายเหตุ</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                    <input type="hidden" name="stock_type" value="accessory">
+                    <input type="hidden" name="related_id" value="<?= $_GET['acc_id']; ?>">
+                    <input type="hidden" name="branch_id" value="<?= $_SESSION['branch_id']; ?>">
+                </form>
+            </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button class="btn btn-primary" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-dismiss="modal">บันทึกข้อมูล</button>
+              </div>
+        </div>
     </div>
-  </div>
 </div>
 
 
@@ -270,7 +419,7 @@ function formatId($id) {
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">ยืนยันข้อมูล</h5>
+        <h5 class="modal-title text-white" id="exampleModalLabel">ยืนยันข้อมูล</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
           </button>
       </div>
@@ -301,43 +450,42 @@ $stock_result = mysqli_query($conn, $stock_sql);
 // ตรวจสอบว่ามีข้อมูลสต็อกหรือไม่
 if (mysqli_num_rows($stock_result) > 0) {
     ?>
-    <div class="mt-4">
-        <h5>ประวัติการทำรายการสต็อก</h5>
-        <table class="table table-hover table-primary table-striped">
-            <thead>
-                <tr>
-                    <th>วันที่ทำรายการ</th>
-                    <th>ผู้ทำรายการ</th>
-                    <th>จำนวน</th>
-                    <th>ต้นทุนต่อหน่วย</th>
-                    <th>วันหมดอายุ</th>
-                    <th>หมายเหตุ</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php while ($stock = mysqli_fetch_object($stock_result)) { ?>
-                <tr>
-                    <td><?php echo date('d/m/Y H:i', strtotime($stock->transaction_date)); ?></td>
-                    <td><?php echo $stock->users_fname . ' ' . $stock->users_lname; ?></td>
-                    <td><?php echo number_format($stock->quantity, 2); ?></td>
-                    <td><?php echo number_format($stock->cost_per_unit, 2)." บาท"; ?></td>
-                    <td><?php if ($stock->expiry_date == NULL){ echo "ไม่พบวันหมดอายุ"; }else{
-                        $date_obj = $stock->expiry_date;
-                        $date_obj = DateTime::createFromFormat('Y-m-d', $date_obj);
-                        if ($date_obj) {
-                            $date_obj->modify('+543 years'); // แปลงจาก ค.ศ. เป็น พ.ศ.
-                            $date_thai = $date_obj->format('d/m/Y');
-                            echo $date_thai; // output: 31/08/2567
-                        } else {
-                            echo "รูปแบบวันที่ไม่ถูกต้อง";
-                        }
-                    } ?></td>
-                    <td><?php echo $stock->notes; ?></td>
-                </tr>
-            <?php } ?>
-            </tbody>
-        </table>
+    <<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title text-white">ข้อมูลสต็อก</h5>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">
+            <i class="ri-add-line me-1"></i> เพิ่มสต็อก
+        </button>
     </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>วันที่ทำรายการ</th>
+                        <th>ผู้ทำรายการ</th>
+                        <th>จำนวน</th>
+                        <th>ต้นทุนต่อหน่วย</th>
+                        <th>วันหมดอายุ</th>
+                        <th>หมายเหตุ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($stock = mysqli_fetch_object($stock_result)) { ?>
+                    <tr>
+                        <td><?php echo date('d/m/Y H:i', strtotime($stock->transaction_date)); ?></td>
+                        <td><?php echo $stock->users_fname . ' ' . $stock->users_lname; ?></td>
+                        <td><?php echo number_format($stock->quantity, 2); ?></td>
+                        <td><?php echo number_format($stock->cost_per_unit, 2)." บาท"; ?></td>
+                        <td><?php echo ($stock->expiry_date) ? date('d/m/Y', strtotime($stock->expiry_date)) : 'ไม่ระบุ'; ?></td>
+                        <td><?php echo $stock->notes; ?></td>
+                    </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
     <?php
 } else {
     echo "<p>ไม่พบข้อมูลการทำรายการสต็อก</p>";
@@ -347,7 +495,6 @@ if (mysqli_num_rows($stock_result) > 0) {
 ?>
             </div>
         </div>
-    </div>
             </div>
             <!--/ Content -->
 
@@ -412,26 +559,22 @@ if (mysqli_num_rows($stock_result) > 0) {
 
     <script type="text/javascript">
       // ลบข้อมูล
-          function confirmDelete(url) {
-           Swal.fire({
-              title: 'คุณแน่ใจหรือไม่ที่จะลบข้อมูล?',
-              text: "การลบจะทำให้ข้อมูลหาย ไม่สามารถกู้คืนมาได้!",
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
-              customClass: {
-                confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
-                cancelButton: 'btn btn-outline-secondary waves-effect'
-              },
-              buttonsStyling: false
-            }).then((result) => {
-              if (result.isConfirmed) {
-                top.location = url;
-              }
-            });
-          };
+    function submitAddStock() {
+        Swal.fire({
+            title: 'ยืนยันการเพิ่มสต็อก?',
+            text: "คุณแน่ใจหรือไม่ที่จะเพิ่มสต็อกนี้?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $('#addStockForm').submit();
+            }
+        });
+    }
 
 
     // msg error
