@@ -4,52 +4,8 @@ include 'chk-session.php';
 require '../dbcon.php';
 
 $branch_id=$_SESSION['branch_id'];
-
-// ดึงข้อมูลวันที่ปิดทำการ
-$sql_closures = "SELECT closure_date FROM clinic_closures WHERE branch_id='$branch_id'";
-$result_closures = $conn->query($sql_closures);
-$closed_dates = [];
-while ($row = $result_closures->fetch_object()) {
-    if ($row->closure_date) {
-        $closed_date = date('Y-m-d', strtotime($row->closure_date));
-        if ($closed_date) {
-            $closed_dates[] = $closed_date;
-        } else {
-            error_log("Invalid closure date format: " . $row->closure_date);
-        }
-    }
-}
-
-// ดึงข้อมูลเวลาทำการ
-$sql_hours = "SELECT * FROM clinic_hours WHERE branch_id='$branch_id'";
-$result_hours = $conn->query($sql_hours);
-$clinic_hours = [];
-$closed_days = [];
-while ($row = $result_hours->fetch_object()) {
-    $clinic_hours[$row->day_of_week] = [
-        'start_time' => $row->start_time,
-        'end_time' => $row->end_time,
-        'is_closed' => $row->is_closed
-    ];
-    if ($row->is_closed == 1) {
-        $closed_days[] = $row->day_of_week;
-    }
-}
-echo "<script>const clinicHours = " . json_encode($clinic_hours) . ";</script>";
-echo "<script>const closedDays = " . json_encode($closed_days) . ";</script>";
-
-
-
-// ดึงข้อมูลการจองที่มีอยู่
-$sql_bookings = "SELECT booking_datetime FROM course_bookings WHERE status IN ('pending', 'confirmed') and branch_id='$branch_id'";
-$result_bookings = $conn->query($sql_bookings);
-$booked_slots = [];
-while ($row = $result_bookings->fetch_object()) {
-    if ($row->booking_datetime) {
-        $booked_slots[] = $row->booking_datetime;
-    }
-}
-
+$selected_customer_id = isset($_POST['selected_customer_id']) ? $_POST['selected_customer_id'] : '';
+$customer_name = isset($_POST['customer_name']) ? $_POST['customer_name'] : '';
 // ดึงข้อมูลคอร์ส
 $sql_courses = "SELECT course_id, course_name, course_price, course_pic FROM course WHERE course_status = 1 and branch_id='$branch_id'";
 $result_courses = $conn->query($sql_courses);
@@ -63,65 +19,10 @@ while ($row = $result_courses->fetch_object()) {
     ];
 }
 
-$booking_datetime = null;
+
 $search_term = '';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (isset($_POST['select_datetime']) && $_POST['select_datetime'] == 1) {
-        $booking_datetime = $_POST['booking_date'] . ' ' . $_POST['booking_time'] . ':00';
-        $selected_customer_id = $_POST['customer_select'];
 
-    }
-    
-    if (isset($_POST['search_course'])) {
-        $search_term = $_POST['search_course'];
-        $booking_datetime = $_POST['booking_date'] . ' ' . $_POST['booking_time'] . ':00';
-        $selected_customer_id = $_POST['customer_select'];
-    }
-
-    if (isset($_POST['booking']) && $_POST['booking'] == 1) {
-        $users_id=$_SESSION['users_id'];
-        $branch_id=$_SESSION['branch_id'];
-        $course_id = $_POST['course_id'];
-        $booking_datetime = $_POST['booking_date'] . ' ' . $_POST['booking_time'] . ':00';
-        // สร้างวัตถุ DateTime จากสตริงวันที่และเวลาในรูปแบบ พ.ศ.
-        $datetime_obj = DateTime::createFromFormat('d/m/Y H:i:s', $booking_datetime);
-
-        if ($datetime_obj) {
-            // แปลงจาก พ.ศ. เป็น ค.ศ.
-            $datetime_obj->modify('-543 years');
-
-            // จัดรูปแบบวันที่และเวลาให้อยู่ในรูปแบบที่เหมาะสมสำหรับฐานข้อมูล
-            $booking_datetime = $datetime_obj->format('Y-m-d H:i:s');
-
-            echo $booking_datetime; // ผลลัพธ์: 2024-08-27 16:00:00
-        } else {
-            echo "รูปแบบวันที่และเวลาไม่ถูกต้อง";
-        }
-
-        $selected_customer_id = $_POST['customer_select'];
-        if (empty($selected_customer_id)) {
-            $_SESSION['msg_error'] = "กรุณาเลือกลูกค้า";
-            header("Location: booking.php");
-            exit();
-        }
-
-
-        // สร้างคำสั่ง SQL โดยใช้ mysqli_real_escape_string
-        $sql_insert = "INSERT INTO course_bookings (branch_id, cus_id, booking_datetime, users_id, status) 
-                        VALUES ('$branch_id', '$selected_customer_id', '$booking_datetime', $users_id, 'confirmed')";
-
-        // ดำเนินการ query
-        if (mysqli_query($conn, $sql_insert)) {
-            $_SESSION['msg_ok'] = "จองคอร์สสำเร็จ";
-            header("Location: booking-show.php");
-        } else {
-            $_SESSION['msg_error'] = "เกิดข้อผิดพลาดในการจองคอร์ส: " . mysqli_error($conn);
-            header("Location: booking.php");
-        }
-        exit();
-    }
-}
 
 $display_courses = $courses;
 if (!empty($search_term)) {
@@ -143,6 +44,10 @@ function getCustomers($conn) {
 
 $customers = getCustomers($conn);
 
+function formatCustomerId($cusId) {
+    $paddedId = str_pad($cusId, 6, '0', STR_PAD_LEFT);
+    return "HN-" . $paddedId;
+}
 ?>
 
 <!doctype html>
@@ -272,6 +177,38 @@ $customers = getCustomers($conn);
         justify-content: center;
         font-weight: bold;
     }
+    #selected_course {
+        background-color: #e7f1ff;
+        border: 1px solid #b8daff;
+        border-radius: 5px;
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    #selected_course h4 {
+        color: #004085;
+        margin-bottom: 0;
+    }
+    #backToCourseBtn {
+        font-size: 0.9rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    #backToCourseBtn i {
+        font-size: 1rem;
+        vertical-align: middle;
+    }
+    .flatpickr-calendar {
+        font-family: 'Sarabun', sans-serif; /* หรือฟอนต์ภาษาไทยที่คุณใช้ */
+    }
+
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-size: 1rem;
+    }
+
+    .flatpickr-current-month .numInputWrapper {
+        font-size: 1rem;
+    }
     </style>
 
 </head>
@@ -294,176 +231,146 @@ $customers = getCustomers($conn);
 
                     <!-- Content -->
                     <div class="container flex-grow-1 container-p-y">
-                        <div class="row">
-                            <!-- booking datetime -->
-                            <?php if(!isset($booking_datetime)){ ?>
-
-
-                            <form id="bookingForm" method="POST">
-                                <div class="card mb-4">
-                                <div class="text-end m-5"><a href="booking-show.php" class="btn btn-danger">ข้อมูลการจอง</a></div>
-
-                                <div class="row">
-                                    <div class="offset-md-2 col-md-4">
-                                        
-                                            <h5 class="card-header">เลือกลูกค้า</h5>
-                                            <div class="card-body">
-                                                <div class="mb-3">
-                                                    <label for="customer_select" class="form-label">ค้นหาลูกค้า</label>
-                                                    <select id="customer_select" name="customer_select" class="form-select select2" style="width: 100%;">
-                                                        <option value="">เลือกลูกค้า</option>
-                                                        <?php foreach ($customers as $customer): ?>
-                                                            <option value="<?php echo $customer['cus_id']; ?>"><?php echo $customer['cus_id_card_number'] . ' - ' . $customer['cus_firstname'] . ' ' . $customer['cus_lastname']; ?></option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-                                                <div id="customerDetails" class="mt-4" style="display: none;">
-                                                    <div class="text-center mb-3">
-                                                        <img id="customerImage" src="" alt="รูปลูกค้า" class="img-fluid rounded-circle" style="max-width: 150px; max-height: 150px;">
-                                                    </div>
-                                                    <table class="table table-borderless">
-                                                        <tr>
-                                                            <th>ชื่อ-นามสกุล:</th>
-                                                            <td id="customerName"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>เลขบัตรประชาชน:</th>
-                                                            <td id="customerIdCard"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>อีเมล:</th>
-                                                            <td id="customerEmail"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>เบอร์โทร:</th>
-                                                            <td id="customerTel"></td>
-                                                        </tr>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        
-                                    </div>
-                                    <div class="col-md-4">
-                                        
-                                            <h5 class="card-header">โปรดเลือกวันที่</h5>
-                                            <div class="card-body">
-
-                                                <div class="mb-3">
-                                                    <label for="booking_date" class="form-label">เลือกวันที่</label>
-                                                    <input type="text" class="form-control" id="booking_date" name="booking_date" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label">เลือกเวลา</label>
-                                                    <div id="timeSlots" class="row text-center">
-                                                    
-                                                    </div>
-                                                </div>
-                                                <input type="hidden" id="booking_time" name="booking_time">
-                                                <input type="hidden" id="selected_customer_id" name="selected_customer_id">
-                                                <input type="hidden" name="select_datetime" value="1">
-                                            </div>
-                                        </div>
-                                        <div class="d-grid gap-2 col-6 mx-auto mb-5">
-                                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>ถัดไป</button>
-                                        </div>
-                                    </div>
+    
+        <?php if(!isset($_POST['select_datetime'])){ ?>
+        <div class="row">    
+            <form id="bookingForm" method="POST">
+                <div class="card mb-4">
+                    <div class="text-end m-5"><a href="booking-show.php" class="btn btn-danger">ข้อมูลการจอง</a></div>
+                    <div class="row">
+                        <div class="offset-md-3 col-md-6">
+                            <h5 class="card-header">เลือกลูกค้า</h5>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="customer_select" class="form-label">ค้นหาลูกค้า</label>
+                                    <select id="customer_select" name="customer_select" class="form-select select2" style="width: 100%;">
+                                        <option value="">เลือกลูกค้า</option>
+                                    </select>
                                 </div>
-                            </form>
-
-                            <?php } ?>
-                            <?php if(isset($booking_datetime)){ ?>
-                            <?php $sql_cus="SELECT * FROM `customer` WHERE cus_id = '$selected_customer_id'";
-                                  $result_cus=$conn->query($sql_cus);
-                                  $row_cus=mysqli_fetch_object($result_cus);
-                             ?>
-                            <div class="row">
-                                <div class="text-center">
-                                    <h3 class="text-danger">วันที่จอง : <?php echo $booking_datetime; ?></h3>
-                                    <h4>ลูกค้า : <?php echo $row_cus->cus_firstname." ".$row_cus->cus_lastname; ?></h3>
-                                </div>
-                                <div class="col-md-4">
-                                <div class="card border-2 border-primary">
-                                    <div class="card-header bg-primary text-center ">
-                                        <h4 class="text-white mt-3">รายการสั่งซื้อ</h4>
+                                <div id="customerDetails" class="mt-4" style="display: none;">
+                                    <div class="text-center mb-3">
+                                        <img id="customerImage" src="" alt="รูปลูกค้า" class="img-fluid rounded-circle" style="max-width: 150px; max-height: 150px;">
                                     </div>
-                                    <div class="card-body">
-                                        <br>
-                                        <div id="orderList">
-                                            <!-- รายการคอร์สที่เลือกจะแสดงที่นี่ -->
-                                        </div>
-                                        <hr>
-                                        <div class="d-flex justify-content-between">
-                                            <strong>ราคารวม:</strong>
-                                            <span id="totalPrice">0</span> บาท
-                                        </div>
-                                        <form id="orderForm" method="POST" action="sql/process-order.php" class="mt-3">
-                                            <input type="hidden" name="customer_id" value="<?php echo $selected_customer_id; ?>">
-                                            <input type="hidden" name="booking_datetime" value="<?php echo $booking_datetime; ?>">
-                                            <input type="hidden" name="selected_courses" id="selectedCoursesInput">
-                                            <div class="mb-3">
-                                                <label for="payment_method" class="form-label">วิธีการชำระเงิน</label>
-                                                <select class="form-select" id="payment_method" name="payment_method" required>
-                                                    <option value="">เลือกวิธีการชำระเงิน</option>
-                                                    <option value="ยังไม่จ่ายเงิน">ยังไม่จ่ายเงิน</option>
-                                                    <option value="เงินสด">เงินสด</option>
-                                                    <option value="บัตรเครดิต">บัตรเครดิต</option>
-                                                    <option value="เงินโอน">เงินโอน</option>
-                                                </select>
-                                            </div>
-                                            <input type="hidden" name="booking_datetime" value="<?= $booking_datetime; ?>">
-                                            <input type="hidden" name="customer_select" value="<?= $selected_customer_id; ?>">
-                                            <input type="hidden" name="booking_date" value="<?= $_POST['booking_date'] ?>">
-                                            <input type="hidden" name="booking_time" value="<?= $_POST['booking_time'] ?>">
-                                            <button type="submit" class="btn btn-primary" form="orderForm">บันทึกคำสั่งซื้อ</button>
-                                        </form>
-                                    </div>
-                                </div>
-                                </div>
-                                <div class="col-md-8">
-                            <div id="courseSection">
-                                <form method="POST" action="">
-                                    <div class="mb-3">
-
-                                        <div class="text-end">
-                                            <a href="booking.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
-                                            
-                                        </div>
-                                        <label for="courseSearch" class="form-label">ค้นหาวันที่</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="courseSearch" name="search_course" placeholder="พิมพ์ชื่อคอร์ส..." value="<?= htmlspecialchars($search_term) ?>">
-                                            <button type="submit" class="btn btn-primary">ค้นหา</button>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="booking_date" value="<?= $_POST['booking_date'] ?>">
-                                    <input type="hidden" name="booking_time" value="<?= $_POST['booking_time'] ?>">
-                                    <input type="hidden" name="customer_select" value="<?= $selected_customer_id; ?>">
-                                    <input type="hidden" name="select_datetime" value="1">
-                                </form>
-                                <div id="courseList" class="row">
-                                    <?php if (empty($display_courses)): ?>
-                                        <div class="col-12">
-                                            <p>ไม่พบคอร์สที่ตรงกับการค้นหา</p>
-                                        </div>
-                                    <?php else: ?>
-                                        <?php foreach ($display_courses as $course): ?>
-                                            <div class="col-md-3 mb-3">
-                                                <div class="card course-item" data-course-id="<?= $course['id'] ?>" data-course-name="<?= htmlspecialchars($course['name']) ?>" data-course-price="<?= $course['price'] ?>">
-                                                    <img src="../img/course/<?= htmlspecialchars($course['image']) ?>" class="card-img-top" alt="<?= htmlspecialchars($course['name']) ?>">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title"><?= htmlspecialchars($course['name']) ?></h5>
-                                                        <p class="card-text">ราคา: <?= number_format($course['price']) ?> บาท</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                        </div>
-                                     </div>
-                                    <?php endif; ?>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th>รหัสลูกค้า:</th>
+                                            <td id="customerHN"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>ชื่อ-นามสกุล:</th>
+                                            <td id="customerName"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>เลขบัตรประชาชน:</th>
+                                            <td id="customerIdCard"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>อีเมล:</th>
+                                            <td id="customerEmail"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>เบอร์โทร:</th>
+                                            <td id="customerTel"></td>
+                                        </tr>
+                                    </table>
                                 </div>
                             </div>
-                            <?php } ?>
                         </div>
                     </div>
+                    <input type="hidden" id="selected_customer_id" name="selected_customer_id" value="<?php echo htmlspecialchars($selected_customer_id); ?>">
+                    <input type="hidden" name="select_datetime" value="1">
+                    <div class="d-grid gap-2 col-3 mx-auto my-5">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>ถัดไป</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <?php } else { 
+            if (!empty($selected_customer_id)) {
+                $selected_customer_id = $_POST['selected_customer_id'];
+                $sql_cus = "SELECT cus_id, cus_firstname, cus_lastname FROM `customer` WHERE cus_id = '$selected_customer_id'";
+                $result_cus = $conn->query($sql_cus);
+                // $row_cus = $result_cus->fetch_object();
+                
+                if ($row_cus = $result_cus->fetch_object()) {
+                    $customer_name = formatCustomerId($row_cus->cus_id) . " " . $row_cus->cus_firstname . " " . $row_cus->cus_lastname;
+                } else {
+                    $customer_name = '';
+                }
+            } else {
+                $customer_name = '';
+            }
+        ?>
+            <div class="text-center mb-4">
+                <h3>ลูกค้า: <?php echo htmlspecialchars($customer_name); ?></h3>
+                <div id="selected_course" class="mt-3"></div>
+            </div>
+            <div class="row">
+                <div class="offset-md-1 col-md-10">
+                    <div id="courseSection">
+                        <form method="POST" action="">
+                            <div class="mb-3">
+                                <div class="text-end">
+                                    <a href="booking.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
+                                </div>
+<!--                                 <label for="courseSearch" class="form-label">ค้นหาคอร์ส</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="courseSearch" name="search_course" placeholder="พิมพ์ชื่อคอร์ส..." value="<?= htmlspecialchars($search_term) ?>">
+                                    <button type="submit" class="btn btn-primary">ค้นหา</button>
+                                </div> -->
+                            </div>
+                            <input type="hidden" name="selected_customer_id" value="<?= $selected_customer_id; ?>">
+                            <input type="hidden" name="select_datetime" value="1">
+                        </form>
+                        <div id="courseList" class="row">
+                            <?php foreach ($display_courses as $course): ?>
+                                <div class="col-md-4 col-lg-3 mb-3">
+                                    <div class="card course-item" data-course-id="<?= $course['id'] ?>" data-course-name="<?= htmlspecialchars($course['name']) ?>" data-course-price="<?= $course['price'] ?>" data-course-image="<?= htmlspecialchars($course['image']) ?>">
+                                        <img src="../img/course/<?= htmlspecialchars($course['image']) ?>" class="card-img-top" alt="<?= htmlspecialchars($course['name']) ?>">
+                                        <div class="card-body">
+                                            <h5 class="card-title"><?= htmlspecialchars($course['name']) ?></h5>
+                                            <p class="card-text">ราคา: <?= number_format($course['price']) ?> บาท</p>
+                                            <button type="button" class="btn btn-primary select-course">เลือกคอร์สนี้</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php } ?>
+        <div class="row">
+            <div class="offset-md-2 col-md-8">
+                <div id="dateTimeSection" style="display: none;">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title">เลือกวันและเวลา</h5>
+                                <button type="button" class="btn btn-secondary" id="backToCourseBtn">
+                                    <i class="ri-arrow-left-line me-1"></i> กลับไปเลือกคอร์ส
+                                </button>
+                            </div>
+                            <div class="mb-3">
+                                <label for="booking_date" class="form-label">เลือกวันที่</label>
+                                <input type="text" class="form-control" id="booking_date" name="booking_date" placeholder="เลือกวันที่" required readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">เลือกเวลา</label>
+                                <div id="timeSlots" class="row text-center">
+                                </div>
+                            </div>
+                            <input type="hidden" id="booking_time" name="booking_time">
+                            <input type="hidden" id="selected_room_id" name="selected_room_id">
+                            <input type="hidden" id="selected_course_id" name="selected_course_id">
+                            <button type="button" id="confirmBookingBtn" class="btn btn-primary mt-3">ยืนยันการจอง</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
                     <!-- / Content -->
 
                     <!-- Footer -->
@@ -489,7 +396,7 @@ $customers = getCustomers($conn);
 <script src="../assets/vendor/js/menu.js"></script>
 
 <!-- Vendors JS -->
-<script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- Main JS -->
 <script src="../assets/js/main.js"></script>
@@ -501,31 +408,10 @@ $customers = getCustomers($conn);
 <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
 
 <script>
-
+var selectedCustomerId = '<?php echo addslashes($selected_customer_id); ?>';
+// var customerName = '<?php echo addslashes($customer_name); ?>';
 $(document).ready(function() {
 let selectedCourses = [];
-const $submitButton = $('button[type="submit"][form="orderForm"]');
-
-function updateSubmitButton() {
-    $submitButton.prop('disabled', selectedCourses.length === 0);
-}
-
-$('.course-item').on('click', function() {
-    const courseId = $(this).data('course-id');
-    const courseName = $(this).data('course-name');
-    const coursePrice = $(this).data('course-price');
-
-    if($(this).hasClass('selected')) {
-        $(this).removeClass('selected');
-        selectedCourses = selectedCourses.filter(course => course.id !== courseId);
-    } else {
-        $(this).addClass('selected');
-        selectedCourses.push({id: courseId, name: courseName, price: coursePrice});
-    }
-
-    updateOrderList();
-    updateSubmitButton();
-});
 
 function updateOrderList() {
     const orderList = $('#orderList');
@@ -546,19 +432,309 @@ function updateOrderList() {
     $('#totalPrice').text(totalPrice.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
     $('#selectedCoursesInput').val(JSON.stringify(selectedCourses));
 }
-updateSubmitButton();
+
+    // เพิ่ม event listener สำหรับปุ่มย้อนกลับ
+    $('#backToCourseBtn').on('click', function() {
+        $('#dateTimeSection').hide();
+        $('#courseSection').show();
+        $('#selected_course').html(''); // ล้างข้อมูลคอร์สที่เลือก
+    });
+
+
+   $('.select-course').on('click', function() {
+        var courseCard = $(this).closest('.course-item');
+        var courseId = courseCard.data('course-id');
+        var courseName = courseCard.data('course-name');
+        var coursePrice = courseCard.data('course-price');
+        var courseImage = courseCard.data('course-image');
+
+        // เก็บค่า course_id
+        $('#selected_course_id').val(courseId);
+        console.log('Selected Course ID:', courseId);
+
+         Swal.fire({
+            title: 'ยืนยันการเลือกคอร์ส',
+            html: `
+                <img src="../img/course/${courseImage}" style="max-width: 200px; margin-bottom: 10px;">
+                <p><strong>${courseName}</strong></p>
+                <p>ราคา: ${coursePrice.toLocaleString()} บาท</p>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+             if (result.isConfirmed) {
+                var formattedCourseId = 'C-' + courseId.toString().padStart(6, '0');
+                $('#selected_course').html(`
+                    <h4>คอร์สที่เลือก: ${formattedCourseId} - ${courseName}</h4>
+                `);
+                // ส่ง AJAX request เพื่อดึงข้อมูลวันและเวลาที่สามารถจองได้
+                $.ajax({
+                    url: 'sql/get-available-slots.php',
+                    method: 'POST',
+                    data: { 
+                        course_id: courseId,
+                        selected_date: new Date().toISOString().split('T')[0] // ส่งวันที่ปัจจุบัน
+                    },
+                    success: function(response) {
+                        // console.log('Raw response:', response);
+                        try {
+                            var availableSlots = JSON.parse(response);
+                            console.log('Parsed availableSlots:', availableSlots);
+                            showDateTimePicker(availableSlots);
+                        } catch (e) {
+                            console.error('Error parsing JSON:', e);
+                            Swal.fire('เกิดข้อผิดพลาด', 'ข้อมูลไม่ถูกต้อง', 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', status, error);
+                        Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถดึงข้อมูลการจองได้', 'error');
+                    }
+                });
+            }
+        });
+    });
+
+    $('#confirmBookingBtn').on('click', function() {
+        const customerId = selectedCustomerId;
+        const courseId = $('#selected_course_id').val();
+        const bookingDate = $('#booking_date').val();
+        const bookingTime = $('#booking_time').val();
+        const selectedRoomId = $('#selected_room_id').val();
+        const selectedSlot = $('.time-slot.selected');
+        const intervalMinutes = selectedSlot.data('interval');
+        const availableRooms = selectedSlot.data('available-rooms');
+
+        if (!customerId || !courseId || !bookingDate || !bookingTime || !selectedRoomId) {
+            Swal.fire('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกข้อมูลให้ครบถ้วน', 'warning');
+            return;
+        }
+
+        // สร้าง bookingDateTime
+        const bookingDateTime = formatDateTimeForDatabase(bookingDate, bookingTime);
+
+        // ดึงชื่อลูกค้า
+        const customerName = '<?php echo addslashes($customer_name); ?>';
+        const customerHN = 'HN-' + customerId.toString().padStart(6, '0');
+
+        // ดึงข้อมูลคอร์สที่เลือก
+        const selectedCourse = $('.course-item[data-course-id="' + courseId + '"]');
+        const courseName = selectedCourse.data('course-name');
+        const coursePrice = selectedCourse.data('course-price');
+
+        // คำนวณเวลาสิ้นสุด
+        const startTime = new Date(`2000-01-01T${bookingTime}`);
+        const endTime = new Date(startTime.getTime() + intervalMinutes * 60000);
+        const startTimeString = startTime.toTimeString().slice(0,5);
+        const endTimeString = endTime.toTimeString().slice(0,5);
+
+        const roomName = availableRooms && availableRooms.length > 0 ? availableRooms[0].room_name : 'ไม่ระบุ';
+
+        Swal.fire({
+            title: 'ยืนยันการจอง',
+            html: `
+                <p><strong>ลูกค้า:</strong> ${customerName} (${customerHN})</p>
+                <p><strong>คอร์ส:</strong> ${courseName} (รหัส: C-${courseId.toString().padStart(6, '0')})</p>
+                <p><strong>ราคา:</strong> ${coursePrice.toLocaleString()} บาท</p>
+                <p><strong>วันที่:</strong> ${bookingDate}</p>
+                <p><strong>เวลา:</strong> ${startTimeString} - ${endTimeString}</p>
+                <p><strong>ระยะเวลา:</strong> ${intervalMinutes} นาที</p>
+                <p><strong>ห้อง:</strong> ${roomName}</p>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'sql/save-booking.php',
+                    method: 'POST',
+                    data: {
+                        customer_id: selectedCustomerId,
+                        course_id: courseId,
+                        booking_datetime: bookingDateTime,
+                        course_price: coursePrice,
+                        room_id: selectedRoomId
+                    },
+                    success: function(response) {
+                        const result = JSON.parse(response);
+                        if (result.success) {
+                            Swal.fire('สำเร็จ', 'บันทึกการจองเรียบร้อยแล้ว', 'success')
+                            .then(() => {
+                                window.location.href = 'booking-show.php';
+                            });
+                        } else {
+                            Swal.fire('เกิดข้อผิดพลาด', result.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกการจองได้', 'error');
+                    }
+                });
+            }
+        });
+    });
+
 });
+
+// ฟังก์ชันสำหรับแปลงรูปแบบวันที่และเวลา
+function formatDateTimeForDatabase(date, time) {
+    // แปลงวันที่จากรูปแบบ "วัน เดือน ปี" เป็น "YYYY-MM-DD"
+    const [day, month, year] = date.split(' ');
+    const monthIndex = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'].indexOf(month) + 1;
+    const formattedDate = `${parseInt(year) - 543}-${monthIndex.toString().padStart(2, '0')}-${day.padStart(2, '0')}`;
+    
+    // รวมวันที่และเวลา
+    return `${formattedDate} ${time}:00`;
+}
+
+function showDateTimePicker(response) {
+    const availableDates = response.available_dates;
+
+    $('#courseSection').hide();
+    $('#dateTimeSection').show();
+
+    // รีเซ็ตค่าใน input และ timeSlots
+    $('#booking_date').val('');
+    $('#timeSlots').html('');
+    $('#booking_time').val('');
+    $('#selected_room_id').val('');
+
+    // กำหนดค่าให้กับ flatpickr สำหรับเลือกวันที่
+    flatpickr("#booking_date", {
+        enable: availableDates,
+        dateFormat: "Y-m-d",
+        locale: "th",
+        onChange: function(selectedDates, dateStr, instance) {
+            const thaiDate = formatThaiDate(selectedDates[0]);
+            instance.input.value = thaiDate;
+            fetchAvailableSlots(dateStr);
+        }
+    });
+}
+
+function fetchAvailableSlots(selectedDate) {
+    $.ajax({
+        url: 'sql/get-available-slots.php',
+        method: 'POST',
+        data: { 
+            course_id: $('#selected_course_id').val(),
+            selected_date: selectedDate
+        },
+        success: function(response) {
+            console.log('Raw response:', response);
+            try {
+                var data = JSON.parse(response);
+                console.log('Parsed data:', data);
+                updateTimeSlots(data.available_slots);
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                Swal.fire('เกิดข้อผิดพลาด', 'ข้อมูลไม่ถูกต้อง', 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX error:', status, error);
+            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถดึงข้อมูลการจองได้', 'error');
+        }
+    });
+}
+
+// ฟังก์ชันสำหรับแปลงวันที่เป็นรูปแบบไทย
+function formatThaiDate(date) {
+    const thaiMonths = [
+        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    const day = date.getDate();
+    const month = thaiMonths[date.getMonth()];
+    const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
+    return `${day} ${month} ${year}`;
+}
+
+function updateTimeSlots(availableSlots) {
+    console.log('Available slots:', availableSlots);
+    var timeSlotsHtml = '';
+
+    availableSlots.forEach(function(slot) {
+        console.log('Processing slot:', slot);
+        var buttonClass = 'btn-outline-primary';
+        var buttonText = slot.time;
+        var roomInfo = '';
+
+        switch(slot.status) {
+            case 'fully_booked':
+                buttonClass = 'btn-danger disabled';
+                roomInfo = 'ไม่ว่าง';
+                break;
+            case 'partially_booked':
+            case 'available':
+                buttonClass = slot.status === 'partially_booked' ? 'btn-warning' : 'btn-outline-primary';
+                roomInfo = `ว่าง ${slot.available_rooms_count} ห้อง`;
+                break;
+        }
+
+        timeSlotsHtml += `
+            <div class="col-md-3 mb-2">
+                <button type="button" class="btn ${buttonClass} time-slot w-100" 
+                        data-time="${slot.time}" data-status="${slot.status}" 
+                        data-available-rooms='${JSON.stringify(slot.available_rooms)}'
+                        data-interval="${slot.interval_minutes}">
+                    ${buttonText}<br>${roomInfo}
+                </button>
+            </div>
+        `;
+    });
+
+    $('#timeSlots').html(timeSlotsHtml);
+
+    $('.time-slot').on('click', function() {
+        $('.time-slot').removeClass('selected');
+        $(this).addClass('selected');
+
+        var selectedTime = $(this).data('time');
+        var status = $(this).data('status');
+        var availableRooms = $(this).data('available-rooms');
+        var intervalMinutes = $(this).data('interval');
+
+        console.log('Selected time:', selectedTime);
+        console.log('Status:', status);
+        console.log('Available rooms:', availableRooms);
+        console.log('Interval:', intervalMinutes);
+
+        $('#booking_time').val(selectedTime);
+
+        if (availableRooms && availableRooms.length > 0) {
+            $('#selected_room_id').val(availableRooms[0].room_id);
+            var roomName = availableRooms[0].room_name;
+        } else {
+            $('#selected_room_id').val('');
+            var roomName = 'ไม่มีห้องว่าง';
+        }
+
+        var startTime = new Date(`2000-01-01T${selectedTime}`);
+        var endTime = new Date(startTime.getTime() + intervalMinutes * 60000);
+        var startTimeString = startTime.toTimeString().slice(0,5);
+        var endTimeString = endTime.toTimeString().slice(0,5);
+
+        Swal.fire({
+            title: 'ข้อมูลการจอง',
+            html: `คุณกำลังจองคอร์ส<br>
+                   เวลา: ${startTimeString} - ${endTimeString}<br>
+                   ห้อง: ${roomName}<br>
+                   ระยะเวลา: ${intervalMinutes} นาที`,
+            icon: 'info',
+            confirmButtonText: 'เข้าใจแล้ว'
+        });
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     let customerSelected = false;
-    let timeSelected = false;
+    const submitBtn = document.getElementById('submitBtn');
 
-    function checkSubmitButton() {
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = !(customerSelected && timeSelected);
-    }
-
-    // Initialize Select2 for customer search
     $('#customer_select').select2({
         placeholder: 'ค้นหาลูกค้า...',
         allowClear: true,
@@ -574,207 +750,46 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             processResults: function(data) {
                 return {
-                    results: data
+                    results: data.map(function(item) {
+                        return {
+                            id: item.id,
+                            text: 'HN-' + item.id.padStart(6, '0') + ' : ' + item.text,
+                            hn: 'HN-' + item.id.padStart(6, '0'),
+                            id_card: item.id_card,
+                            email: item.email,
+                            tel: item.tel,
+                            image: item.image
+                        };
+                    })
                 };
             },
             cache: true
         }
     }).on('select2:select', function(e) {
         var data = e.params.data;
-        document.getElementById('selected_customer_id').value = data.id;
+        $('#selected_customer_id').val(data.id);
         customerSelected = true;
-        checkSubmitButton();
+        submitBtn.disabled = false;
         
         // Display customer details
-        $('#customerImage').attr('src', data.image);
-        $('#customerName').text(data.text);
+        $('#customerImage').attr('src', data.image || '../assets/img/avatars/1.png');
+        $('#customerHN').text(data.hn);
+        $('#customerName').text(data.text.split(' : ')[1]);
         $('#customerIdCard').text(data.id_card);
         $('#customerEmail').text(data.email);
         $('#customerTel').text(data.tel);
         $('#customerDetails').fadeIn();
     }).on('select2:unselect', function() {
-        document.getElementById('selected_customer_id').value = '';
+        $('#selected_customer_id').val('');
         customerSelected = false;
-        checkSubmitButton();
+        submitBtn.disabled = true;
         $('#customerDetails').fadeOut();
     });
-
-    // Initialize Flatpickr for date selection
-    flatpickr.localize(flatpickr.l10ns.th);
-    const closedDates = <?php echo json_encode($closed_dates); ?>;
-    const clinicHours = <?php echo json_encode($clinic_hours); ?>;
-    const bookedSlots = <?php echo json_encode($booked_slots); ?>;
-    const closedDays = <?php echo json_encode($closed_days); ?>;
-    // console.log(closedDates);
-    const today = new Date();
-    const oneMonthLater = new Date(today);
-    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-
-    flatpickr("#booking_date", {
-        minDate: "today",
-        maxDate: new Date().fp_incr(30), // 30 days from now
-        // console.log("Closed dates:", closedDates),
-        disable: [
-            function(date) {
-                // ตรวจสอบวันที่ปิดที่กำหนดไว้
-                const isClosedDate = closedDates.some(closedDate => {
-                    const closed = new Date(closedDate);
-                    return date.getFullYear() === closed.getFullYear() &&
-                           date.getMonth() === closed.getMonth() &&
-                           date.getDate() === closed.getDate();
-                });
-
-                // ตรวจสอบวันในสัปดาห์ที่ปิด
-                const dayOfWeek = date.toLocaleString('en-us', {weekday: 'long'});
-                const isClosedDay = closedDays.includes(dayOfWeek);
-
-                // คืนค่า true ถ้าเป็นวันที่ปิดหรือวันในสัปดาห์ที่ปิด
-                return isClosedDate || isClosedDay;
-            }
-        ],
-        dateFormat: "d/m/Y",
-        locale: {
-            ...flatpickr.l10ns.th,
-            reformatAfterEdit: true,
-        },
-        onReady: function(selectedDates, dateStr, instance) {
-            instance.currentYearElement.textContent = parseInt(instance.currentYearElement.textContent) + 543;
-        },
-        onChange: function(selectedDates, dateStr, instance) {
-            if (selectedDates.length > 0) {
-                const thaiDate = formatThaiDate(selectedDates[0]);
-                instance.input.value = thaiDate;
-                updateTimeSlots(thaiDate);
-                timeSelected = false;
-                checkSubmitButton();
-            }
-        },
-        onYearChange: function(selectedDates, dateStr, instance) {
-            setTimeout(function() {
-                let yearElem = instance.currentYearElement;
-                yearElem.textContent = parseInt(yearElem.textContent) + 543;
-            }, 0);
-        },
-        formatDate: function(date, format) {
-            return formatThaiDate(date);
-        },
-        parseDate: function(datestr, format) {
-            if (!datestr) return undefined;
-            const parts = datestr.split('/');
-            if (parts.length !== 3) return undefined;
-            const thaiYear = parseInt(parts[2], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const day = parseInt(parts[0], 10);
-            return new Date(thaiYear - 543, month, day);
-        }
-    });
-
-    // Function to update time slots
-    function updateTimeSlots(dateStr) {
-        const [day, month, year] = dateStr.split('/');
-        const selectedDate = new Date(year - 543, month - 1, day);
-        const dayOfWeek = selectedDate.toLocaleString('en-us', {weekday:'long'});
-        console.log("วันที่เลือก:", dayOfWeek);
-
-        const hours = clinicHours[dayOfWeek];
-        console.log("เวลาทำการของวันที่เลือก:", hours);
-
-        const timeSlotsContainer = document.getElementById('timeSlots');
-        timeSlotsContainer.innerHTML = '';
-
-        if (hours && hours.is_closed != 1) {
-            const startTime = new Date(`2000-01-01T${hours.start_time}`);
-            const endTime = new Date(`2000-01-01T${hours.end_time}`);
-
-            const now = new Date();
-            const isToday = selectedDate.toDateString() === now.toDateString();
-
-            while (startTime < endTime) {
-                const timeStr = startTime.toTimeString().slice(0, 5);
-                const fullDateStr = `${year - 543}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                const fullDateTimeStr = `${fullDateStr} ${timeStr}:00`;
-                const isBooked = bookedSlots.includes(fullDateTimeStr);
-                
-                const slotDateTime = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), startTime.getHours(), startTime.getMinutes());
-                const isPastTime = isToday && slotDateTime < now;
-
-                const slot = document.createElement('div');
-                slot.className = `col-4 col-sm-3 mb-2`;
-                
-                if (isPastTime) {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-secondary disabled" data-time="${timeStr}">${timeStr}</div>`;
-                } else if (isBooked) {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-danger disabled" data-time="${timeStr}">${timeStr}</div>`;
-                } else {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-primary" data-time="${timeStr}">${timeStr}</div>`;
-                }
-                
-                timeSlotsContainer.appendChild(slot);
-                startTime.setMinutes(startTime.getMinutes() + 15);
-            }
-
-            document.querySelectorAll('.time-slot:not(.disabled)').forEach(slot => {
-                slot.addEventListener('click', function() {
-                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-                    this.classList.add('selected');
-                    document.getElementById('booking_time').value = this.dataset.time;
-                    timeSelected = true;
-                    checkSubmitButton();
-                });
-            });
-        } else {
-            console.log("ไม่มีเวลาทำการหรือคลินิกปิดในวันที่เลือก");
-            timeSlotsContainer.innerHTML = '<p>ไม่มีเวลาทำการในวันที่เลือก</p>';
-        }
-    }
-
-    // Helper function to format date in Thai format
-    function formatThaiDate(date) {
-        const thaiYear = date.getFullYear() + 543;
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        return `${day}/${month}/${thaiYear}`;
-    }
-
-    // Handle course search form submission
-    // const searchForm = document.querySelector('form');
-    // const searchInput = document.getElementById('courseSearch');
-    // if (searchForm && searchInput) {
-    //     searchForm.addEventListener('submit', function(e) {
-    //         if (searchInput.value.trim() === '') {
-    //             e.preventDefault();
-    //             alert('กรุณากรอกคำค้นหา');
-    //         }
-    //     });
-    // }
 });
 
 
-// Display success message
-      <?php if(isset($_SESSION['msg_ok'])){ ?>
-        Swal.fire({
-          icon: 'success',
-          title: 'แจ้งเตือน!',
-          text: '<?php echo $_SESSION['msg_ok']; ?>',
-          customClass: {
-            confirmButton: 'btn btn-primary waves-effect waves-light'
-          },
-          buttonsStyling: false
-        });
-      <?php unset($_SESSION['msg_ok']); } ?>
 
-      // Display error message
-      <?php if(isset($_SESSION['msg_error'])){ ?>
-        Swal.fire({
-          icon: 'error',
-          title: 'แจ้งเตือน!',
-          text: '<?php echo $_SESSION['msg_error']; ?>',
-          customClass: {
-            confirmButton: 'btn btn-danger waves-effect waves-light'
-          },
-          buttonsStyling: false
-        });
-      <?php unset($_SESSION['msg_error']); } ?>
+
 </script>
 </body>
 </html>

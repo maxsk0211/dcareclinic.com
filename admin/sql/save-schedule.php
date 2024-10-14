@@ -1,62 +1,118 @@
 <?php
-session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require '../../dbcon.php';
+
+function checkTimeOverlap($roomId, $date, $startTime, $endTime, $excludeScheduleId = null) {
+    global $conn;
+    
+    $sql = "SELECT COUNT(*) as count FROM room_schedules 
+            WHERE room_id = ? AND date = ? AND 
+            ((start_time < ? AND end_time > ?) OR 
+             (start_time >= ? AND start_time < ?) OR 
+             (end_time > ? AND end_time <= ?))";
+    
+    $params = [$roomId, $date, $endTime, $startTime, $startTime, $endTime, $startTime, $endTime];
+    $types = "isssssss";
+
+    if ($excludeScheduleId) {
+        $sql .= " AND schedule_id != ?";
+        $params[] = $excludeScheduleId;
+        $types .= "i";
+    }
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    
+    return $row['count'] > 0;
+}
+
+// Log ข้อมูลที่ได้รับ
+error_log("Received POST data: " . print_r($_POST, true));
 
 $response = ['success' => false, 'message' => ''];
 
-$scheduleId = $_POST['scheduleId'];
-$roomId = $_POST['roomId'];
-$date = $_POST['date'];
-$startTime = $_POST['startTime'];
-$endTime = $_POST['endTime'];
-$intervalMinutes = $_POST['intervalMinutes'];
-$courses = isset($_POST['courses']) ? $_POST['courses'] : [];
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $scheduleId = isset($_POST['scheduleId']) ? intval($_POST['scheduleId']) : 0;
+    $roomId = isset($_POST['roomId']) ? intval($_POST['roomId']) : 0;
 
-$conn->begin_transaction();
-
-try {
-    if ($scheduleId) {
-        // อัปเดตตารางเวลาที่มีอยู่
-        $sql = "UPDATE room_schedules SET start_time = ?, end_time = ?, interval_minutes = ? 
-                WHERE schedule_id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssii", $startTime, $endTime, $intervalMinutes, $scheduleId);
-    } else {
-        // สร้างตารางเวลาใหม่
-        $sql = "INSERT INTO room_schedules (room_id, date, start_time, end_time, interval_minutes) 
-                VALUES (?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("isssi", $roomId, $date, $startTime, $endTime, $intervalMinutes);
+    // ตรวจสอบว่า roomId มีค่า
+    if ($roomId === 0) {
+        $response['message'] = 'Room ID is missing or invalid';
+        echo json_encode($response);
+        exit;
     }
 
-    $stmt->execute();
+    $date = $_POST['date'];
+    $scheduleName = $_POST['scheduleName'];
+    $startTime = $_POST['startTime'];
+    $endTime = $_POST['endTime'];
+    $intervalMinutes = intval($_POST['intervalMinutes']);
+    $courses = isset($_POST['courses']) && is_array($_POST['courses']) ? $_POST['courses'] : [];
 
-    if (!$scheduleId) {
-        $scheduleId = $stmt->insert_id;
+    // ตรวจสอบความซ้ำซ้อนของเวลา
+    $isOverlap = checkTimeOverlap($roomId, $date, $startTime, $endTime, $scheduleId);
+
+    if ($isOverlap) {
+        $response['message'] = 'ช่วงเวลานี้ซ้ำซ้อนกับตารางที่มีอยู่แล้ว กรุณาเลือกเวลาอื่น';
+        echo json_encode($response);
+        exit;
     }
 
-    // ลบคอร์สเก่าออก
-    $deleteSql = "DELETE FROM room_courses WHERE schedule_id = ?";
-    $deleteStmt = $conn->prepare($deleteSql);
-    $deleteStmt->bind_param("i", $scheduleId);
-    $deleteStmt->execute();
+    $conn->begin_transaction();
 
-    // บันทึกคอร์สใหม่
-    if (!empty($courses)) {
-        $insertSql = "INSERT INTO room_courses (schedule_id, course_id) VALUES (?, ?)";
-        $insertStmt = $conn->prepare($insertSql);
-        foreach ($courses as $courseId) {
-            $insertStmt->bind_param("ii", $scheduleId, $courseId);
-            $insertStmt->execute();
+    try {
+        if ($scheduleId > 0) {
+            // Update existing schedule
+            $sql = "UPDATE room_schedules SET schedule_name = ?, start_time = ?, end_time = ?, interval_minutes = ? WHERE schedule_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssii", $scheduleName, $startTime, $endTime, $intervalMinutes, $scheduleId);
+        } else {
+            // Insert new schedule
+            $sql = "INSERT INTO room_schedules (room_id, date, schedule_name, start_time, end_time, interval_minutes) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("issssi", $roomId, $date, $scheduleName, $startTime, $endTime, $intervalMinutes);
         }
-    }
 
-    $conn->commit();
-    $response['success'] = true;
-    $response['message'] = 'บันทึกตารางเวลาและคอร์สสำเร็จ';
-} catch (Exception $e) {
-    $conn->rollback();
-    $response['message'] = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage();
+        if (!$stmt->execute()) {
+            throw new Exception("Error executing query: " . $stmt->error);
+        }
+
+        if ($scheduleId == 0) {
+            $scheduleId = $conn->insert_id;
+        }
+
+        // Delete existing course associations
+        $sql = "DELETE FROM room_courses WHERE schedule_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $scheduleId);
+        $stmt->execute();
+
+        // Insert new course associations
+        if (!empty($courses)) {
+            $sql = "INSERT INTO room_courses (schedule_id, course_id) VALUES (?, ?)";
+            $stmt = $conn->prepare($sql);
+            foreach ($courses as $courseId) {
+                $stmt->bind_param("ii", $scheduleId, $courseId);
+                $stmt->execute();
+            }
+        }
+
+        $conn->commit();
+        $response['success'] = true;
+        $response['message'] = 'บันทึกตารางเวลาเรียบร้อยแล้ว';
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Error in save-schedule.php: " . $e->getMessage());
+        $response['message'] = 'เกิดข้อผิดพลาด: ' . $e->getMessage();
+    }
 }
 
 echo json_encode($response);
+$conn->close();
+?>

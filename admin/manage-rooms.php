@@ -11,12 +11,23 @@ $selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
 // ดึงข้อมูลห้องทั้งหมด
 $branch_id = $_SESSION['branch_id'];
-$sql_rooms = "SELECT * FROM rooms WHERE branch_id = ? AND status = 'active'";
+// ดึงข้อมูลห้องทั้งหมดพร้อมสถานะรายวัน
+$sql_rooms = "
+    SELECT r.*, 
+           COALESCE(rs.daily_status, 'closed') AS daily_status
+    FROM rooms r
+    LEFT JOIN room_status rs ON r.room_id = rs.room_id AND rs.date = ?
+    WHERE r.branch_id = ? AND r.status = 'active'
+";
 $stmt_rooms = $conn->prepare($sql_rooms);
-$stmt_rooms->bind_param("i", $branch_id);
+$stmt_rooms->bind_param("si", $selected_date, $branch_id);
 $stmt_rooms->execute();
 $result_rooms = $stmt_rooms->get_result();
 
+$rooms = [];
+while ($room = $result_rooms->fetch_assoc()) {
+    $rooms[] = $room;
+}
 // ดึงรายชื่อห้องที่มีอยู่
 $sql_room_names = "SELECT DISTINCT room_name FROM rooms WHERE branch_id = ?";
 $stmt_room_names = $conn->prepare($sql_room_names);
@@ -42,6 +53,17 @@ function thaiDate($date) {
 
 function formatTime($time) {
     return date("H:i", strtotime($time));
+}
+
+
+function getSchedulesForRoom($roomId, $date) {
+    global $conn;
+    $sql = "SELECT * FROM room_schedules WHERE room_id = ? AND date = ? ORDER BY start_time";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("is", $roomId, $date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
 }
 ?>
 
@@ -113,6 +135,154 @@ function formatTime($time) {
         .select2-dropdown {
           z-index: 1100; /* ควรมีค่ามากกว่า .select2-container */
         }
+   body {
+        background-color: #f8f9fa;
+    }
+    .container-xxl {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+    }
+    .card-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 1rem;
+    }
+    .card-body {
+        padding: 1.5rem;
+    }
+    .room-card {
+        margin-bottom: 2rem;
+    }
+    .room-card .card-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    .room-schedule {
+        background-color: #f1f3f9;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    .room-schedule h6 {
+        color: #4e73df;
+        margin-bottom: 0.5rem;
+    }
+    .list-group-item {
+        border: none;
+        background-color: transparent;
+        padding: 0.5rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .btn {
+        border-radius: 50px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+    }
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+    }
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+    }
+    .btn-info {
+        background-color: #36b9cc;
+        border-color: #36b9cc;
+        color: white;
+    }
+    .btn-info:hover {
+        background-color: #2c9faf;
+        border-color: #2c9faf;
+    }
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .modal-content {
+        border-radius: 15px;
+    }
+    .modal-header {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .form-control, .form-select {
+        border-radius: 50px;
+    }
+    .select2-container--bootstrap-5 .select2-selection {
+        border-radius: 50px;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+        border-radius: 10px;
+    }
+    @media (max-width: 768px) {
+        .container-xxl {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .card {
+            margin-bottom: 1rem;
+        }
+    }
+    .card.room-closed {
+        background-color: #fff5f5;
+        border: 1px solid #dc3545;
+    }
+    .card.room-closed .card-header {
+        background-color: #dc3545;
+    }
+    .card.room-closed .room-schedule {
+        background-color: #ffe5e5;
+    }
+    .badge {
+        padding: 0.5em 0.75em;
+        border-radius: 50px;
+        font-weight: 600;
+    }
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-toggle-open {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+    .btn-toggle-open:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+    .btn-toggle-closed {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+    .btn-toggle-closed:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
     </style>
 </head>
 
@@ -132,41 +302,79 @@ function formatTime($time) {
                     <?php include 'menu.php';  ?>
                     <!-- / Menu -->
                     <div class="container-xxl flex-grow-1 container-p-y">
+                        <br>
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="py-3 mb-4"><span class="text-muted fw-light">จัดการ /</span> ห้อง</h4>
+                            <h4 class="py-3 mb-4">จัดการห้องประจำวัน    </h4>
                             <button class="btn btn-primary" onclick="showManageRoomsModal()">
                                 <i class="ri-add-line align-middle me-1"></i> จัดการห้อง
                             </button>
                         </div>
                         <!-- เลือกวันที่ -->
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <form action="" method="GET" id="dateForm">
-                                    <div class="mb-3">
+                        <div class="card mb-4 ">
+                            <div class="card-body ">
+                                <form action="" method="GET" id="dateForm" class="row align-items-center">
+                                    <div class="col-md-4">
                                         <label for="date" class="form-label">เลือกวันที่</label>
                                         <input type="text" class="form-control" id="date" name="date" value="<?php echo $selected_date; ?>">
+                                    </div>
+                                    <div class="col-md-4 mt-3 mt-md-0">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="ri-search-line"></i> แสดงข้อมูล
+                                        </button>
                                     </div>
                                 </form>
                             </div>
                         </div>
+                        <div class="alert alert-info text-center mb-4 h3 text-primary">
+                            <i class="ri-calendar-check-line"></i> วันที่แสดงข้อมูล: <?php echo thaiDate($selected_date); ?>
+                        </div>
 
-                         <!-- แสดงรายการห้อง -->
+                        <!-- ในส่วนของ HTML ที่แสดงรายละเอียดห้อง -->
                         <div class="row" id="roomsContainer">
-                            <?php while($room = $result_rooms->fetch_assoc()): ?>
+                            <?php foreach ($rooms as $room): ?>
                             <div class="col-md-6 col-lg-4">
-                                <div class="card room-card">
+                                <div class="card room-card <?php echo $room['daily_status'] == 'closed' ? 'room-closed' : ''; ?>">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0 text-white"><?php echo $room['room_name']; ?></h5>
+                                    </div>
                                     <div class="card-body">
-                                        <h5 class="card-title"><?php echo $room['room_name']; ?></h5>
-                                        <p class="card-text">สถานะ: <?php echo $room['status'] == 'active' ? 'เปิดใช้งาน' : 'ปิดใช้งาน'; ?></p>
+                                        <p class="card-text mt-4">
+                                            สถานะ: 
+                                            <span class="badge <?php echo $room['daily_status'] == 'open' ? 'badge-success' : 'badge-danger'; ?>">
+                                                <?php echo $room['daily_status'] == 'open' ? 'เปิดใช้งาน' : 'ปิดใช้งาน'; ?>
+                                            </span>
+                                        </p>
                                         <div class="room-schedule">
-                                            <!-- แสดงตารางเวลาของห้อง (ถ้ามี) -->
+                                            <?php $schedules = getSchedulesForRoom($room['room_id'], $selected_date); ?>
+                                            <h6><i class="ri-calendar-line"></i> ตารางเวลา: <?php if (isset($schedule)): ?> <p class="text-danger">ไม่มี</p> <?php endif ?></h6>
+                                            <ul class="list-group">
+                                            <?php
+                                            foreach ($schedules as $schedule):
+                                            ?>
+                                                <li class="list-group-item">
+                                                    <span>
+                                                        <i class="ri-time-line"></i> <?php echo $schedule['schedule_name']; ?>: 
+                                                        <?php echo formatTime($schedule['start_time']); ?> - <?php echo formatTime($schedule['end_time']); ?>
+                                                    </span>
+                                                    <button class="btn btn-sm btn-primary" onclick="editSchedule(<?php echo $schedule['schedule_id']; ?>)">
+                                                        <i class="ri-edit-line"></i> แก้ไข
+                                                    </button>
+                                                </li>
+                                            <?php endforeach; ?>
+                                            </ul>
                                         </div>
-                                        <button class="btn btn-primary mt-2" onclick="editRoom(<?php echo $room['room_id']; ?>)">แก้ไขห้อง</button>
-                                        <button class="btn btn-info mt-2" onclick="showScheduleModal(<?php echo $room['room_id']; ?>)">จัดการตารางเวลา</button>
+                                        <button class="btn btn-primary mt-2" onclick="showScheduleModal(<?php echo $room['room_id']; ?>)">
+                                            <i class="ri-add-line"></i> เพิ่มช่วงเวลา
+                                        </button>
+                                        <button class="btn <?php echo $room['daily_status'] == 'open' ? 'btn-toggle-closed' : 'btn-toggle-open'; ?> mt-2" 
+                                                onclick="toggleRoomStatus(<?php echo $room['room_id']; ?>, '<?php echo $room['daily_status'] == 'open' ? 'closed' : 'open'; ?>', '<?php echo addslashes($room['room_name']); ?>')">
+                                            <i class="ri-toggle-line"></i> 
+                                            <?php echo $room['daily_status'] == 'open' ? 'ปิดการใช้งาน' : 'เปิดการใช้งาน'; ?>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </div>
 
                         <!-- ปุ่มเพิ่มห้องใหม่ -->
@@ -186,8 +394,8 @@ function formatTime($time) {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">จัดการห้อง</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title text-white">จัดการห้อง</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -215,8 +423,8 @@ function formatTime($time) {
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="roomFormModalTitle">เพิ่มห้องใหม่</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title text-white" id="roomFormModalTitle">เพิ่มห้องใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="roomForm">
@@ -243,52 +451,50 @@ function formatTime($time) {
 
 
 
-<!-- Modal สำหรับจัดการตารางเวลาและคอร์ส -->
 <div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="scheduleModalTitle">จัดการตารางเวลาและคอร์ส</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title text-white" id="scheduleModalTitle">จัดการตารางเวลาและคอร์ส</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="scheduleForm">
+                    <input type="hidden" id="roomId" name="roomId">
                     <input type="hidden" id="scheduleId" name="scheduleId">
-                    <input type="hidden" id="scheduleRoomId" name="roomId">
-                    <input type="hidden" id="scheduleDate" name="date" value="<?php echo $selected_date; ?>">
+                    <input type="hidden" name="date" id="scheduleDate" value="<?php echo $selected_date; ?>">
                     <div class="mb-3">
-                        <label class="form-label">วันที่: <?php echo thaiDate($selected_date); ?></label>
+                        <label for="scheduleName" class="form-label">ชื่อช่วงเวลา</label>
+                        <input type="text" class="form-control" id="scheduleName" name="scheduleName" required>
                     </div>
                     <div class="row">
-                        <div class="col-auto">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="startTime" class="form-label">เวลาเริ่ม</label>
                                 <input type="time" class="form-control" id="startTime" name="startTime" required>
                             </div>
                         </div>
-                        <div class="col-auto">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="endTime" class="form-label">เวลาสิ้นสุด</label>
                                 <input type="time" class="form-control" id="endTime" name="endTime" required>
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <div class="mb-3">
-                                <label for="intervalMinutes" class="form-label">ช่วงเวลา (นาที)</label>
-                                <input type="number" class="form-control" id="intervalMinutes" name="intervalMinutes" value="30" required>
-                            </div>
-                        </div>
                     </div>
-
-
+                    <div class="mb-3">
+                        <label for="intervalMinutes" class="form-label">ช่วงเวลา (นาที)</label>
+                        <input type="number" class="form-control" id="intervalMinutes" name="intervalMinutes" value="30" required>
+                    </div>
                     <div class="mb-3">
                         <label for="courses" class="form-label">คอร์สที่สามารถจองได้</label>
                         <select class="form-control" id="courses" name="courses[]" multiple>
                             <!-- ตัวเลือกคอร์สจะถูกเพิ่มด้วย JavaScript -->
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary" id="saveScheduleBtn">บันทึกตารางเวลา</button>
-                    <button type="button" class="btn btn-danger" id="deleteScheduleBtn" style="display:none;">ลบตารางเวลา</button>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary" id="saveScheduleBtn">บันทึกตารางเวลา</button>
+                        <button type="button" class="btn btn-danger" id="deleteScheduleBtn" style="display:none;">ลบตารางเวลา</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -319,81 +525,84 @@ function formatTime($time) {
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
     <script>
-    $(document).ready(function() {
-        flatpickr("#date", {
-            dateFormat: "Y-m-d",
-            locale: "th",
-            onChange: function(selectedDates, dateStr, instance) {
-                // ส่งฟอร์มอัตโนมัติเมื่อมีการเลือกวันที่
-                $('#dateForm').submit();
-            }
-        });
-        // flatpickr("#scheduleDate", {
-        //     dateFormat: "Y-m-d",
-        //     locale: "th"
-        // });
-
-        flatpickr("#startTime", {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true
-        });
-
-        flatpickr("#endTime", {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true
-        });
-
-        $('#courses').select2({
-            theme: 'bootstrap-5',
-            ajax: {
-                url: 'sql/get-courses.php',
-                dataType: 'json',
-                delay: 250,
-                processResults: function (data) {
-                    return {
-                        results: data
-                    };
-                },
-                cache: true
-            }
-        });
-         $('#courses').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: 'เลือกคอร์ส',
-            allowClear: true
-        });
-        // เรียกใช้ฟังก์ชันเมื่อหน้าเว็บโหลดเสร็จ
-        loadRoomNames();
-        // กำหนดให้ input type="time" แสดงผลเป็น 24 ชั่วโมง
-        $('input[type="time"]').attr('step', '60');
-        
-        loadCourses(); // โหลดคอร์สเมื่อหน้าโหลดเสร็จ
+$(document).ready(function() {
+    flatpickr("#date", {
+        dateFormat: "Y-m-d",
+        locale: "th",
+        onChange: function(selectedDates, dateStr, instance) {
+            // ส่งฟอร์มอัตโนมัติเมื่อมีการเลือกวันที่
+            $('#dateForm').submit();
+        }
     });
+
+    flatpickr("#startTime", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true
+    });
+
+    flatpickr("#endTime", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true
+    });
+
+    $('#courses').select2({
+        theme: 'bootstrap-5',
+        ajax: {
+            url: 'sql/get-courses.php',
+            dataType: 'json',
+            delay: 250,
+            processResults: function (data) {
+                return {
+                    results: data
+                };
+            },
+            cache: true
+        }
+    });
+
+    $('#courses').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'เลือกคอร์ส',
+        allowClear: true
+    });
+
+    loadRoomNames();
+    $('input[type="time"]').attr('step', '60');
+    loadCourses();
+
+
+
+});
 
 function showManageRoomsModal() {
     loadRooms();
-    loadRoomNames();  // เพิ่มบรรทัดนี้
+    loadRoomNames();
     $('#manageRoomsModal').modal('show');
 }
 
+function openScheduleModal(roomId) {
+    $('#scheduleRoomId').val(roomId);
+    $('#scheduleModal').modal('show');
+    console.log("Opening modal for Room ID:", roomId); // เพิ่ม log นี้
+}
 function loadRoomNames() {
     $.ajax({
         url: 'sql/get-room-names.php',
         type: 'GET',
         dataType: 'json',
         success: function(data) {
-            console.log("Room data received:", data);
+            // console.log("Room data received:", data);
             let options = '<option value="">เลือกห้อง</option>';
             data.forEach(function(room) {
                 options += `<option value="${room.room_id}">${room.room_name}</option>`;
             });
             $('#roomSelect').html(options);
-            console.log("Options generated:", options);
+            // console.log("Options generated:", options);
         },
         error: function(xhr, status, error) {
             console.error('เกิดข้อผิดพลาดในการโหลดรายชื่อห้อง:', status, error);
@@ -403,40 +612,40 @@ function loadRoomNames() {
     });
 }
 
-    function loadRooms() {
-        $.ajax({
-            url: 'sql/get-rooms.php',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                let tableBody = '';
-                data.forEach(function(room) {
-                    tableBody += `
-                        <tr>
-                            <td>${room.room_name}</td>
-                            <td>${room.status === 'active' ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editRoom(${room.room_id})" data-bs-dismiss="modal">แก้ไข</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteRoom(${room.room_id})">ลบ</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                $('#roomsTableBody').html(tableBody);
-            },
-            error: function() {
-                Swal.fire('Error', 'เกิดข้อผิดพลาดในการโหลดข้อมูลห้อง', 'error');
-            }
-        });
-    }
-    // สำหรับการจัดการห้อง
-    function showAddRoomForm() {
-        $('#roomFormModalTitle').text('เพิ่มห้องใหม่');
-        $('#roomId').val('');
-        $('#roomName').val('');
-        $('#roomStatus').val('active');
-        $('#roomFormModal').modal('show');
-    }
+function loadRooms() {
+    $.ajax({
+        url: 'sql/get-rooms.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let tableBody = '';
+            data.forEach(function(room) {
+                tableBody += `
+                    <tr>
+                        <td>${room.room_name}</td>
+                        <td>${room.status === 'active' ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="editRoom(${room.room_id})" data-bs-dismiss="modal">แก้ไข</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteRoom(${room.room_id})">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            $('#roomsTableBody').html(tableBody);
+        },
+        error: function() {
+            Swal.fire('Error', 'เกิดข้อผิดพลาดในการโหลดข้อมูลห้อง', 'error');
+        }
+    });
+}
+
+function showAddRoomForm() {
+    $('#roomFormModalTitle').text('เพิ่มห้องใหม่');
+    $('#roomId').val('');
+    $('#roomName').val('');
+    $('#roomStatus').val('active');
+    $('#roomFormModal').modal('show');
+}
 
 function editRoom(roomId) {
     $.ajax({
@@ -481,40 +690,40 @@ $('#roomForm').submit(function(e) {
     });
 });
 
-    function deleteRoom(roomId) {
-        Swal.fire({
-            title: 'คุณแน่ใจหรือไม่?',
-            text: "คุณต้องการลบห้องนี้ใช่หรือไม่?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'ใช่, ลบเลย!',
-            cancelButtonText: 'ยกเลิก'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: 'sql/delete-room.php',
-                    type: 'POST',
-                    data: { roomId: roomId },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire('สำเร็จ', response.message, 'success').then(() => {
-                                loadRooms();
-                                location.reload(); // รีโหลดหน้าเพื่ออัปเดตรายการห้อง
-                            });
-                        } else {
-                            Swal.fire('Error', response.message, 'error');
-                        }
-                    },
-                    error: function() {
-                        Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบห้อง', 'error');
+function deleteRoom(roomId) {
+    Swal.fire({
+        title: 'คุณแน่ใจหรือไม่?',
+        text: "คุณต้องการลบห้องนี้ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/delete-room.php',
+                type: 'POST',
+                data: { roomId: roomId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('สำเร็จ', response.message, 'success').then(() => {
+                            loadRooms();
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
                     }
-                });
-            }
-        });
-    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบห้อง', 'error');
+                }
+            });
+        }
+    });
+}
 
 function saveRoom() {
     let formData = new FormData($('#roomForm')[0]);
@@ -542,39 +751,25 @@ function saveRoom() {
     });
 }
 
-// function addRoom() {
-//     $('#roomForm')[0].reset();
-//     $('#roomId').val('');
-//     $('#roomModalTitle').text('เพิ่มห้องใหม่');
-//     $('#courses').val(null).trigger('change');
-//     loadRoomNames();
-//     loadCourses();
-//     $('#roomModal').modal('show');
-// }
-
 function loadCourses() {
     $.ajax({
         url: 'sql/get-courses.php',
         type: 'GET',
         dataType: 'json',
         success: function(data) {
-            console.log("Courses data received:", data);
+            $('#courses').empty();
+            data.forEach(function(course) {
+                $('#courses').append(new Option(course.name, course.id));
+            });
             $('#courses').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
                 placeholder: 'เลือกคอร์ส',
-                allowClear: true,
-                data: data.map(function(course) {
-                    return {
-                        id: course.id,
-                        text: course.name + ' - ราคา: ' + course.price + ' บาท, จำนวน: ' + course.amount + ' ครั้ง'
-                    };
-                })
+                allowClear: true
             });
         },
-        error: function(xhr, status, error) {
-            console.error('เกิดข้อผิดพลาดในการโหลดรายชื่อคอร์ส:', status, error);
-            console.log(xhr.responseText);
+        error: function() {
+            console.error('เกิดข้อผิดพลาดในการโหลดรายชื่อคอร์ส');
         }
     });
 }
@@ -593,7 +788,6 @@ function saveRoomDetail() {
             if (response.success) {
                 Swal.fire('สำเร็จ', response.message, 'success').then(() => {
                     $('#roomModal').modal('hide');
-                    // อัปเดตข้อมูลห้องหรือรีโหลดหน้าตามต้องการ
                 });
             } else {
                 Swal.fire('Error', response.message, 'error');
@@ -605,79 +799,64 @@ function saveRoomDetail() {
     });
 }
 
-// สำหรับการจัดการตารางเวลาและคอร์ส
-function showScheduleModal(roomId) {
-    $('#scheduleRoomId').val(roomId);
-    $('#scheduleId').val('');
-    resetScheduleForm(); // รีเซ็ตฟอร์มก่อนโหลดข้อมูลใหม่
-    loadSchedule(roomId);
+function showScheduleModal(roomId, scheduleId = null) {
+    console.log("Setting Room ID to:", roomId);
+    $('#scheduleModal #roomId').val(roomId);
+    $('#scheduleModal #scheduleId').val(scheduleId);
+    resetScheduleForm();
+    
+    if (scheduleId) {
+        // กำลังแก้ไขตารางเวลาที่มีอยู่
+        $('#deleteScheduleBtn').show();
+        $('#scheduleModalTitle').text('แก้ไขตารางเวลาและคอร์ส');
+        loadSchedule(scheduleId);
+    } else {
+        // กำลังเพิ่มตารางเวลาใหม่
+        $('#deleteScheduleBtn').hide();
+        $('#scheduleModalTitle').text('เพิ่มตารางเวลาและคอร์ส');
+    }
+    
     $('#scheduleModal').modal('show');
 }
 
-function loadSchedule(roomId) {
+function loadSchedule(scheduleId) {
     $.ajax({
         url: 'sql/get-schedule.php',
         type: 'GET',
-        data: { 
-            roomId: roomId,
-            date: $('#scheduleDate').val()
-        },
+        data: { scheduleId: scheduleId },
         dataType: 'json',
         success: function(data) {
             if (data) {
-                $('#scheduleId').val(data.schedule_id);
+                $('#scheduleName').val(data.schedule_name);
                 $('#startTime').val(data.start_time);
                 $('#endTime').val(data.end_time);
                 $('#intervalMinutes').val(data.interval_minutes);
-                
-                // โหลดคอร์สก่อน แล้วค่อยเลือก
-                loadCourses(data.courses);
-                
-                $('#deleteScheduleBtn').show();
-            } else {
-                resetScheduleForm();
+                // โหลดข้อมูลคอร์ส
+                if (data.courses) {
+                    $('#courses').val(data.courses.split(',')).trigger('change');
+                }
             }
         },
         error: function() {
             console.error('เกิดข้อผิดพลาดในการโหลดข้อมูลตารางเวลา');
-            resetScheduleForm();
         }
     });
 }
 
 function resetScheduleForm() {
+    // $('#roomId').val('');  // ไม่ต้องรีเซ็ต roomId
     $('#scheduleId').val('');
-    $('#startTime').val('09:00');
-    $('#endTime').val('18:00');
+    $('#scheduleName').val('');
+    $('#startTime').val('');
+    $('#endTime').val('');
     $('#intervalMinutes').val('30');
     $('#courses').val(null).trigger('change');
-    $('#deleteScheduleBtn').hide();
-    loadCourses(); // โหลดคอร์สใหม่เมื่อรีเซ็ตฟอร์ม
 }
 
-$('#scheduleForm').submit(function(e) {
-    e.preventDefault();
-    $.ajax({
-        url: 'sql/save-schedule.php',
-        type: 'POST',
-        data: $(this).serialize(),
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                Swal.fire('สำเร็จ', response.message, 'success').then(() => {
-                    $('#scheduleModal').modal('hide');
-                    // อัปเดตการแสดงผลตารางเวลาในหน้าหลัก (ถ้ามี)
-                });
-            } else {
-                Swal.fire('Error', response.message, 'error');
-            }
-        },
-        error: function() {
-            Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
-        }
-    });
-});
 
+$('#scheduleModal').on('shown.bs.modal', function () {
+    console.log("Modal shown. Room ID in form:", $('#scheduleForm #roomId').val());
+});
 
 function loadCourses(selectedCourses = []) {
     $.ajax({
@@ -690,7 +869,7 @@ function loadCourses(selectedCourses = []) {
                 var option = new Option(course.name, course.id, false, selectedCourses.includes(course.id.toString()));
                 $('#courses').append(option);
             });
-            $('#courses').trigger('change'); // ทริกเกอร์ change event เพื่ออัปเดต UI
+            $('#courses').trigger('change');
         },
         error: function() {
             console.error('เกิดข้อผิดพลาดในการโหลดรายชื่อคอร์ส');
@@ -699,6 +878,12 @@ function loadCourses(selectedCourses = []) {
 }
 
 $('#deleteScheduleBtn').click(function() {
+    var scheduleId = $('#scheduleId').val();
+    if (!scheduleId) {
+        Swal.fire('Error', 'ไม่พบข้อมูลตารางเวลา', 'error');
+        return;
+    }
+
     Swal.fire({
         title: 'ยืนยันการลบ?',
         text: "คุณแน่ใจหรือไม่ที่จะลบตารางเวลานี้?",
@@ -713,13 +898,13 @@ $('#deleteScheduleBtn').click(function() {
             $.ajax({
                 url: 'sql/delete-schedule.php',
                 type: 'POST',
-                data: { scheduleId: $('#scheduleId').val() },
+                data: { scheduleId: scheduleId },
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
                         Swal.fire('สำเร็จ', 'ลบตารางเวลาเรียบร้อยแล้ว', 'success').then(() => {
                             $('#scheduleModal').modal('hide');
-                            // อัปเดตการแสดงผลตารางเวลาในหน้าหลัก (ถ้ามี)
+                            location.reload();
                         });
                     } else {
                         Swal.fire('Error', response.message, 'error');
@@ -732,7 +917,181 @@ $('#deleteScheduleBtn').click(function() {
         }
     });
 });
-    </script>
+
+
+
+function deleteSchedule(scheduleId) {
+    Swal.fire({
+        title: 'ยืนยันการลบ?',
+        text: "คุณแน่ใจหรือไม่ที่จะลบตารางเวลานี้?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/delete-schedule.php',
+                type: 'POST',
+                data: { scheduleId: scheduleId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('สำเร็จ', 'ลบตารางเวลาเรียบร้อยแล้ว', 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
+                }
+            });
+        }
+    });
+}
+
+function editSchedule(scheduleId) {
+    resetScheduleForm();
+    
+    $.ajax({
+        url: 'sql/get-schedule.php',
+        type: 'GET',
+        data: { scheduleId: scheduleId },
+        dataType: 'json',
+        success: function(data) {
+            if (data) {
+                console.log("Received data:", data);  // เพิ่ม log นี้
+                $('#scheduleId').val(data.schedule_id);
+                $('#scheduleForm #roomId').val(data.room_id);  // เปลี่ยนเป็นแบบนี้
+                $('#scheduleName').val(data.schedule_name);
+                $('#startTime').val(data.start_time);
+                $('#endTime').val(data.end_time);
+                $('#intervalMinutes').val(data.interval_minutes);
+                
+                if (data.courses) {
+                    if (Array.isArray(data.courses)) {
+                        $('#courses').val(data.courses).trigger('change');
+                    } else if (typeof data.courses === 'string') {
+                        $('#courses').val(data.courses.split(',')).trigger('change');
+                    }
+                }
+                
+                console.log("Editing schedule. Room ID:", data.room_id);
+                console.log("Room ID set in form:", $('#scheduleForm #roomId').val());  // เพิ่ม log นี้
+                $('#deleteScheduleBtn').show();
+                $('#scheduleModal').modal('show');
+            } else {
+                Swal.fire('Error', 'ไม่พบข้อมูลตารางเวลา', 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX Error: ", status, error);
+            console.log("Response Text: ", xhr.responseText);
+            Swal.fire('Error', 'เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
+        }
+    });
+}
+
+function showScheduleModal(roomId) {
+    console.log("Setting Room ID to:", roomId);
+    $('#scheduleModal #roomId').val(roomId);  // เพิ่ม #scheduleModal เพื่อให้แน่ใจว่าเราเลือก input ถูกต้อง
+    $('#scheduleModal #scheduleId').val('');
+    resetScheduleForm();
+    $('#scheduleModal').modal('show');
+}
+
+
+$('#scheduleForm').submit(function(e) {
+    e.preventDefault();
+    var roomId = $('#scheduleForm #roomId').val();
+    console.log("Submitting form. Room ID in form:", roomId);
+
+    if (!roomId) {
+        console.error("Room ID is missing!");
+        Swal.fire('Error', 'ไม่พบข้อมูล Room ID', 'error');
+        return;
+    }
+
+    var formData = $(this).serialize();
+    console.log("Form data before sending:", formData);
+
+    $.ajax({
+        url: 'sql/save-schedule.php',
+        type: 'POST',
+        data: formData,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                Swal.fire('สำเร็จ', 'บันทึกตารางเวลาเรียบร้อยแล้ว', 'success').then(() => {
+                    $('#scheduleModal').modal('hide');
+                    location.reload();
+                });
+            } else {
+                Swal.fire('Error', response.message, 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+            console.log("Response Text:", xhr.responseText);
+            Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+        }
+    });
+});
+function toggleRoomStatus(roomId, newStatus, roomName) {
+    let actionText = newStatus === 'open' ? 'เปิด' : 'ปิด';
+    Swal.fire({
+        title: `ยืนยันการ${actionText}ห้อง?`,
+        text: `คุณต้องการ${actionText}ห้อง "${roomName}" สำหรับวันนี้ใช่หรือไม่?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: `ใช่, ${actionText}ห้อง!`,
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/toggle-room-status.php',
+                type: 'POST',
+                data: {
+                    roomId: roomId,
+                    status: newStatus,
+                    date: $('#date').val()
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire(
+                            'สำเร็จ!',
+                            `${actionText}ห้อง "${roomName}" เรียบร้อยแล้ว`,
+                            'success'
+                        ).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด!',
+                            response.message,
+                            'error'
+                        );
+                    }
+                },
+                error: function() {
+                    Swal.fire(
+                        'เกิดข้อผิดพลาด!',
+                        'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+}
+</script>
 
 </body>
 </html>

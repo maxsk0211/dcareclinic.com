@@ -843,42 +843,35 @@ while ($row = $result_bookings->fetch_object()) {
                                         </div>
                                     <div class="col-md-6">
                                         
-                                            <div class="form-section">
-                                                <h3>นัดหมายติดตามผล</h3>
-                                                <div class="alert alert-warning" id="DrawingModalalert" >
-                                                    <p>กรุณาเพิ่มข้อมูล OPD ก่อน</p>
-                                                </div>
-                                            <div id="followUpSection" style="display: none;">
-                                                <div class="mb-3">
-                                                    <label for="follow_up_date" class="form-label">วันที่นัดติดตามผล</label>
-                                                    <input type="text" class="form-control" id="follow_up_date" name="follow_up_date" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label">เลือกเวลา</label>
-                                                    <div id="timeSlots" class="row text-center">
-                                                        <!-- Time slots will be dynamically added here -->
-                                                    </div>
-                                                </div>
-                                                <input type="hidden" id="follow_up_time" name="follow_up_time">
-                                                <div class="mb-3">
-                                                    <label for="follow_up_note" class="form-label">หมายเหตุการติดตามผล</label>
-                                                    <textarea class="form-control" id="follow_up_note" name="follow_up_note" rows="3"></textarea>
-                                                </div>
-                                                <button type="button" class="btn btn-primary" onclick="saveFollowUp()">บันทึกการนัดติดตามผล</button>
-                                             </div>
-
+                                        <div class="form-section">
+                                            <h3>นัดหมายติดตามผล</h3>
+                                            <div class="mb-3">
+                                                <label for="follow_up_date" class="form-label">วันที่นัดติดตามผล</label>
+                                                <input type="text" class="form-control" id="follow_up_date" name="follow_up_date" required>
                                             </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">เลือกเวลา</label>
+                                                <div id="timeSlots" class="row"></div>
+                                            </div>
+                                            <div id="selectedTimeInfo" class="mb-3"></div>
+                                            <input type="hidden" id="follow_up_time" name="follow_up_time">
+                                            <div class="mb-3">
+                                                <label for="follow_up_note" class="form-label">หมายเหตุการติดตามผล</label>
+                                                <textarea class="form-control" id="follow_up_note" name="follow_up_note" rows="3"></textarea>
+                                            </div>
+                                            <button type="button" class="btn btn-primary" onclick="saveFollowUp()">บันทึกการนัดติดตามผล</button>
+                                        </div>
 
-                                            <div class="form-section">
-                                                <h3>ประวัติการนัดติดตามผล</h3>
-                                                <div class="alert alert-warning" id="DrawingModalalert" >
-                                                    <p>กรุณาเพิ่มข้อมูล OPD ก่อน</p>
-                                                </div>
-                                                <div id="followUpHistory">
-                                                    <!-- ข้อมูลประวัติการนัดติดตามผลจะถูกเพิ่มที่นี่ -->
-                                                </div>
+                                        <div class="form-section">
+                                            <h3>ประวัติการนัดติดตามผล</h3>
+                                            <div class="alert alert-warning" id="DrawingModalalert" >
+                                                <p>กรุณาเพิ่มข้อมูล OPD ก่อน</p>
+                                            </div>
+                                            <div id="followUpHistory">
+                                                <!-- ข้อมูลประวัติการนัดติดตามผลจะถูกเพิ่มที่นี่ -->
                                             </div>
                                         </div>
+                                    </div>
 
                                 </div>
 
@@ -985,6 +978,15 @@ function msg_error(messageทช){
 
 
 $(document).ready(function() {
+    // เพิ่มการกำหนดค่า Flatpickr สำหรับเลือกวันที่
+    flatpickr("#follow_up_date", {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        onChange: function(selectedDates, dateStr, instance) {
+            fetchAvailableSlots(dateStr);
+        }
+    });
+
     $('#showPartTwo').on('click', function() {
         const opdId = $('#opd_id').val();
         if (opdId) {
@@ -1657,63 +1659,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('follow_up_date element not found');
     }
 
-    // Function to update time slots
-    function updateTimeSlots(dateStr) {
-        console.log('Updating time slots for date:', dateStr);
-        const [day, month, year] = dateStr.split('/');
-        const selectedDate = new Date(year - 543, month - 1, day);
-        const dayOfWeek = selectedDate.toLocaleString('en-us', {weekday:'long'});
 
-        console.log('Day of week:', dayOfWeek);
-        console.log('Clinic hours:', clinicHours);
 
-        const hours = clinicHours[dayOfWeek];
-        const timeSlotsContainer = document.getElementById('timeSlots');
-        timeSlotsContainer.innerHTML = '';
 
-        if (hours && hours.is_closed != 1) {
-            const startTime = new Date(`2000-01-01T${hours.start_time}`);
-            const endTime = new Date(`2000-01-01T${hours.end_time}`);
-
-            const now = new Date();
-            const isToday = selectedDate.toDateString() === now.toDateString();
-
-            while (startTime < endTime) {
-                const timeStr = startTime.toTimeString().slice(0, 5);
-                const fullDateStr = `${year - 543}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                const fullDateTimeStr = `${fullDateStr} ${timeStr}:00`;
-                const isBooked = bookedSlots.includes(fullDateTimeStr);
-                
-                const slotDateTime = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), startTime.getHours(), startTime.getMinutes());
-                const isPastTime = isToday && slotDateTime < now;
-
-                const slot = document.createElement('div');
-                slot.className = `col-4 col-sm-3 mb-2`;
-                
-                if (isPastTime) {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-secondary disabled" data-time="${timeStr}">${timeStr}</div>`;
-                } else if (isBooked) {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-danger disabled" data-time="${timeStr}">${timeStr}</div>`;
-                } else {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-primary" data-time="${timeStr}">${timeStr}</div>`;
-                }
-                
-                timeSlotsContainer.appendChild(slot);
-                startTime.setMinutes(startTime.getMinutes() + 15);
-            }
-
-            document.querySelectorAll('.time-slot:not(.disabled)').forEach(slot => {
-                slot.addEventListener('click', function() {
-                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-                    this.classList.add('selected');
-                    document.getElementById('follow_up_time').value = this.dataset.time;
-                });
-            });
-        } else {
-            console.log('No operating hours found for this day or clinic is closed');
-            timeSlotsContainer.innerHTML = '<p>ไม่มีเวลาทำการในวันที่เลือก หรือคลินิกปิดทำการ</p>';
-        }
-    }
 
     // Helper function to format date in Thai format
     function formatThaiDate(date) {
@@ -1724,6 +1672,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function updateTimeSlots(availableSlots) {
+    const timeSlotsContainer = document.getElementById('timeSlots');
+    timeSlotsContainer.innerHTML = '';
+
+    availableSlots.forEach(function(slot) {
+        const slotElement = document.createElement('div');
+        slotElement.className = 'col-md-3 mb-2';
+        
+        let buttonClass = 'btn-outline-primary';
+        let buttonText = slot.time;
+        let isDisabled = false;
+
+        switch(slot.status) {
+            case 'fully_booked':
+                buttonClass = 'btn-danger';
+                buttonText += ' (เต็ม)';
+                isDisabled = true;
+                break;
+            case 'partially_booked':
+                buttonClass = 'btn-warning';
+                buttonText += ` (ว่าง ${slot.available_rooms_count})`;
+                break;
+        }
+
+        slotElement.innerHTML = `
+            <button class="btn ${buttonClass} time-slot w-100" 
+                    ${isDisabled ? 'disabled' : ''}
+                    data-time="${slot.time}"
+                    data-available-rooms='${JSON.stringify(slot.available_rooms)}'
+                    data-interval="${slot.interval_minutes}">
+                ${buttonText}
+            </button>
+        `;
+
+        timeSlotsContainer.appendChild(slotElement);
+    });
+
+    // เพิ่ม event listener สำหรับปุ่มเวลา
+    $('.time-slot').on('click', function() {
+        $('.time-slot').removeClass('selected');
+        $(this).addClass('selected');
+        const selectedTime = $(this).data('time');
+        const availableRooms = $(this).data('available-rooms');
+        const intervalMinutes = $(this).data('interval');
+        
+        $('#follow_up_time').val(selectedTime);
+        updateSelectedTimeInfo(selectedTime, availableRooms, intervalMinutes);
+    });
+}
+function updateSelectedTimeInfo(time, availableRooms, intervalMinutes) {
+    const selectedInfo = document.getElementById('selectedTimeInfo');
+    if (availableRooms.length > 0) {
+        const roomNames = availableRooms.map(room => room.room_name).join(', ');
+        selectedInfo.innerHTML = `เวลาที่เลือก: ${time}<br>ห้องที่ว่าง: ${roomNames}<br>ระยะเวลา: ${intervalMinutes} นาที`;
+    } else {
+        selectedInfo.innerHTML = 'ไม่มีห้องว่างในเวลาที่เลือก';
+    }
+}
 function saveFollowUp() {
     const followUpDate = $('#follow_up_date').val();
     const followUpTime = $('#follow_up_time').val();
@@ -1754,15 +1760,14 @@ function saveFollowUp() {
                 Swal.fire({
                     icon: 'success',
                     title: 'บันทึกการนัดติดตามผลสำเร็จ',
-                    text: 'ข้อมูลการนัดติดตามผลถูกบันทึกเรียบร้อยแล้ว',
-                    showConfirmButton: false,
-                    timer: 1500
+                    text: 'ข้อมูลการนัดติดตามผลถูกบันทึกเรียบร้อยแล้ว'
                 }).then(() => {
                     // รีเซ็ตฟอร์ม
                     $('#follow_up_date').val('');
                     $('#follow_up_time').val('');
                     $('#follow_up_note').val('');
                     $('#timeSlots').empty();
+                    $('#selectedTimeInfo').empty();
                     
                     // โหลดข้อมูลประวัติการนัดติดตามผลใหม่
                     loadFollowUpHistory();
@@ -1775,8 +1780,7 @@ function saveFollowUp() {
                 });
             }
         },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.error('AJAX error:', textStatus, errorThrown);
+        error: function() {
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
@@ -2157,8 +2161,8 @@ document.getElementById('printButton').addEventListener('click', function() {
                 <div class="info-item"><strong>เบอร์โทร:</strong> ${data.customer.cus_tel || ''}</div>
                 <div class="info-item">${data.customer.cus_postal_code || ''}</div>
                 <div class="info-item"><strong>เลขที่ใบอนุญาต:</strong> 42211789168</div>
-                <div class="info-item"><strong>โรคประจำตัว:</strong> ${data.opd.food_allergy || ''}</div>
-                <div class="info-item"><strong>แพ้ยา:</strong> ${data.opd.drug_allergy || ''}</div>
+                <div class="info-item"><strong>โรคประจำตัว:</strong> ${data.opd && data.opd.food_allergy ? data.opd.food_allergy : ''}</div>
+                <div class="info-item"><strong>แพ้ยา:</strong> ${data.opd && data.opd.drug_allergy ? data.opd.drug_allergy : ''}</div>
                 <div class="info-item"><strong>ที่อยู่:</strong> 100/1 ซ วิภาวดี 1 รัชดา จังหวัดกรุงเทพ</div>
                 <div class="info-item"><strong>(พิมพ์เมื่อ: ${data.printDateTime || ''})</strong></div>
                 <div class="info-item"></div>
@@ -2230,6 +2234,26 @@ document.getElementById('printButton').addEventListener('click', function() {
   });
 });
 
+function fetchAvailableSlots(selectedDate) {
+    $.ajax({
+        url: 'sql/get-follow-up-slots.php',
+        method: 'POST',
+        data: { selected_date: selectedDate },
+        success: function(response) {
+            try {
+                const availableSlots = JSON.parse(response);
+                updateTimeSlots(availableSlots);
+            } catch (error) {
+                console.error('Error parsing JSON:', error);
+                alert('เกิดข้อผิดพลาดในการประมวลผลข้อมูล');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX error:', status, error);
+            alert('ไม่สามารถดึงข้อมูลการจองได้');
+        }
+    });
+}
 </script>
 </body>
 </html>
