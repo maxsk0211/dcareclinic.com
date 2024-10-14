@@ -93,6 +93,17 @@ while ($row = $result_bookings->fetch_object()) {
     }
 }
 
+// ดึงข้อมูลวันที่ที่มีในตาราง room_status
+$sql_available_dates = "SELECT DISTINCT date FROM room_status WHERE daily_status = 'open' AND branch_id = ?";
+$stmt = $conn->prepare($sql_available_dates);
+$stmt->bind_param("i", $_SESSION['branch_id']);
+$stmt->execute();
+$result = $stmt->get_result();
+$available_dates = [];
+while ($row = $result->fetch_assoc()) {
+    $available_dates[] = $row['date'];
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -681,7 +692,6 @@ while ($row = $result_bookings->fetch_object()) {
                                             <option value="">เลือก</option>
                                             <option value="ไม่สูบ" <?php echo ($smoking == 'ไม่สูบ') ? 'selected' : ''; ?>>ไม่สูบ</option>
                                             <option value="สูบ" <?php echo ($smoking == 'สูบ') ? 'selected' : ''; ?>>สูบ</option>
-                                            <option value="เคยสูบแต่เลิกแล้ว" <?php echo ($smoking == 'เคยสูบแต่เลิกแล้ว') ? 'selected' : ''; ?>>เคยสูบแต่เลิกแล้ว</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3 mb-3">
@@ -690,7 +700,6 @@ while ($row = $result_bookings->fetch_object()) {
                                             <option value="">เลือก</option>
                                             <option value="ไม่ดื่ม" <?php echo ($alcohol == 'ไม่ดื่ม') ? 'selected' : ''; ?>>ไม่ดื่ม</option>
                                             <option value="ดื่ม" <?php echo ($alcohol == 'ดื่ม') ? 'selected' : ''; ?>>ดื่ม</option>
-                                            <option value="เคยดื่มแต่เลิกแล้ว" <?php echo ($alcohol == 'เคยดื่มแต่เลิกแล้ว') ? 'selected' : ''; ?>>เคยดื่มแต่เลิกแล้ว</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3 mb-3">
@@ -948,7 +957,7 @@ let backgroundImage = new Image();
 // เพิ่มตัวแปรสำหรับเก็บสถานะสิทธิ์
 const canEditPart1 = <?php echo json_encode($canEditPart1); ?>;
 const canEditPart2 = <?php echo json_encode($canEditPart2); ?>;
-
+    var availableDates = <?php echo json_encode($available_dates); ?>;
 
 
 function msg_ok(message){
@@ -980,10 +989,22 @@ function msg_error(messageทช){
 $(document).ready(function() {
     // เพิ่มการกำหนดค่า Flatpickr สำหรับเลือกวันที่
     flatpickr("#follow_up_date", {
-        dateFormat: "Y-m-d",
+        dateFormat: "d/m/Y",
         minDate: "today",
+        locale: "th",
         onChange: function(selectedDates, dateStr, instance) {
-            fetchAvailableSlots(dateStr);
+            console.log('Selected date:', dateStr); // เพิ่ม log
+            const thaiDate = formatThaiDate(selectedDates[0]);
+            instance.input.value = thaiDate;
+            fetchAvailableSlots(thaiDate);
+        },
+        onReady: function(selectedDates, dateStr, instance) {
+            const currentYear = instance.currentYear;
+            instance.currentYearElement.textContent = currentYear + 543;
+        },
+        onYearChange: function(selectedDates, dateStr, instance) {
+            const currentYear = instance.currentYear;
+            instance.currentYearElement.textContent = currentYear + 543;
         }
     });
 
@@ -1585,19 +1606,19 @@ var closedDays = <?php echo json_encode($closed_days); ?>;
 var closedDates = <?php echo json_encode($closed_dates); ?>;
 var bookedSlots = <?php echo json_encode($booked_slots); ?>;
 
-console.log('Clinic Hours:', clinicHours);
-console.log('Closed Days:', closedDays);
-console.log('Closed Dates:', closedDates);
-console.log('Booked Slots:', bookedSlots);
+// console.log('Clinic Hours:', clinicHours);
+// console.log('Closed Days:', closedDays);
+// console.log('Closed Dates:', closedDates);
+// console.log('Booked Slots:', bookedSlots);
 
 document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize Flatpickr for date selection
     flatpickr.localize(flatpickr.l10ns.th);
-    const clinicHours = <?php echo json_encode($clinic_hours); ?>;
-    const closedDays = <?php echo json_encode($closed_days); ?>;
-    const closedDates = <?php echo json_encode($closed_dates); ?>;
-    const bookedSlots = <?php echo json_encode($booked_slots); ?>;
+    // const clinicHours = <?php echo json_encode($clinic_hours); ?>;
+    // const closedDays = <?php echo json_encode($closed_days); ?>;
+    // const closedDates = <?php echo json_encode($closed_dates); ?>;
+    // const bookedSlots = <?php echo json_encode($booked_slots); ?>;
 
 
     console.log('DOM fully loaded');
@@ -1618,41 +1639,36 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Disable closed days of the week
                     const dayOfWeek = date.toLocaleString('en-us', {weekday: 'long'});
-                    return closedDays.includes(dayOfWeek);
+                    if (closedDays.includes(dayOfWeek)) {
+                        return true;
+                    }
+
+                    // Disable dates not in room_status
+                    const formattedDate = formatDateForDatabase(date);
+                    if (!availableDates.includes(formattedDate)) {
+                        return true;
+                    }
+
+                    return false;
                 }
             ],
             dateFormat: "d/m/Y",
-            locale: {
-                ...flatpickr.l10ns.th,
-                reformatAfterEdit: true,
-            },
-            onReady: function(selectedDates, dateStr, instance) {
-                instance.currentYearElement.textContent = parseInt(instance.currentYearElement.textContent) + 543;
-            },
+            locale: "th",
             onChange: function(selectedDates, dateStr, instance) {
                 if (selectedDates.length > 0) {
                     const thaiDate = formatThaiDate(selectedDates[0]);
                     instance.input.value = thaiDate;
-                    updateTimeSlots(thaiDate);
+                    fetchAvailableSlots(thaiDate);
                 }
+            },
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.currentYearElement.textContent = parseInt(instance.currentYearElement.textContent) + 543;
             },
             onYearChange: function(selectedDates, dateStr, instance) {
                 setTimeout(function() {
                     let yearElem = instance.currentYearElement;
                     yearElem.textContent = parseInt(yearElem.textContent) + 543;
                 }, 0);
-            },
-            formatDate: function(date, format) {
-                return formatThaiDate(date);
-            },
-            parseDate: function(datestr, format) {
-                if (!datestr) return undefined;
-                const parts = datestr.split('/');
-                if (parts.length !== 3) return undefined;
-                const thaiYear = parseInt(parts[2], 10);
-                const month = parseInt(parts[1], 10) - 1;
-                const day = parseInt(parts[0], 10);
-                return new Date(thaiYear - 543, month, day);
             }
         });
     } else {
@@ -1663,14 +1679,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    // Helper function to format date in Thai format
-    function formatThaiDate(date) {
-        const thaiYear = date.getFullYear() + 543;
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        return `${day}/${month}/${thaiYear}`;
-    }
+
 });
+
+function formatDateForDatabase(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Helper function to format date in Thai format
+function formatThaiDate(date) {
+    const thaiYear = date.getFullYear() + 543;
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${day}/${month}/${thaiYear}`;
+}
 
 function updateTimeSlots(availableSlots) {
     const timeSlotsContainer = document.getElementById('timeSlots');
@@ -1718,9 +1743,13 @@ function updateTimeSlots(availableSlots) {
         const intervalMinutes = $(this).data('interval');
         
         $('#follow_up_time').val(selectedTime);
+        if (availableRooms && availableRooms.length > 0) {
+            $('#selected_room_id').val(availableRooms[0].room_id); // เก็บค่า room_id
+        }
         updateSelectedTimeInfo(selectedTime, availableRooms, intervalMinutes);
     });
 }
+
 function updateSelectedTimeInfo(time, availableRooms, intervalMinutes) {
     const selectedInfo = document.getElementById('selectedTimeInfo');
     if (availableRooms.length > 0) {
@@ -1735,24 +1764,31 @@ function saveFollowUp() {
     const followUpTime = $('#follow_up_time').val();
     const followUpNote = $('#follow_up_note').val();
     const opdId = $('#opd_id').val();
+    const selectedRoomId = $('#selected_room_id').val(); // เพิ่มบรรทัดนี้
 
-    if (!followUpDate || !followUpTime) {
+    if (!followUpDate || !followUpTime || !selectedRoomId) { // เพิ่มการตรวจสอบ selectedRoomId
         Swal.fire({
             icon: 'error',
             title: 'ข้อมูลไม่ครบถ้วน',
-            text: 'กรุณาเลือกวันที่และเวลานัดหมาย'
+            text: 'กรุณาเลือกวันที่ เวลา และห้องตรวจ'
         });
         return;
     }
+
+    // แปลงวันที่จากรูปแบบไทยเป็นรูปแบบที่ใช้ในฐานข้อมูล
+    const [day, month, thaiYear] = followUpDate.split('/');
+    const year = parseInt(thaiYear) - 543;
+    const formattedDate = `${year}-${month}-${day}`;
 
     $.ajax({
         url: 'sql/save-follow-up.php',
         type: 'POST',
         data: {
             opd_id: opdId,
-            follow_up_date: followUpDate,
+            follow_up_date: formattedDate,
             follow_up_time: followUpTime,
-            follow_up_note: followUpNote
+            follow_up_note: followUpNote,
+            room_id: selectedRoomId // เพิ่มบรรทัดนี้
         },
         dataType: 'json',
         success: function(response) {
@@ -1768,6 +1804,7 @@ function saveFollowUp() {
                     $('#follow_up_note').val('');
                     $('#timeSlots').empty();
                     $('#selectedTimeInfo').empty();
+                    $('#selected_room_id').val(''); // เพิ่มบรรทัดนี้
                     
                     // โหลดข้อมูลประวัติการนัดติดตามผลใหม่
                     loadFollowUpHistory();
@@ -1817,7 +1854,6 @@ function loadFollowUpHistory() {
 }
 
 function updateFollowUpHistoryTable(data) {
-    // console.log('Updating follow-up history table with data:', data);
     let historyHtml = '<table class="table">';
     historyHtml += '<thead><tr><th>วันที่และเวลานัด</th><th>หมายเหตุ</th><th>สถานะ</th><th>การดำเนินการ</th></tr></thead>';
     historyHtml += '<tbody>';
@@ -1829,8 +1865,12 @@ function updateFollowUpHistoryTable(data) {
             const appointmentDate = new Date(item.booking_datetime_raw);
             const canCancel = appointmentDate > currentDate && item.status !== 'cancelled';
 
+            // แปลงวันที่เป็นรูปแบบไทย
+            const thaiDate = formatThaiDate(appointmentDate);
+            const appointmentTime = appointmentDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
             historyHtml += `<tr>
-                <td>${item.booking_datetime}</td>
+                <td>${thaiDate} ${appointmentTime}</td>
                 <td>${item.note}</td>
                 <td>${getStatusBadge(item.status)}</td>
                 <td>`;
@@ -2235,11 +2275,19 @@ document.getElementById('printButton').addEventListener('click', function() {
 });
 
 function fetchAvailableSlots(selectedDate) {
+    // แปลงวันที่จากรูปแบบ d/m/Y (พ.ศ.) เป็น Y-m-d (ค.ศ.)
+    let [day, month, thaiYear] = selectedDate.split('/');
+    let year = parseInt(thaiYear) - 543;
+    let formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+    console.log('Fetching slots for date:', formattedDate); // เพิ่ม log เพื่อตรวจสอบ
+
     $.ajax({
         url: 'sql/get-follow-up-slots.php',
         method: 'POST',
-        data: { selected_date: selectedDate },
+        data: { selected_date: formattedDate },
         success: function(response) {
+            // console.log('Response from server:', response); // เพิ่ม log เพื่อตรวจสอบ
             try {
                 const availableSlots = JSON.parse(response);
                 updateTimeSlots(availableSlots);

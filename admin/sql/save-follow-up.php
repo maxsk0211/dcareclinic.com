@@ -9,53 +9,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $follow_up_date = mysqli_real_escape_string($conn, $_POST['follow_up_date']);
     $follow_up_time = mysqli_real_escape_string($conn, $_POST['follow_up_time']);
     $follow_up_note = mysqli_real_escape_string($conn, $_POST['follow_up_note']);
-    $branch_id = intval($_SESSION['branch_id']); // ใช้ branch_id จาก session
+    $room_id = intval($_POST['room_id']); // เพิ่มบรรทัดนี้
 
     $booking_datetime = $follow_up_date . ' ' . $follow_up_time;
 
-    // สร้าง SQL query โดยรวม branch_id
-    $sql = "INSERT INTO course_bookings (cus_id, branch_id, booking_datetime, status, is_follow_up, users_id) 
-            SELECT cus_id, ?, ?, 'confirmed', 1, ?
-            FROM opd 
-            WHERE opd_id = ?";
-    
-    $stmt = $conn->prepare($sql);
-    
-    if ($stmt === false) {
-        echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการเตรียมคำสั่ง SQL: ' . $conn->error]);
-        exit;
-    }
+    try {
+        $conn->begin_transaction();
 
-    $stmt->bind_param("isii", $branch_id, $booking_datetime, $_SESSION['users_id'], $opd_id);
+        // ดึง cus_id จาก opd
+        $sql_get_cus_id = "SELECT cus_id FROM opd WHERE opd_id = ?";
+        $stmt = $conn->prepare($sql_get_cus_id);
+        $stmt->bind_param("i", $opd_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $cus_id = $row['cus_id'];
+        } else {
+            throw new Exception("ไม่พบข้อมูล OPD");
+        }
 
-    if ($stmt->execute()) {
+        // บันทึกข้อมูลการนัดหมาย
+        $sql_insert_booking = "INSERT INTO course_bookings (cus_id, booking_datetime, status, is_follow_up, room_id, users_id, branch_id) 
+                               VALUES (?, ?, 'confirmed', 1, ?, ?, ?)";
+        $stmt = $conn->prepare($sql_insert_booking);
+        $status = 'confirmed';
+        $is_follow_up = 1;
+        $users_id = $_SESSION['users_id'];
+        $branch_id = $_SESSION['branch_id'];
+        $stmt->bind_param("isiii", $cus_id, $booking_datetime, $room_id, $users_id, $branch_id);
+        if (!$stmt->execute()) {
+            throw new Exception("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " . $stmt->error);
+        }
+
         $booking_id = $conn->insert_id;
 
         // บันทึกหมายเหตุการติดตามผล
-        $note_sql = "INSERT INTO follow_up_notes (booking_id, note) VALUES (?, ?)";
-        $note_stmt = $conn->prepare($note_sql);
-        
-        if ($note_stmt === false) {
-            echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการเตรียมคำสั่ง SQL สำหรับหมายเหตุ: ' . $conn->error]);
-            exit;
+        if (!empty($follow_up_note)) {
+            $sql_insert_note = "INSERT INTO follow_up_notes (booking_id, note) VALUES (?, ?)";
+            $stmt = $conn->prepare($sql_insert_note);
+            $stmt->bind_param("is", $booking_id, $follow_up_note);
+            if (!$stmt->execute()) {
+                throw new Exception("เกิดข้อผิดพลาดในการบันทึกหมายเหตุ: " . $stmt->error);
+            }
         }
 
-        $note_stmt->bind_param("is", $booking_id, $follow_up_note);
-        
-        if ($note_stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => 'บันทึกการนัดติดตามผลสำเร็จ']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการบันทึกหมายเหตุ: ' . $note_stmt->error]);
-        }
+        $conn->commit();
+        echo json_encode(['success' => true, 'message' => 'บันทึกการนัดติดตามผลสำเร็จ']);
 
-        $note_stmt->close();
-    } else {
-        echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $stmt->error]);
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);
     }
-
-    $stmt->close();
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
 }
-
-$conn->close();
