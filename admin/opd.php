@@ -864,6 +864,7 @@ while ($row = $result->fetch_assoc()) {
                                             </div>
                                             <div id="selectedTimeInfo" class="mb-3"></div>
                                             <input type="hidden" id="follow_up_time" name="follow_up_time">
+                                            <input type="hidden" id="selected_room_id" name="selected_room_id">
                                             <div class="mb-3">
                                                 <label for="follow_up_note" class="form-label">หมายเหตุการติดตามผล</label>
                                                 <textarea class="form-control" id="follow_up_note" name="follow_up_note" rows="3"></textarea>
@@ -1698,6 +1699,7 @@ function formatThaiDate(date) {
 }
 
 function updateTimeSlots(availableSlots) {
+    console.log('Updating time slots with:', availableSlots); // เพิ่ม log เพื่อตรวจสอบข้อมูล
     const timeSlotsContainer = document.getElementById('timeSlots');
     timeSlotsContainer.innerHTML = '';
 
@@ -1743,8 +1745,14 @@ function updateTimeSlots(availableSlots) {
         const intervalMinutes = $(this).data('interval');
         
         $('#follow_up_time').val(selectedTime);
+
+        // เพิ่ม log เพื่อตรวจสอบข้อมูล
+        console.log('Selected time:', selectedTime);
+        console.log('Available rooms:', availableRooms);
+
         if (availableRooms && availableRooms.length > 0) {
             $('#selected_room_id').val(availableRooms[0].room_id); // เก็บค่า room_id
+            console.log('Set room_id to:', availableRooms[0].room_id);
         }
         updateSelectedTimeInfo(selectedTime, availableRooms, intervalMinutes);
     });
@@ -1754,9 +1762,19 @@ function updateSelectedTimeInfo(time, availableRooms, intervalMinutes) {
     const selectedInfo = document.getElementById('selectedTimeInfo');
     if (availableRooms.length > 0) {
         const roomNames = availableRooms.map(room => room.room_name).join(', ');
-        selectedInfo.innerHTML = `เวลาที่เลือก: ${time}<br>ห้องที่ว่าง: ${roomNames}<br>ระยะเวลา: ${intervalMinutes} นาที`;
+        const roomId = availableRooms[0].room_id;
+        $('#selected_room_id').val(roomId); // เพิ่มบรรทัดนี้เพื่อความแน่ใจ
+        selectedInfo.innerHTML = `
+            <div class="alert alert-info">
+                <strong>เวลาที่เลือก:</strong> ${time}<br>
+                <strong>ห้องที่ว่าง:</strong> ${roomNames}<br>
+                <strong>ระยะเวลา:</strong> ${intervalMinutes} นาที<br>
+                <strong>รหัสห้อง:</strong> ${roomId}
+            </div>`;
+
     } else {
-        selectedInfo.innerHTML = 'ไม่มีห้องว่างในเวลาที่เลือก';
+        selectedInfo.innerHTML = '<div class="alert alert-warning">ไม่มีห้องว่างในเวลาที่เลือก</div>';
+        $('#selected_room_id').val(''); // ล้างค่า room_id ถ้าไม่มีห้องว่าง
     }
 }
 function saveFollowUp() {
@@ -1766,11 +1784,30 @@ function saveFollowUp() {
     const opdId = $('#opd_id').val();
     const selectedRoomId = $('#selected_room_id').val(); // เพิ่มบรรทัดนี้
 
-    if (!followUpDate || !followUpTime || !selectedRoomId) { // เพิ่มการตรวจสอบ selectedRoomId
+    // เพิ่ม log เพื่อตรวจสอบค่า
+    console.log('Save Follow Up Data:', {
+        date: followUpDate,
+        time: followUpTime,
+        note: followUpNote,
+        opdId: opdId,
+        roomId: selectedRoomId
+    });
+
+    if (!followUpDate || !followUpTime || !selectedRoomId) {
         Swal.fire({
             icon: 'error',
             title: 'ข้อมูลไม่ครบถ้วน',
-            text: 'กรุณาเลือกวันที่ เวลา และห้องตรวจ'
+            text: 'กรุณาเลือกวันที่ เวลา และห้องตรวจ',
+            html: `
+                <div class="text-left">
+                    <p>ข้อมูลที่ขาดหาย:</p>
+                    <ul>
+                        ${!followUpDate ? '<li>วันที่นัด</li>' : ''}
+                        ${!followUpTime ? '<li>เวลานัด</li>' : ''}
+                        ${!selectedRoomId ? '<li>ห้องตรวจ</li>' : ''}
+                    </ul>
+                </div>
+            `
         });
         return;
     }
@@ -1854,6 +1891,8 @@ function loadFollowUpHistory() {
 }
 
 function updateFollowUpHistoryTable(data) {
+    console.log('Follow up history data:', data); // เพิ่ม log เพื่อตรวจสอบข้อมูล
+    
     let historyHtml = '<table class="table">';
     historyHtml += '<thead><tr><th>วันที่และเวลานัด</th><th>หมายเหตุ</th><th>สถานะ</th><th>การดำเนินการ</th></tr></thead>';
     historyHtml += '<tbody>';
@@ -1863,7 +1902,12 @@ function updateFollowUpHistoryTable(data) {
     if (data.length > 0) {
         data.forEach(function(item) {
             const appointmentDate = new Date(item.booking_datetime_raw);
-            const canCancel = appointmentDate > currentDate && item.status !== 'cancelled';
+            console.log('Appointment date:', appointmentDate); // เพิ่ม log
+            console.log('Current date:', currentDate); // เพิ่ม log
+            console.log('Status:', item.status); // เพิ่ม log
+
+            // แก้ไขเงื่อนไขการแสดงปุ่มยกเลิก
+            const canCancel = appointmentDate > currentDate && item.status === 'confirmed';
 
             // แปลงวันที่เป็นรูปแบบไทย
             const thaiDate = formatThaiDate(appointmentDate);
@@ -1871,14 +1915,22 @@ function updateFollowUpHistoryTable(data) {
 
             historyHtml += `<tr>
                 <td>${thaiDate} ${appointmentTime}</td>
-                <td>${item.note}</td>
+                <td>${item.note || '-'}</td>
                 <td>${getStatusBadge(item.status)}</td>
                 <td>`;
             
             if (canCancel) {
                 historyHtml += `<button class="btn btn-danger btn-sm" onclick="cancelFollowUp(${item.id})">ยกเลิก</button>`;
             } else {
-                historyHtml += `<span class="text-muted">ไม่สามารถยกเลิกได้</span>`;
+                let reason = '';
+                if (appointmentDate <= currentDate) {
+                    reason = 'เลยเวลานัดแล้ว';
+                } else if (item.status === 'cancelled') {
+                    reason = 'ยกเลิกแล้ว';
+                } else if (item.status === 'completed') {
+                    reason = 'เสร็จสิ้นแล้ว';
+                }
+                historyHtml += `<span class="text-muted">${reason}</span>`;
             }
 
             historyHtml += `</td></tr>`;
@@ -1899,11 +1951,15 @@ function getStatusBadge(status) {
             return '<span class="badge bg-danger">ยกเลิกแล้ว</span>';
         case 'completed':
             return '<span class="badge bg-info">เสร็จสิ้น</span>';
+        case 'pending':
+            return '<span class="badge bg-warning">รอยืนยัน</span>';
         default:
             return '<span class="badge bg-secondary">ไม่ทราบสถานะ</span>';
     }
 }
 function cancelFollowUp(followUpId) {
+    console.log('Attempting to cancel follow up:', followUpId); // เพิ่ม log
+
     Swal.fire({
         title: 'ยืนยันการยกเลิก',
         text: "คุณแน่ใจหรือไม่ที่จะยกเลิกการนัดติดตามผลนี้?",
@@ -1921,6 +1977,7 @@ function cancelFollowUp(followUpId) {
                 data: { follow_up_id: followUpId },
                 dataType: 'json',
                 success: function(response) {
+                    console.log('Cancel response:', response); // เพิ่ม log
                     if (response.success) {
                         Swal.fire(
                             'ยกเลิกแล้ว!',
@@ -1938,6 +1995,7 @@ function cancelFollowUp(followUpId) {
                     }
                 },
                 error: function() {
+                    console.error('AJAX error:', error); // เพิ่ม log
                     Swal.fire(
                         'เกิดข้อผิดพลาด!',
                         'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',

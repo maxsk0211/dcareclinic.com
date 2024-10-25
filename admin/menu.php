@@ -161,12 +161,35 @@
                 </li> -->
               </ul>
             </li>
+
             <li class="menu-item">
+              <a href="javascript:void(0)" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons ri-calendar-todo-fill"></i>
+                <div data-i18n="Dashboards">จัดการห้อง</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="manage-rooms.php" class="menu-link" >
+                    <i class="menu-icon tf-icons ri-shopping-cart-2-line"></i>
+                    <div data-i18n="eCommerce">จัดการห้องประจำวัน</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="room-occupancy-calendar.php" class="menu-link">
+                    <i class="menu-icon tf-icons ri-donut-chart-fill"></i>
+                    <div data-i18n="CRM">ปฏิทินการใช้งานห้อง</div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            
+<!--             <li class="menu-item">
                 <a href="manage-rooms.php" class="menu-link">
                     <i class="menu-icon tf-icons ri-calendar-todo-fill"></i>
                     <div data-i18n="จัดการคิว">จัดการห้อง</div>
                 </a>
-            </li>
+            </li> -->
 <!--             <li class="menu-item">
               <a href="page-2.html" class="menu-link">
                 <i class="menu-icon tf-icons ri-file-line"></i>

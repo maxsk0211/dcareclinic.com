@@ -53,9 +53,15 @@ if (!$order) {
 }
 
 // ดึงข้อมูลรายละเอียดคอร์สในคำสั่งซื้อ
-$sql_courses = "SELECT od.*, c.course_name
+$sql_courses = "SELECT od.*, c.course_name, c.course_amount, 
+                COALESCE(cu.used_sessions, 0) as used_sessions
                 FROM order_detail od
                 JOIN course c ON od.course_id = c.course_id
+                LEFT JOIN (
+                    SELECT order_detail_id, COUNT(*) as used_sessions
+                    FROM course_usage
+                    GROUP BY order_detail_id
+                ) cu ON od.od_id = cu.order_detail_id
                 WHERE od.oc_id = ?";
 
 $stmt_courses = $conn->prepare($sql_courses);
@@ -125,7 +131,9 @@ while ($course = $result_courses->fetch_assoc()) {
         'name' => $course['course_name'],
         'amount' => $course['od_amount'],
         'price' => $course['od_price'],
-        'resources' => $resources
+        'resources' => $resources,
+        'used_sessions' => intval($course['used_sessions']),
+        'course_amount' => intval($course['course_amount'])
     );
 
     $stmt_resources->close();

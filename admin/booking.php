@@ -534,8 +534,8 @@ function updateOrderList() {
         Swal.fire({
             title: 'ยืนยันการจอง',
             html: `
-                <p><strong>ลูกค้า:</strong> ${customerName} (${customerHN})</p>
-                <p><strong>คอร์ส:</strong> ${courseName} (รหัส: C-${courseId.toString().padStart(6, '0')})</p>
+                <p><strong>ลูกค้า:</strong> ${customerName} </p>
+                <p><strong>คอร์ส:</strong>รหัส: C-${courseId.toString().padStart(6, '0')} ${courseName} </p>
                 <p><strong>ราคา:</strong> ${coursePrice.toLocaleString()} บาท</p>
                 <p><strong>วันที่:</strong> ${bookingDate}</p>
                 <p><strong>เวลา:</strong> ${startTimeString} - ${endTimeString}</p>

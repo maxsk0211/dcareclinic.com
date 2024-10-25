@@ -505,6 +505,7 @@ function formatOrderId($orderId) {
     </div>
 </div>
 
+
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
@@ -934,7 +935,7 @@ $(document).ready(function() {
     loadExistingOrder();
     loadCourseOptions();
 
-  $('#cancelPaymentButton').on('click', function() {
+    $('#cancelPaymentButton').on('click', function() {
         Swal.fire({
             title: 'ยืนยันการยกเลิกการชำระเงิน?',
             text: "คุณแน่ใจหรือไม่ที่จะยกเลิกการชำระเงินนี้?",
@@ -944,13 +945,11 @@ $(document).ready(function() {
             cancelButtonColor: '#d33',
             confirmButtonText: 'ใช่, ยกเลิกการชำระเงิน',
             cancelButtonText: 'ยกเลิก',
-              customClass: {
+            customClass: {
                 confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
                 cancelButton: 'btn btn-outline-secondary waves-effect'
-              },
-              buttonsStyling: false
-
-
+            },
+            buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
@@ -959,38 +958,75 @@ $(document).ready(function() {
                     data: {
                         order_id: currentOrderId
                     },
+                    dataType: 'json', // ระบุ dataType เป็น json
                     success: function(response) {
-                        console.log('Server response:', response);  // เพิ่ม log นี้
-                        if (response.success) {
-                            Swal.fire({
-                                 icon: 'success',
-                                 title: 'ยกเลิกสำเร็จ!',
-                                 text: 'การชำระเงินได้ถูกยกเลิกแล้ว',
-                                 customClass: {
-                                      confirmButton: 'btn btn-danger waves-effect waves-light'
-                                    },
-                                 buttonsStyling: false
-                            }).then(() => {
-                                location.reload(); // รีโหลดหน้าเพื่อแสดงการเปลี่ยนแปลง
-                            });
+                        console.log('Server response:', response);
+                        
+                        // ตรวจสอบว่า response เป็น string หรือไม่
+                        if (typeof response === 'string') {
+                            try {
+                                response = JSON.parse(response);
+                            } catch (e) {
+                                console.error('Error parsing response:', e);
+                            }
+                        }
 
+                        if (response && response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'ยกเลิกสำเร็จ!',
+                                text: 'การชำระเงินได้ถูกยกเลิกแล้ว',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger waves-effect waves-light'
+                                },
+                                buttonsStyling: false
+                            }).then(() => {
+                                location.reload();
+                            });
                         } else {
-                            msg_error()
-                            Swal.fire(
-                                'เกิดข้อผิดพลาด!',
-                                response.message || 'ไม่สามารถยกเลิกการชำระเงินได้',
-                                'error'
-                            );
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด!',
+                                text: response.message || 'ไม่สามารถยกเลิกการชำระเงินได้',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger waves-effect waves-light'
+                                },
+                                buttonsStyling: false
+                            });
                         }
                     },
                     error: function(xhr, status, error) {
-                    console.error('AJAX error:', status, error);
-                    console.log('Response Text:', xhr.responseText);
-                        Swal.fire(
-                            'เกิดข้อผิดพลาด!',
-                            'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
-                            'error'
-                        );
+                        console.error('AJAX error:', status, error);
+                        console.log('Response Text:', xhr.responseText);
+                        
+                        // พยายามแปลง response เป็น JSON ถ้าเป็นไปได้
+                        try {
+                            const errorResponse = JSON.parse(xhr.responseText);
+                            if (errorResponse.message) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'เกิดข้อผิดพลาด!',
+                                    text: errorResponse.message,
+                                    customClass: {
+                                        confirmButton: 'btn btn-danger waves-effect waves-light'
+                                    },
+                                    buttonsStyling: false
+                                });
+                                return;
+                            }
+                        } catch(e) {
+                            console.error('Error parsing error response:', e);
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                            customClass: {
+                                confirmButton: 'btn btn-danger waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        });
                     }
                 });
             }

@@ -7,14 +7,108 @@ require '../dbcon.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// รับค่า oc_id จาก GET parameter
+// ฟังก์ชันช่วยเหลือ
+function thai_date($date) {
+    $months = array(
+        1=>'มกราคม', 2=>'กุมภาพันธ์', 3=>'มีนาคม', 4=>'เมษายน', 
+        5=>'พฤษภาคม', 6=>'มิถุนายน', 7=>'กรกฎาคม', 8=>'สิงหาคม', 
+        9=>'กันยายน', 10=>'ตุลาคม', 11=>'พฤศจิกายน', 12=>'ธันวาคม'
+    );
+    $timestamp = strtotime($date);
+    return date('d', $timestamp).' '.$months[date('n', $timestamp)].' '.(date('Y', $timestamp) + 543);
+}
+
+function format_money($amount) {
+    return number_format($amount, 2, '.', ',');
+}
+
+function formatOrderId($orderId) {
+    return 'ORDER-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
+}
+
+function format_datetime($datetime) {
+    return date('d/m/Y H:i', strtotime($datetime));
+}
+
+// ฟังก์ชันจัดการการใช้บริการ
+function getUsageDetails($order_id, $course_id) {
+    global $conn;
+    try {
+        $sql = "SELECT od.od_id, od.used_sessions, od.od_amount, c.course_amount,
+                (SELECT COUNT(*) FROM course_usage cu WHERE cu.order_detail_id = od.od_id) as actual_used
+                FROM order_detail od
+                JOIN course c ON od.course_id = c.course_id
+                WHERE od.oc_id = ? AND od.course_id = ?";
+                
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $order_id, $course_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+        
+        if (!$data) {
+            return [
+                'used_sessions' => 0,
+                'total_sessions' => 0,
+                'actual_used' => 0,
+                'od_id' => null
+            ];
+        }
+        
+        return [
+            'used_sessions' => (int)$data['used_sessions'],
+            'total_sessions' => (int)$data['course_amount'] * (int)$data['od_amount'],
+            'actual_used' => (int)$data['actual_used'],
+            'od_id' => $data['od_id']
+        ];
+    } catch (Exception $e) {
+        error_log("Error in getUsageDetails: " . $e->getMessage());
+        return [
+            'used_sessions' => 0,
+            'total_sessions' => 0,
+            'actual_used' => 0,
+            'od_id' => null
+        ];
+    }
+}
+
+function getUsageHistory($order_id, $course_id) {
+    global $conn;
+    try {
+        $sql = "SELECT cu.usage_date, cu.notes
+                FROM course_usage cu
+                JOIN order_detail od ON cu.order_detail_id = od.od_id
+                WHERE od.oc_id = ? AND od.course_id = ?
+                ORDER BY cu.usage_date DESC";
+                
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $order_id, $course_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $history = [];
+        while ($row = $result->fetch_assoc()) {
+            $history[] = [
+                'date' => thai_date($row['usage_date']),
+                'notes' => $row['notes']
+            ];
+        }
+        
+        return $history;
+    } catch (Exception $e) {
+        error_log("Error in getUsageHistory: " . $e->getMessage());
+        return [];
+    }
+}
+
+// รับค่า order id
 $oc_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($oc_id == 0) {
     die("ไม่พบข้อมูลคำสั่งซื้อ");
 }
 
-// ดึงข้อมูลคำสั่งซื้อและข้อมูลลูกค้าจากฐานข้อมูล
+// ดึงข้อมูลคำสั่งซื้อและลูกค้า
 $sql = "SELECT oc.*, c.*, cb.booking_datetime 
         FROM order_course oc
         JOIN customer c ON oc.cus_id = c.cus_id
@@ -22,112 +116,151 @@ $sql = "SELECT oc.*, c.*, cb.booking_datetime
         WHERE oc.oc_id = ?";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $oc_id);
-$stmt->execute();
-$result = $stmt->get_result();
+if (!$stmt) {
+    die("Failed to prepare statement: " . $conn->error);
+}
 
+$stmt->bind_param("i", $oc_id);
+if (!$stmt->execute()) {
+    die("Failed to execute statement: " . $stmt->error);
+}
+
+$result = $stmt->get_result();
 if ($result->num_rows == 0) {
     die("ไม่พบข้อมูลคำสั่งซื้อ");
 }
 
 $customer_data = $result->fetch_assoc();
 
-// คำนวณอายุ
-$birthDate = new DateTime($customer_data['cus_birthday']);
-$today = new DateTime();
-$age = $today->diff($birthDate);
-
-// ฟังก์ชันสำหรับแปลงวันที่เป็นรูปแบบไทย
-function thai_date($date) {
-    $months = array(
-        1=>'มกราคม', 2=>'กุมภาพันธ์', 3=>'มีนาคม', 4=>'เมษายน', 5=>'พฤษภาคม', 6=>'มิถุนายน', 
-        7=>'กรกฎาคม', 8=>'สิงหาคม', 9=>'กันยายน', 10=>'ตุลาคม', 11=>'พฤศจิกายน', 12=>'ธันวาคม'
-    );
-    $timestamp = strtotime($date);
-    $thai_date = date('d', $timestamp).' '.$months[date('n', $timestamp)].' '.(date('Y', $timestamp) + 543);
-    return $thai_date;
-}
-
-// ดึงข้อมูลใบเสร็จและรายการสินค้า
-$sql_order = "SELECT oc.*, u.users_fname, u.users_lname,
-              CONCAT(u.users_fname, ' ', u.users_lname) as seller_name
+// ดึงข้อมูล order
+$sql_order = "SELECT oc.*, 
+              CONCAT(u.users_fname, ' ', u.users_lname) as seller_name,
+              u.users_fname, u.users_lname
               FROM order_course oc
               LEFT JOIN users u ON oc.seller_id = u.users_id
               WHERE oc.oc_id = ?";
-$stmt_order = $conn->prepare($sql_order);
-$stmt_order->bind_param("i", $oc_id);
-$stmt_order->execute();
-$order_result = $stmt_order->get_result();
-$order_data = $order_result->fetch_assoc();
 
-$sql_items = "SELECT od.*, c.course_name
+$stmt_order = $conn->prepare($sql_order);
+if (!$stmt_order) {
+    die("Failed to prepare order statement: " . $conn->error);
+}
+
+$stmt_order->bind_param("i", $oc_id);
+if (!$stmt_order->execute()) {
+    die("Failed to execute order statement: " . $stmt_order->error);
+}
+
+$result_order = $stmt_order->get_result();
+$order_data = $result_order->fetch_assoc();
+
+
+// ดึงข้อมูลรายการคอร์ส
+$sql_items = "SELECT od.*, c.course_name, c.course_amount
               FROM order_detail od
               JOIN course c ON od.course_id = c.course_id
               WHERE od.oc_id = ?";
+
 $stmt_items = $conn->prepare($sql_items);
 $stmt_items->bind_param("i", $oc_id);
 $stmt_items->execute();
 $items_result = $stmt_items->get_result();
 
-// เพิ่มการดึงข้อมูล booking และ queue
-$sql_booking = "SELECT cb.booking_datetime 
-                FROM course_bookings cb
-                WHERE cb.id = ?";
-$stmt_booking = $conn->prepare($sql_booking);
-$stmt_booking->bind_param("i", $order_data['course_bookings_id']);
-$stmt_booking->execute();
-$booking_result = $stmt_booking->get_result();
-$booking_data = $booking_result->fetch_assoc();
-
-$sql_queue = "SELECT sq.queue_date, sq.queue_time, sq.queue_id
-              FROM service_queue sq
-              WHERE sq.booking_id = ?";
-$stmt_queue = $conn->prepare($sql_queue);
-$stmt_queue->bind_param("i", $order_data['course_bookings_id']);
-$stmt_queue->execute();
-$queue_result = $stmt_queue->get_result();
-$queue_data = $queue_result->fetch_assoc();
-
-// ฟังก์ชันสำหรับฟอร์แมตวันที่และเวลา
-function format_datetime($datetime) {
-    return date('d/m/Y H:i', strtotime($datetime));
-}
-function formatOrderId($orderId) {
-    return 'ORDER-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
-}
-// คำนวณยอดรวม
-$total_amount = 0;
-$items_result->data_seek(0); // รีเซ็ตตำแหน่งของ result set
-while ($item = $items_result->fetch_assoc()) {
-    $total_amount += $item['od_amount'] * $item['od_price'];
+// ดึงข้อมูล booking
+if (isset($order_data['course_bookings_id'])) {
+    $sql_booking = "SELECT cb.booking_datetime 
+                    FROM course_bookings cb
+                    WHERE cb.id = ?";
+    $stmt_booking = $conn->prepare($sql_booking);
+    if ($stmt_booking) {
+        $stmt_booking->bind_param("i", $order_data['course_bookings_id']);
+        $stmt_booking->execute();
+        $booking_result = $stmt_booking->get_result();
+        $booking_data = $booking_result->fetch_assoc();
+        $stmt_booking->close();
+    }
 }
 
-// ฟังก์ชันสำหรับจัดรูปแบบตัวเลขเงิน
-function format_money($amount) {
-    return number_format($amount, 2, '.', ',');
+// ดึงข้อมูล queue
+if (isset($order_data['course_bookings_id'])) {
+    $sql_queue = "SELECT sq.queue_date, sq.queue_time, sq.queue_id
+                  FROM service_queue sq
+                  WHERE sq.booking_id = ?";
+    $stmt_queue = $conn->prepare($sql_queue);
+    if ($stmt_queue) {
+        $stmt_queue->bind_param("i", $order_data['course_bookings_id']);
+        if ($stmt_queue->execute()) {
+            $queue_result = $stmt_queue->get_result();
+            $queue_data = $queue_result->fetch_assoc();
+        }
+        $stmt_queue->close();
+    }
 }
-// ตรวจสอบว่าผู้ใช้เป็นผู้ดูแลระบบหรือผู้จัดการหรือไม่
-$canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2);
 
-// เพิ่มโค้ดนี้หลังจากที่คุณดึงข้อมูล $customer_data
+// เพิ่มการตรวจสอบว่ามีข้อมูลคิวหรือไม่
+$hasQueue = isset($queue_data) && !empty($queue_data['queue_id']);
+
+// ดึงประวัติการใช้บริการของลูกค้า
 $sql_services = "SELECT oc.oc_id, oc.order_datetime, oc.order_net_total, oc.order_payment, 
-                        GROUP_CONCAT(CONCAT(c.course_name, ' (', od.od_amount, ')') SEPARATOR ', ') as courses
-                 FROM order_course oc
-                 JOIN order_detail od ON oc.oc_id = od.oc_id
-                 JOIN course c ON od.course_id = c.course_id
-                 WHERE oc.cus_id = ?
-                 GROUP BY oc.oc_id
-                 ORDER BY oc.order_datetime DESC";
+                GROUP_CONCAT(CONCAT(c.course_name, ' (', od.od_amount, ')') SEPARATOR ', ') as courses
+                FROM order_course oc
+                JOIN order_detail od ON oc.oc_id = od.oc_id
+                JOIN course c ON od.course_id = c.course_id
+                WHERE oc.cus_id = ?
+                GROUP BY oc.oc_id
+                ORDER BY oc.order_datetime DESC";
+
 $stmt_services = $conn->prepare($sql_services);
 $stmt_services->bind_param("i", $customer_data['cus_id']);
 $stmt_services->execute();
 $result_services = $stmt_services->get_result();
 
+// คำนวณยอดรวมและสถิติ
+$total_amount = 0;
+$total_services = 0;
+$total_used = 0;
 
+$items_result->data_seek(0);
+while ($item = $items_result->fetch_assoc()) {
+    $total_amount += $item['od_amount'] * $item['od_price'];
+    $usage_data = getUsageDetails($oc_id, $item['course_id']);
+    $total_services += $usage_data['total_sessions'];
+    $total_used += $usage_data['actual_used'];
+}
+
+// คำนวณอายุ
+$birthDate = new DateTime($customer_data['cus_birthday']);
+$today = new DateTime();
+$age = $today->diff($birthDate);
+
+// ปิด statements
+$stmt->close();
+$stmt_order->close();
+$stmt_items->close();
+$stmt_services->close();
+
+// ไม่ต้องปิด $conn ที่นี่เพราะอาจจะยังต้องใช้ในส่วนอื่นของหน้า
+function canRecordUsage($payment_status) {
+    return $payment_status !== 'ยังไม่จ่ายเงิน';
+}
+
+// อัพเดทโค้ดส่วนที่เกี่ยวข้องกับการตรวจสอบสถานะ
+$isPaymentCompleted = ($order_data['order_payment'] !== 'ยังไม่จ่ายเงิน');
+$canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2);
+$canRecordServiceUsage = canRecordUsage($order_data['order_payment']);
+
+// ในส่วนของการแสดงผลการใช้บริการ
+$items_result->data_seek(0); // รีเซ็ตตำแหน่งของ result set
 ?>
-
 <!DOCTYPE html>
-<html lang="en">
+<html
+  lang="en"
+  class="light-style layout-menu-fixed layout-compact"
+  dir="ltr"
+  data-theme="theme-default"
+  data-assets-path="../assets/"
+  data-template="horizontal-menu-template-no-customizer-starter"
+  data-style="light">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
@@ -171,9 +304,9 @@ $result_services = $stmt_services->get_result();
         font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
 
-    .container-xxl {
+/*    .container-xxl {
         padding: 20px;
-    }
+    }*/
 
     .card {
 /*        border: none;*/
@@ -521,6 +654,105 @@ $result_services = $stmt_services->get_result();
     .bg-secondary {
         background-color: #6c757d;
     }
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 0.5rem;
+    }
+    .progress-bar {
+        border-radius: 0.5rem;
+        transition: width 0.3s ease;
+    }
+    .btn-group-sm > .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 0.2rem;
+    }
+    .usage-history-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .usage-history-item {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+
+    .usage-history-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .swal2-popup input[type="number"] {
+        text-align: center;
+        font-size: 1.1em;
+    }
+
+    .alert {
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .alert-info {
+        background-color: #e8f4f8;
+        border-color: #bee5eb;
+        color: #0c5460;
+    }
+
+    .usage-history-popup {
+        max-width: 600px;
+    }
+
+    .swal2-popup .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .swal2-popup input[type="number"],
+    .swal2-popup input[type="time"] {
+        text-align: center;
+        font-weight: bold;
+    }
+    /* สไตล์สำหรับ input วันที่ภาษาไทย */
+    input[type="date"]:before {
+        content: attr(data-date);
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        padding: 0.5rem;
+        pointer-events: none;
+    }
+    input[type="date"]:focus:before,
+    input[type="date"]:valid:before {
+        display: none;
+    }
+    .modal-lg {
+        max-width: 800px;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-sm i {
+        font-size: 1rem;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.075);
+    }
 </style>
 </head>
 <body>
@@ -580,37 +812,98 @@ $result_services = $stmt_services->get_result();
                                             <?php endif; ?>
                                         </ul>
                                     </div>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>รายการ</th>
-                                                <th>จำนวน</th>
-                                                <th>หน่วยนับ</th>
-                                                <th>ราคา/หน่วย</th>
-                                                <th>ยอดสุทธิ</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php 
-                                            $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ result set อีกครั้ง
-                                            while ($item = $items_result->fetch_assoc()): 
-                                            ?>
-                                            <tr>
-                                                <td><?php echo htmlspecialchars($item['course_name']); ?></td>
-                                                <td><?php echo $item['od_amount']; ?></td>
-                                                <td>ครั้ง/คอร์ส</td>
-                                                <td><?php echo format_money($item['od_price']); ?></td>
-                                                <td><?php echo format_money($item['od_amount'] * $item['od_price']); ?></td>
-                                            </tr>
-                                            <?php endwhile; ?>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="4" class="text-end"><strong>ยอดรวมทั้งสิ้น:</strong></td>
-                                                <td><strong><?php echo format_money($total_amount); ?></strong></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>รายการ</th>
+                                                    <th class="text-center">จำนวน/คอร์ส</th>
+                                                    <th width="35%">การใช้บริการ</th>
+                                                    <th class="text-end">ราคา/หน่วย</th>
+                                                    <th class="text-end">ยอดสุทธิ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php 
+                                                $items_result->data_seek(0);
+                                                while ($item = $items_result->fetch_assoc()): 
+                                                    $usage_data = getUsageDetails($oc_id, $item['course_id']);
+                                                    $used_sessions = $usage_data['used_sessions'];
+                                                    $total_sessions = $usage_data['total_sessions'];
+                                                    $usage_percentage = ($total_sessions > 0) ? ($used_sessions / $total_sessions) * 100 : 0;
+                                                    $remaining_sessions = $total_sessions - $used_sessions;
+                                                ?>
+                                                <tr>
+                                                    <td class="align-middle">
+                                                        <h6 class="mb-0"><?php echo htmlspecialchars($item['course_name']); ?></h6>
+                                                    </td>
+                                                    <td class="text-center align-middle">
+                                                        <?php echo $item['od_amount']; ?>
+                                                    </td>
+                                                    <td>
+                                                        <div class="usage-section">
+                                                            <!-- แสดงจำนวนครั้งที่ใช้และที่เหลือ -->
+                                                            <div class="d-flex justify-content-between mb-2">
+                                                                <span class="usage-count">
+                                                                    <i class="ri-checkbox-circle-line text-success"></i>
+                                                                    ใช้ไปแล้ว: <strong><?php echo $used_sessions; ?></strong> ครั้ง
+                                                                </span>
+                                                                <span class="usage-remaining">
+                                                                    <i class="ri-time-line text-primary"></i>
+                                                                    เหลือ: <strong><?php echo $remaining_sessions; ?></strong> ครั้ง
+                                                                </span>
+                                                            </div>
+
+                                                            <!-- Progress bar แสดงความคืบหน้า -->
+                                                            <div class="progress mb-2" style="height: 10px;">
+                                                                <div class="progress-bar bg-<?php echo $usage_percentage >= 100 ? 'success' : 'primary'; ?>"
+                                                                     role="progressbar" 
+                                                                     style="width: <?php echo min(100, $usage_percentage); ?>%"
+                                                                     aria-valuenow="<?php echo $used_sessions; ?>" 
+                                                                     aria-valuemin="0" 
+                                                                     aria-valuemax="<?php echo $total_sessions; ?>">
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- ปุ่มดูประวัติและบันทึกการใช้บริการ -->
+                                                            <div class="d-flex gap-2">
+                                                                <button type="button" 
+                                                                        class="btn btn-outline-primary btn-sm flex-grow-1"
+                                                                        onclick="showUsageDetails(<?php echo $item['course_id']; ?>)">
+                                                                    <i class="ri-history-line me-1"></i>
+                                                                    ประวัติการใช้บริการ
+                                                                </button>
+                                                                <?php if ($remaining_sessions > 0 ): ?>
+                                                                <button type="button" 
+                                                                        class="btn btn-outline-success btn-sm flex-grow-1"
+                                                                        onclick="recordUsage(<?php echo $item['course_id']; ?>)">
+                                                                    <i class="ri-add-circle-line me-1"></i>
+                                                                    บันทึกการใช้บริการ
+                                                                </button>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                            
+                                                            <?php if ($used_sessions >= $total_sessions): ?>
+                                                            <div class="alert alert-success mt-2 mb-0 py-2">
+                                                                <i class="ri-checkbox-circle-line me-1"></i>
+                                                                ใช้บริการครบตามจำนวนแล้ว
+                                                            </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-end align-middle">
+                                                        <?php echo number_format($item['od_price'], 2); ?>
+                                                    </td>
+                                                    <td class="text-end align-middle">
+                                                        <?php echo number_format($item['od_amount'] * $item['od_price'], 2); ?>
+                                                    </td>
+                                                </tr>
+                                                <?php endwhile; ?>
+                                            </tbody>
+                                        </table>
+
+                                    </div>
                                     <?php if ($order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
                                     <div class="text-end m-3">
                                         <a href="edit-order.php?id=<?php echo $oc_id; ?>" class="btn btn-primary">แก้ไขคำสั่งซื้อ</a>
@@ -808,19 +1101,26 @@ $result_services = $stmt_services->get_result();
                                     </div>
                                 </div>
                                 <div class="d-grid gap-2">
-
-                                    <?php if (isset($queue_data['queue_id'])): ?>
+                                    <?php if ($isPaymentCompleted && isset($queue_data['queue_id'])): ?>
                                         <a href="opd.php?queue_id=<?php echo $queue_data['queue_id']; ?>" class="btn btn-success btn-lg">OPD</a>
+                                        <div class="mb-3">
+                                            <select id="doctorSelect" class="form-select">
+                                                <option value="">เลือกแพทย์</option>
+                                                <!-- ตัวเลือกแพทย์จะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                                            </select>
+                                        </div>
+                                        <button id="printMedicalCertificateBtn" class="btn btn-secondary">พิมพ์ใบรับรองแพทย์</button>
                                     <?php else: ?>
-                                        <button class="btn btn-success btn-lg" disabled>OPD (ไม่พบข้อมูลคิว)</button>
+                                        <?php if (!$isPaymentCompleted): ?>
+                                            <button class="btn btn-secondary btn-lg" disabled>
+                                                ต้องชำระเงินก่อนจึงจะสามารถพิมพ์ใบรับรองแพทย์ได้
+                                            </button>
+                                        <?php elseif (!$hasQueue): ?>
+                                            <button class="btn btn-secondary btn-lg" disabled>
+                                                ไม่พบข้อมูลคิว ไม่สามารถพิมพ์ใบรับรองแพทย์ได้
+                                            </button>
+                                        <?php endif; ?>
                                     <?php endif; ?>
-                                    <div class="mb-3">
-                                        <select id="doctorSelect" class="form-select">
-                                            <option value="">เลือกแพทย์</option>
-                                            <!-- ตัวเลือกแพทย์จะถูกเพิ่มที่นี่ด้วย JavaScript -->
-                                        </select>
-                                    </div>
-                                    <button id="printMedicalCertificateBtn" class="btn btn-secondary">พิมพ์ใบรับรองแพทย์</button>
                                 </div>
                             </div>
                         </div>
@@ -846,6 +1146,69 @@ $result_services = $stmt_services->get_result();
   </div>
 </div>
 
+
+<!-- เพิ่ม Modal สำหรับบันทึกการใช้บริการ -->
+<div class="modal fade" id="recordUsageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">บันทึกการใช้บริการ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="usageForm">
+                    <input type="hidden" id="recordUsageCourseId">
+                    <div class="mb-3">
+                        <label class="form-label">วันที่ใช้บริการ</label>
+                        <input type="date" class="form-control" id="usageDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">บันทึกเพิ่มเติม</label>
+                        <textarea class="form-control" id="usageNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-primary" onclick="submitUsage()">บันทึก</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <!-- เพิ่ม Modal HTML ไว้ที่ส่วนท้ายของ body ใน bill.php -->
+<div class="modal fade" id="usageHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ประวัติการใช้บริการ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th width="20%">วันที่</th>
+                                <th width="15%">เวลา</th>
+                                <th width="15%">จำนวนครั้ง</th>
+                                <th>บันทึกเพิ่มเติม</th>
+                                <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
+                                <th width="10%">จัดการ</th>
+                                <?php endif; ?>
+                            </tr>
+                        </thead>
+                        <tbody id="usageHistoryTableBody">
+                            <!-- ข้อมูลจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <!-- Core JS -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -870,6 +1233,31 @@ $result_services = $stmt_services->get_result();
 
 
 <script>
+    const orderIdForJs = <?php echo json_encode($oc_id); ?>;
+
+function formatThaiDate(dateString) {
+    const months = [
+        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
+    
+    return `${day} ${month} ${year}`;
+}
+
+// ฟังก์ชันแปลงวันที่สำหรับ input
+function formatDateForInput(date) {
+    const d = new Date(date);
+    const year = d.getFullYear() + 543; // แปลงเป็น พ.ศ.
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // ย้ายฟังก์ชัน showSlipModal มาไว้นอก $(document).ready()
 function showSlipModal(imageSrc) {
     Swal.fire({
@@ -1059,6 +1447,11 @@ $(document).ready(function() {
         $('#change_amount').val(changeAmount >= 0 ? changeAmount.toFixed(2) : '0.00');
     });
 
+
+    // เพิ่มการประกาศตัวแปร currentOrderId ที่ส่วนบนของ JavaScript
+    let currentOrderId = <?php echo $oc_id; ?>; // ดึงค่า order_id จาก PHP
+
+    // แก้ไขส่วน submit form การชำระเงิน
     $('#paymentForm').submit(function(e) {
         e.preventDefault();
         
@@ -1083,52 +1476,58 @@ $(document).ready(function() {
             return;
         }
 
-        if (receivedAmount < remainingAmount) {
-            Swal.fire({
-                icon: 'error',
-                title: 'จำนวนเงินไม่เพียงพอ',
-                text: 'จำนวนเงินที่รับมาน้อยกว่ายอดที่ต้องชำระ',
-            });
-            return;
-        }
+        // เพิ่มการตรวจสอบและตัดสต๊อก
+        checkAndDeductStock(currentOrderId)
+            .then(() => {
+                var formData = new FormData(this);
+                formData.append('order_id', currentOrderId); // เพิ่ม order_id เข้าไปใน FormData
 
-        var formData = new FormData(this);
-
-        $.ajax({
-            url: 'sql/update-payment.php',
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: 'json',
-            success: function(response) {
-                if(response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'สำเร็จ',
-                        text: response.message || 'บันทึกการชำระเงินสำเร็จ',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        $('#cancelDepositBtn').hide(); // ซ่อนปุ่มยกเลิกค่ามัดจำ
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'เกิดข้อผิดพลาด',
-                        text: response.message || 'ไม่สามารถบันทึกการชำระเงินได้',
-                    });
-                }
-            },
-            error: function() {
+                // ดำเนินการบันทึกการชำระเงิน
+                $.ajax({
+                    url: 'sql/update-payment.php',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'สำเร็จ',
+                                text: 'บันทึกการชำระเงินและตัดสต๊อกเรียบร้อยแล้ว',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: response.message || 'ไม่สามารถบันทึกการชำระเงินได้'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        console.log('Response:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
+                        });
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Stock Error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                    text: error
                 });
-            }
-        });
+            });
     });
 
 
@@ -1148,27 +1547,52 @@ function cancelPayment(orderId) {
         cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ'
     }).then((result) => {
         if (result.isConfirmed) {
+            // เพิ่มการคืนสต๊อกก่อนยกเลิกการชำระเงิน
             $.ajax({
-                url: 'sql/cancel-payment.php',
+                url: 'sql/return-stock.php',
                 type: 'POST',
                 data: { order_id: orderId },
                 dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'สำเร็จ',
-                            text: 'ยกเลิกการชำระเงินเรียบร้อยแล้ว',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            location.reload();
+                success: function(stockResponse) {
+                    if (stockResponse.success) {
+                        // หลังจากคืนสต๊อกสำเร็จ ทำการยกเลิกการชำระเงิน
+                        $.ajax({
+                            url: 'sql/cancel-payment.php',
+                            type: 'POST',
+                            data: { order_id: orderId },
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'สำเร็จ',
+                                        text: 'ยกเลิกการชำระเงินและคืนสต๊อกเรียบร้อยแล้ว',
+                                        showConfirmButton: false,
+                                        timer: 1500
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'เกิดข้อผิดพลาด',
+                                        text: response.message || 'ไม่สามารถยกเลิกการชำระเงินได้'
+                                    });
+                                }
+                            },
+                            error: function() {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'เกิดข้อผิดพลาด',
+                                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
+                                });
+                            }
                         });
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'เกิดข้อผิดพลาด',
-                            text: response.message || 'ไม่สามารถยกเลิกการชำระเงินได้',
+                            text: 'ไม่สามารถคืนสต๊อกได้: ' + stockResponse.error
                         });
                     }
                 },
@@ -1176,7 +1600,7 @@ function cancelPayment(orderId) {
                     Swal.fire({
                         icon: 'error',
                         title: 'เกิดข้อผิดพลาด',
-                        text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                        text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
                     });
                 }
             });
@@ -1235,7 +1659,7 @@ function updateFollowUpHistoryTable(data) {
     }
     
     historyHtml += '</tbody></table>';
-    console.log("Generated HTML:", historyHtml);
+    // console.log("Generated HTML:", historyHtml);
     $('#followUpHistory').html(historyHtml);
 }
 
@@ -1421,13 +1845,27 @@ $(document).ready(function() {
 
     // จัดการการเลือกแพทย์
     $('#doctorSelect').change(function() {
-        $('#printMedicalCertificateBtn').prop('disabled', !$(this).val());
+        const hasQueue = <?php echo json_encode($hasQueue); ?>;
+        const selectedDoctor = $(this).val();
+        const isPaymentCompleted = <?php echo json_encode($isPaymentCompleted); ?>;
+        
+        $('#printMedicalCertificateBtn').prop('disabled', 
+            !selectedDoctor || !isPaymentCompleted || !hasQueue
+        );
     });
 
-    // แก้ไข Event Listener สำหรับปุ่มพิมพ์ใบรับรองแพทย์
+    // จัดการการคลิกปุ่มพิมพ์
     $('#printMedicalCertificateBtn').click(function() {
-        var selectedDoctor = $('#doctorSelect').val();
+        const selectedDoctor = $('#doctorSelect').val();
         if (selectedDoctor) {
+            if (!<?php echo json_encode($isPaymentCompleted); ?>) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'แจ้งเตือน',
+                    text: 'กรุณาชำระเงินก่อนพิมพ์ใบรับรองแพทย์'
+                });
+                return;
+            }
             printMedicalCertificate(selectedDoctor);
         } else {
             Swal.fire({
@@ -1464,12 +1902,24 @@ function loadDoctors() {
 }
 
 function printMedicalCertificate(doctorId) {
-    var queueId = <?php echo $queue_data['queue_id']; ?>;
-    if (!queueId) {
+    <?php
+    $queueId = isset($queue_data['queue_id']) ? $queue_data['queue_id'] : 'null';
+    ?>
+    var queueId = <?php echo $queueId; ?>;
+    if (!queueId || queueId === 'null') {
         Swal.fire({
             icon: 'error',
             title: 'เกิดข้อผิดพลาด',
             text: 'ไม่พบข้อมูลคิว ไม่สามารถพิมพ์ใบรับรองแพทย์ได้',
+        });
+        return;
+    }
+    // เพิ่มการตรวจสอบการชำระเงิน
+    if (!<?php echo json_encode($isPaymentCompleted); ?>) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'แจ้งเตือน',
+            text: 'กรุณาชำระเงินก่อนพิมพ์ใบรับรองแพทย์'
         });
         return;
     }
@@ -1478,7 +1928,8 @@ function printMedicalCertificate(doctorId) {
         type: 'GET',
         data: { 
             doctor_id: doctorId,
-            oc_id: <?php echo $oc_id; ?>
+            oc_id: <?php echo $oc_id; ?>,
+            queue_id: queueId
         },
         dataType: 'json',
         success: function(data) {
@@ -1592,6 +2043,435 @@ function printMedicalCertificate(doctorId) {
 
 // เพิ่ม Event Listener สำหรับปุ่มพิมพ์ใบรับรองแพทย์
 document.getElementById('printMedicalCertificateBtn').addEventListener('click', printMedicalCertificate);
+// เพิ่ม JavaScript functions สำหรับจัดการการใช้บริการ
+function showUsageDetails(courseId) {
+    $.ajax({
+        url: 'sql/get-usage-details.php',
+        type: 'GET',
+        data: { 
+            course_id: courseId,
+            order_id: orderIdForJs
+        },
+        dataType: 'json',
+        success: function(response) {
+            const tableBody = $('#usageHistoryTableBody');
+            tableBody.empty();
+
+            if (!Array.isArray(response) || response.length === 0) {
+                tableBody.html(`<tr><td colspan="5" class="text-center">ยังไม่มีประวัติการใช้บริการ</td></tr>`);
+                $('#usageHistoryModal').modal('show');
+                return;
+            }
+
+            response.forEach(usage => {
+                const date = new Date(usage.usage_date);
+                const thaiDate = date.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const time = date.toLocaleTimeString('th-TH', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+
+                let row = `
+                    <tr data-id="${usage.id}">
+                        <td>${thaiDate}</td>
+                        <td>${time} น.</td>
+                        <td>${usage.usage_count || 1} ครั้ง</td>
+                        <td>${usage.notes || '-'}</td>`;
+                
+                // เพิ่มปุ่มลบสำหรับผู้จัดการและแอดมินเท่านั้น
+                <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
+                row += `
+                        <td>
+                            <button type="button" 
+                                    class="btn btn-danger btn-sm" 
+                                    onclick="deleteUsage(
+                                        ${usage.id}, 
+                                        ${usage.course_id}, 
+                                        ${usage.usage_count || 1}, 
+                                        ${usage.order_detail_id}
+                                    )">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </td>`;
+                <?php endif; ?>
+                
+                row += `</tr>`;
+                tableBody.append(row);
+            });
+
+            $('#usageHistoryModal').modal('show');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            console.log('Response:', xhr.responseText);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถดึงข้อมูลประวัติการใช้บริการได้'
+            });
+        }
+    });
+}
+
+
+function deleteUsage(usageId, courseId, usageCount, orderDetailId) {
+     console.log('Delete params:', { usageId, courseId, usageCount, orderDetailId }); // เพิ่ม debug log
+
+    if (!usageId || !courseId || !usageCount || !orderDetailId) {
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ข้อมูลสำหรับการลบไม่ครบถ้วน'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'ยืนยันการลบ',
+        text: 'คุณต้องการลบประวัติการใช้บริการนี้ใช่หรือไม่?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ลบเลย',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+            confirmButton: 'btn btn-danger me-1',
+            cancelButton: 'btn btn-secondary'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/delete-usage.php',
+                type: 'POST',
+                data: {
+                    usage_id: usageId,
+                    course_id: courseId,
+                    usage_count: usageCount,
+                    order_id: orderIdForJs,
+                    order_detail_id: orderDetailId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'ลบสำเร็จ',
+                            text: 'ลบประวัติการใช้บริการเรียบร้อยแล้ว',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            showUsageDetails(courseId);
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: response.message || 'ไม่สามารถลบข้อมูลได้'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                    console.log("Response:", xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+                    });
+                }
+            });
+        }
+    });
+}
+
+function recordUsage(courseId) {
+    // สร้างวันที่และเวลาปัจจุบัน
+    const now = new Date();
+    const currentDate = now.toISOString().slice(0, 10);
+    const currentTime = now.toTimeString().slice(0, 5);
+
+    // สร้างวันที่ภาษาไทย
+    const thaiMonths = [
+        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    const thaiDay = now.getDate();
+    const thaiMonth = thaiMonths[now.getMonth()];
+    const thaiYear = now.getFullYear() + 543;
+    const thaiDateString = `${thaiDay} ${thaiMonth} ${thaiYear}`;
+
+    $.ajax({
+        url: 'sql/get-course-usage.php',
+        type: 'GET',
+        data: {
+            course_id: courseId,
+            order_id: orderIdForJs
+        },
+        success: function(usageInfo) {
+            const remainingSessions = usageInfo.total_sessions - usageInfo.used_sessions;
+
+            Swal.fire({
+                title: 'บันทึกการใช้บริการ',
+                html: `
+                    <div class="mb-3">
+                        <div class="alert alert-info">
+                            <strong>จำนวนครั้งที่เหลือ:</strong> ${remainingSessions} ครั้ง
+                        </div>
+                    </div>
+                    <form id="usageForm" class="text-start">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">วันที่ใช้บริการ:</label>
+                                <input type="date" id="usage_date" class="form-control" 
+                                       value="${currentDate}" 
+                                       data-thai-date="${thaiDateString}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">เวลา:</label>
+                                <input type="time" id="usage_time" class="form-control" 
+                                       value="${currentTime}" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">จำนวนครั้งที่ใช้:</label>
+                            <input type="number" id="usage_count" class="form-control" 
+                                   min="1" max="${remainingSessions}" value="1" required>
+                            <small class="text-muted">ระบุจำนวนครั้งที่ต้องการใช้ (1-${remainingSessions} ครั้ง)</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">บันทึกเพิ่มเติม:</label>
+                            <textarea id="usage_notes" class="form-control" rows="3" 
+                                      placeholder="บันทึกรายละเอียดการใช้บริการ (ถ้ามี)"></textarea>
+                        </div>
+                    </form>
+                    <style>
+                        input[type="date"]:before {
+                            content: attr(data-thai-date);
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: white;
+                            padding: 0.5rem;
+                            pointer-events: none;
+                            white-space: nowrap;
+                            overflow: hidden;
+                        }
+                        input[type="date"]:focus:before,
+                        input[type="date"]:valid:before {
+                            display: none;
+                        }
+                    </style>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'บันทึก',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                didOpen: () => {
+                    // จัดการการเปลี่ยนแปลงวันที่
+                    const dateInput = document.getElementById('usage_date');
+                    dateInput.addEventListener('change', function() {
+                        const selectedDate = new Date(this.value);
+                        const day = selectedDate.getDate();
+                        const month = thaiMonths[selectedDate.getMonth()];
+                        const year = selectedDate.getFullYear() + 543;
+                        const thaiDate = `${day} ${month} ${year}`;
+                        this.setAttribute('data-thai-date', thaiDate);
+                    });
+                },
+                preConfirm: () => {
+                    const date = document.getElementById('usage_date').value;
+                    const time = document.getElementById('usage_time').value;
+                    const count = parseInt(document.getElementById('usage_count').value);
+                    const notes = document.getElementById('usage_notes').value;
+                    
+                    if (!date || !time) {
+                        Swal.showValidationMessage('กรุณาระบุวันที่และเวลา');
+                        return false;
+                    }
+                    
+                    if (!count || count < 1 || count > remainingSessions) {
+                        Swal.showValidationMessage(`กรุณาระบุจำนวนครั้งที่ถูกต้อง (1-${remainingSessions})`);
+                        return false;
+                    }
+                    
+                    const datetime = `${date} ${time}:00`;
+                    return { datetime, count, notes };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: 'sql/record-usage.php',
+                        type: 'POST',
+                        data: {
+                            course_id: courseId,
+                            order_id: orderIdForJs,
+                            usage_date: result.value.datetime,
+                            usage_count: result.value.count,
+                            notes: result.value.notes
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'บันทึกสำเร็จ',
+                                    html: `บันทึกการใช้บริการ ${result.value.count} ครั้ง เรียบร้อยแล้ว<br>
+                                          <small class="text-muted">เหลือการใช้บริการอีก ${remainingSessions - result.value.count} ครั้ง</small>`,
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'เกิดข้อผิดพลาด',
+                                    text: response.message || 'ไม่สามารถบันทึกข้อมูลได้'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+                            });
+                        }
+                    });
+                }
+            });
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+        }
+    });
+}
+function submitUsage() {
+    const courseId = document.getElementById('recordUsageCourseId').value;
+    const usageDate = document.getElementById('usageDate').value;
+    const notes = document.getElementById('usageNotes').value;
+    
+    $.ajax({
+        url: 'sql/record-usage.php',
+        type: 'POST',
+        data: {
+            order_id: <?php echo $oc_id; ?>,
+            course_id: courseId,
+            usage_date: usageDate,
+            notes: notes
+        },
+        success: function(response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกสำเร็จ',
+                    text: 'บันทึกการใช้บริการเรียบร้อยแล้ว',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire('เกิดข้อผิดพลาด', response.message || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+            }
+        },
+        error: function() {
+            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+        }
+    });
+}
+
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('th-TH', options);
+}
+
+// เพิ่มฟังก์ชันใหม่
+function checkAndDeductStock(orderId) {
+    return new Promise((resolve, reject) => {
+        // ตรวจสอบสถานะสต๊อก
+        $.ajax({
+            url: 'sql/check-stock-status.php',
+            type: 'POST',
+            data: { order_id: orderId },
+            dataType: 'json',
+            success: function(response) {
+                if (response.hasInsufficientStock) {
+                    // สร้างข้อความแจ้งเตือน
+                    let warningMessage = 'พบรายการที่สต๊อกไม่พอ:\n\n';
+                    response.insufficientItems.forEach(item => {
+                        warningMessage += `${item.name}\n`;
+                        warningMessage += `- ต้องใช้: ${item.required}\n`;
+                        warningMessage += `- คงเหลือ: ${item.current}\n`;
+                        warningMessage += `- จะติดลบ: ${Math.abs(item.willBeNegative)}\n\n`;
+                    });
+                    
+                    // แสดง SweetAlert2
+                    Swal.fire({
+                        title: 'แจ้งเตือนสต๊อกไม่พอ',
+                        html: warningMessage.replace(/\n/g, '<br>'),
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'ดำเนินการต่อ',
+                        cancelButtonText: 'ยกเลิก',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                            cancelButton: 'btn btn-danger'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // ดำเนินการตัดสต๊อก
+                            deductStockAndPay(orderId).then(resolve).catch(reject);
+                        } else {
+                            reject('ยกเลิกโดยผู้ใช้');
+                        }
+                    });
+                } else {
+                    // ถ้าสต๊อกพอ ดำเนินการต่อได้เลย
+                    deductStockAndPay(orderId).then(resolve).catch(reject);
+                }
+            },
+            error: function(xhr, status, error) {
+                reject(error);
+            }
+        });
+    });
+}
+
+function deductStockAndPay(orderId) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: 'sql/deduct-stock.php',
+            type: 'POST',
+            data: { order_id: orderId },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    resolve();
+                } else {
+                    reject(response.error || 'เกิดข้อผิดพลาดในการตัดสต๊อก');
+                }
+            },
+            error: function(xhr, status, error) {
+                reject(error);
+            }
+        });
+    });
+}
 </script>
 
 </body>

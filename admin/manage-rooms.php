@@ -138,10 +138,10 @@ function getSchedulesForRoom($roomId, $date) {
    body {
         background-color: #f8f9fa;
     }
-    .container-xxl {
+/*    .container-xxl {
         padding-top: 2rem;
         padding-bottom: 2rem;
-    }
+    }*/
     .card {
         border: none;
         border-radius: 15px;
@@ -774,30 +774,30 @@ function loadCourses() {
     });
 }
 
-function saveRoomDetail() {
-    let formData = new FormData($('#roomDetailForm')[0]);
+// function saveRoomDetail() {
+//     let formData = new FormData($('#roomDetailForm')[0]);
     
-    $.ajax({
-        url: 'sql/save-room-detail.php',
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                Swal.fire('สำเร็จ', response.message, 'success').then(() => {
-                    $('#roomModal').modal('hide');
-                });
-            } else {
-                Swal.fire('Error', response.message, 'error');
-            }
-        },
-        error: function() {
-            Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
-        }
-    });
-}
+//     $.ajax({
+//         url: 'sql/save-room-detail.php',
+//         type: 'POST',
+//         data: formData,
+//         processData: false,
+//         contentType: false,
+//         dataType: 'json',
+//         success: function(response) {
+//             if (response.success) {
+//                 Swal.fire('สำเร็จ', response.message, 'success').then(() => {
+//                     $('#roomModal').modal('hide');
+//                 });
+//             } else {
+//                 Swal.fire('Error', response.message, 'error');
+//             }
+//         },
+//         error: function() {
+//             Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+//         }
+//     });
+// }
 
 function showScheduleModal(roomId, scheduleId = null) {
     console.log("Setting Room ID to:", roomId);
@@ -884,75 +884,100 @@ $('#deleteScheduleBtn').click(function() {
         return;
     }
 
-    Swal.fire({
-        title: 'ยืนยันการลบ?',
-        text: "คุณแน่ใจหรือไม่ที่จะลบตารางเวลานี้?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'ใช่, ลบเลย!',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: 'sql/delete-schedule.php',
-                type: 'POST',
-                data: { scheduleId: scheduleId },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        Swal.fire('สำเร็จ', 'ลบตารางเวลาเรียบร้อยแล้ว', 'success').then(() => {
-                            $('#scheduleModal').modal('hide');
-                            location.reload();
+    // ตรวจสอบการจองก่อน
+    $.ajax({
+        url: 'sql/check-schedule-bookings.php',
+        type: 'POST',
+        data: { scheduleId: scheduleId },
+        dataType: 'json',
+        success: function(checkResponse) {
+            if (checkResponse.hasBookings) {
+                // ถ้ามีการจอง แสดงข้อความแจ้งเตือน
+                Swal.fire({
+                    title: 'ไม่สามารถลบได้',
+                    text: "มีการจองคอร์สในช่วงเวลานี้แล้ว ไม่สามารถลบตารางเวลาได้",
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'เข้าใจแล้ว'
+                });
+            } else {
+                // ถ้าไม่มีการจอง แสดง confirm dialog
+                Swal.fire({
+                    title: 'ยืนยันการลบ?',
+                    text: "คุณแน่ใจหรือไม่ที่จะลบตารางเวลานี้?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'ใช่, ลบเลย!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // ดำเนินการลบเมื่อยืนยัน
+                        $.ajax({
+                            url: 'sql/delete-schedule.php',
+                            type: 'POST',
+                            data: { scheduleId: scheduleId },
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire('สำเร็จ', 'ลบตารางเวลาเรียบร้อยแล้ว', 'success').then(() => {
+                                        $('#scheduleModal').modal('hide');
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
+                            }
                         });
-                    } else {
-                        Swal.fire('Error', response.message, 'error');
                     }
-                },
-                error: function() {
-                    Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
-                }
-            });
+                });
+            }
+        },
+        error: function() {
+            Swal.fire('Error', 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูล', 'error');
         }
     });
 });
 
 
 
-function deleteSchedule(scheduleId) {
-    Swal.fire({
-        title: 'ยืนยันการลบ?',
-        text: "คุณแน่ใจหรือไม่ที่จะลบตารางเวลานี้?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'ใช่, ลบเลย!',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: 'sql/delete-schedule.php',
-                type: 'POST',
-                data: { scheduleId: scheduleId },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        Swal.fire('สำเร็จ', 'ลบตารางเวลาเรียบร้อยแล้ว', 'success').then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire('Error', response.message, 'error');
-                    }
-                },
-                error: function() {
-                    Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
-                }
-            });
-        }
-    });
-}
+// function deleteSchedule(scheduleId) {
+//     Swal.fire({
+//         title: 'ยืนยันการลบ?',
+//         text: "คุณแน่ใจหรือไม่ที่จะลบตารางเวลานี้?",
+//         icon: 'warning',
+//         showCancelButton: true,
+//         confirmButtonColor: '#d33',
+//         cancelButtonColor: '#3085d6',
+//         confirmButtonText: 'ใช่, ลบเลย!',
+//         cancelButtonText: 'ยกเลิก'
+//     }).then((result) => {
+//         if (result.isConfirmed) {
+//             $.ajax({
+//                 url: 'sql/delete-schedule.php',
+//                 type: 'POST',
+//                 data: { scheduleId: scheduleId },
+//                 dataType: 'json',
+//                 success: function(response) {
+//                     if (response.success) {
+//                         Swal.fire('สำเร็จ', 'ลบตารางเวลาเรียบร้อยแล้ว', 'success').then(() => {
+//                             location.reload();
+//                         });
+//                     } else {
+//                         Swal.fire('Error', response.message, 'error');
+//                     }
+//                 },
+//                 error: function() {
+//                     Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
+//                 }
+//             });
+//         }
+//     });
+// }
 
 function editSchedule(scheduleId) {
     resetScheduleForm();

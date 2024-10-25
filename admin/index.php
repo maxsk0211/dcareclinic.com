@@ -145,7 +145,7 @@ $stmt_bills->close();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>รายการคำสั่งซื้อประจำวัน - D Care Clinic</title>
+    <title>สรุปการให้บริการประจำวัน - D Care Clinic</title>
 
     <meta name="description" content="" />
 
@@ -250,7 +250,7 @@ $stmt_bills->close();
                     <!-- Content -->
                     <div class="container-xxl flex-grow-1 container-p-y">
 
-                        <h4 class="py-3 mb-4"><span class="text-muted fw-light">คำสั่งซื้อ /</span> รายการคำสั่งซื้อประจำวัน</h4>
+                        <h4 class="py-3 mb-4"> สรุปการให้บริการประจำวัน</h4>
                         
                         <!-- Date Picker -->
                         <div class="card mb-4">
@@ -525,7 +525,7 @@ $stmt_bills->close();
                         <!-- Billing Table -->
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="card-title">รายการคำสั่งซื้อระหว่างวันที่ <?php echo date('d/m/Y', strtotime($start_date) + 543 * 365 * 24 * 60 * 60); ?> ถึง <?php echo date('d/m/Y', strtotime($end_date) + 543 * 365 * 24 * 60 * 60); ?></h5>
+                                <h5 class="card-title">สรุปการให้บริการระหว่างวันที่ <?php echo date('d/m/Y', strtotime($start_date) + 543 * 365 * 24 * 60 * 60); ?> ถึง <?php echo date('d/m/Y', strtotime($end_date) + 543 * 365 * 24 * 60 * 60); ?></h5>
                             </div>
                             <div class="card-body">
                                 <table class="table table-striped" id="billTable">
