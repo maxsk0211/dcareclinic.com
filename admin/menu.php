@@ -19,16 +19,16 @@
             </li>
 
             <li class="menu-item">
-              <a href="javascript:void(0)" class="menu-link menu-toggle">
+              <a href="order-list.php" class="menu-link">
                 <i class="menu-icon tf-icons ri-file-line"></i>
                 <div data-i18n="Page 2">จัดการใบสั่งซื้อ</div>
               </a>
-              <ul class="menu-sub">
+<!--               <ul class="menu-sub">
                 <li class="menu-item">
-<!--                   <a href="order-list-to-day.php" class="menu-link">
+                  <a href="order-list-to-day.php" class="menu-link">
                     <i class="menu-icon tf-icons ri-file-line"></i>
                     <div data-i18n="Page 2">จัดการใบสั่งซื้อประจำวัน</div>
-                  </a> -->
+                  </a>
                 </li>
                 <li class="menu-item">
                   <a href="order-list.php" class="menu-link">
@@ -36,7 +36,7 @@
                     <div data-i18n="Page 2">จัดการใบสั่งซื้อทั้งหมด</div>
                   </a>
                 </li>
-              </ul>
+              </ul> -->
             </li>
 
             <li class="menu-item">

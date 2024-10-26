@@ -53,7 +53,7 @@ if (!$order) {
 }
 
 // ดึงข้อมูลรายละเอียดคอร์สในคำสั่งซื้อ
-$sql_courses = "SELECT od.*, c.course_name, c.course_amount, 
+$sql_courses = "SELECT od.*, c.course_name, c.course_amount, od.detail as course_detail,
                 COALESCE(cu.used_sessions, 0) as used_sessions
                 FROM order_detail od
                 JOIN course c ON od.course_id = c.course_id
@@ -133,7 +133,8 @@ while ($course = $result_courses->fetch_assoc()) {
         'price' => $course['od_price'],
         'resources' => $resources,
         'used_sessions' => intval($course['used_sessions']),
-        'course_amount' => intval($course['course_amount'])
+        'course_amount' => intval($course['course_amount']),
+        'detail' => $course['course_detail'] // เพิ่มบรรทัดนี้
     );
 
     $stmt_resources->close();

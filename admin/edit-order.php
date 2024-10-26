@@ -43,7 +43,14 @@ function formatOrderId($orderId) {
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html
+  lang="en"
+  class="light-style layout-menu-fixed layout-compact"
+  dir="ltr"
+  data-theme="theme-default"
+  data-assets-path="../assets/"
+  data-template="horizontal-menu-template-no-customizer-starter"
+  data-style="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
@@ -82,6 +89,9 @@ function formatOrderId($orderId) {
         <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
         <script src="../assets/js/config.js"></script>
     <style>
+        .swal2-container {
+          z-index: 1091; /* กำหนดค่า z-index ที่ต้องการ */
+        }
         .course-item {
             background-color: #f8f9fa;
             border-radius: 10px;
@@ -265,6 +275,60 @@ function formatOrderId($orderId) {
     .payment-date p:last-child {
         margin-bottom: 0;
     }
+.price-history-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.price-edit-modal .form-control[readonly] {
+    background-color: #f8f9fa;
+}
+
+.price-comparison {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.price-history-table {
+    font-size: 0.875rem;
+}
+
+.price-history-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.price-change-increase {
+    color: #198754;
+}
+
+.price-change-decrease {
+    color: #dc3545;
+}
+
+.modal-backdrop {
+    opacity: 0.5;
+}
+
+.modal-content {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.reason-tag {
+    display: inline-block;
+    padding: 0.25em 0.4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+    background-color: #e9ecef;
+    margin-right: 0.5rem;
+}
     </style>
 </head>
 <body>
@@ -385,11 +449,7 @@ function formatOrderId($orderId) {
                                             <button type="button" class="btn btn-primary mb-3" onclick="addNewCourse()" <?php echo $isPaymentCompleted ? 'disabled' : '';?>>เพิ่มคอร์ส</button>
                                             
 
-                                            <script>
-                                                document.getElementById('saveChangesButton').addEventListener('click', function() {
-                                                    document.getElementById('editOrderForm').submit();
-                                                });
-                                            </script>
+
                                     </div>
                                 </div>
                             </div>
@@ -505,7 +565,124 @@ function formatOrderId($orderId) {
     </div>
 </div>
 
+<!-- เพิ่มต่อจาก Modal เดิมที่มีอยู่ -->
+<div class="modal fade" id="priceEditModal" tabindex="-1" aria-labelledby="priceEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="priceEditModalLabel">แก้ไขราคาคอร์ส</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="price-comparison mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">ราคาเดิม</label>
+                            <input type="text" class="form-control" id="oldPrice" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">ราคาใหม่</label>
+                            <input type="text" class="form-control" id="newPrice" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="priceEditReason" class="form-label">เหตุผลในการแก้ไข <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="priceEditReason" rows="3" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" onclick="confirmPriceEdit()">บันทึกการแก้ไข</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- เพิ่ม Modal สำหรับแสดงประวัติการแก้ไขราคา -->
+<div class="modal fade" id="priceHistoryModal" tabindex="-1" aria-labelledby="priceHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="priceHistoryModalLabel">ประวัติการแก้ไขราคา</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>วันที่แก้ไข</th>
+                                <th>ราคาเดิม</th>
+                                <th>ราคาใหม่</th>
+                                <th>เหตุผล</th>
+                                <th>แก้ไขโดย</th>
+                            </tr>
+                        </thead>
+                        <tbody id="priceHistoryTableBody">
+                            <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="detailEditModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">แก้ไขรายละเอียดคอร์ส</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">รายละเอียดเดิม</label>
+                    <textarea class="form-control" id="oldDetail" rows="2" readonly></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">รายละเอียดใหม่</label>
+                    <textarea class="form-control" id="newDetail" rows="2" readonly></textarea>
+                </div>
+<!--                 <div class="mb-3">
+                    <label class="form-label">เหตุผลในการแก้ไข</label>
+                    <textarea class="form-control" id="detailEditReason" rows="2"></textarea>
+                </div> -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" onclick="confirmDetailEdit()">บันทึกการแก้ไข</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="detailHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ประวัติการแก้ไขรายละเอียด</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>วันที่แก้ไข</th>
+                                <th>รายละเอียดเดิม</th>
+                                <th>รายละเอียดใหม่</th>
+                                <!-- <th>เหตุผล</th> -->
+                                <th>แก้ไขโดย</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailHistoryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
@@ -525,7 +702,7 @@ function formatOrderId($orderId) {
 
     <!-- Page JS -->
     <!-- <script src="../assets/js/tables-datatables-basic.js"></script> -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Core JS -->
 
@@ -605,12 +782,17 @@ function loadExistingOrder() {
         data: { id: currentOrderId },
         dataType: 'json',
         success: function(orderDetails) {
-            console.log('Parsed order details:', orderDetails);
+            console.log('Full order details:', orderDetails);
             $('#booking_datetime').val(orderDetails.booking_datetime);
             $('#payment_method').val(orderDetails.payment_status);
             
             orderDetails.courses.forEach(course => {
-                addCourseToList(course);
+                // ตรวจสอบว่ามีข้อมูล detail หรือไม่
+                console.log('Course detail:', course.detail);
+                addCourseToList({
+                    ...course,
+                    detail: course.detail || '' // เพิ่มการจัดการค่า null หรือ undefined
+                });
                 checkAndLoadDefaultResources(course.id);
             });
             
@@ -623,6 +805,7 @@ function loadExistingOrder() {
         }
     });
 }
+
 function checkAndLoadDefaultResources(courseId) {
     $.ajax({
         url: 'sql/check-and-load-resources.php',
@@ -666,11 +849,39 @@ function addCourseToList(course) {
                 <input type="number" class="form-control course-amount" value="${course.amount}" min="1" onchange="updateCourse(this)" readonly>
             </div>
             <div class="col-md-3">
-                <label  class="form-label">ราคา/คอร์ส</label> 
-                <input type="text" class="form-control course-price" value="${formatNumber(parseFloat(course.price).toFixed(2))}" onchange="updateCourse(this)" ${isPaymentCompleted ? 'readonly' : ''}>
+                <label class="form-label">ราคา/คอร์ส</label> 
+                <div class="input-group">
+                    <input type="text" class="form-control course-price" 
+                           value="${formatNumber(parseFloat(course.price).toFixed(2))}" 
+                           onchange="handlePriceChange(this)" 
+                           ${isPaymentCompleted ? 'readonly' : ''}>
+                    <button class="btn btn-outline-secondary" type="button"
+                            onclick="showPriceHistory(${course.id})"
+                            title="ดูประวัติการแก้ไขราคา">
+                        <i class="ri-history-line"></i>
+                    </button>
+                </div>
             </div>
             <div class="col-md-3">
                 ${isPaymentCompleted ? '' : '<button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>'}
+            </div>
+            <div class="col-md-12 mt-2">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 me-2">
+                        <label class="form-label">รายละเอียดเพิ่มเติม</label>
+                        <div class="input-group">
+                            <textarea class="form-control course-detail" rows="2" 
+                                    onchange="handleDetailChange(this)" 
+                                    ${isPaymentCompleted ? 'readonly' : ''}
+                                    >${course.detail !== undefined ? course.detail : ''}</textarea>
+                            <button class="btn btn-outline-secondary" type="button"
+                                    onclick="showDetailHistory(${course.id})"
+                                    title="ดูประวัติการแก้ไขรายละเอียด">
+                                <i class="ri-history-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="resources-table mt-2">
@@ -1221,8 +1432,333 @@ $('#resourceModal').on('hidden.bs.modal', function () {
     resetAddResourceModal();
 });
 
+// ตัวแปรสำหรับเก็บข้อมูลการแก้ไขราคาปัจจุบัน
+let currentPriceEdit = {
+    courseId: null,
+    oldPrice: null,
+    newPrice: null,
+    element: null
+};
 
+// จัดการเมื่อมีการแก้ไขราคา
+function handlePriceChange(input) {
+    const oldPrice = parseFloat(input.defaultValue.replace(/,/g, ''));
+    const newPrice = parseFloat(input.value.replace(/,/g, ''));
+    
+    // ตรวจสอบความถูกต้องของราคาใหม่
+    if (isNaN(newPrice) || newPrice < 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'ราคาไม่ถูกต้อง',
+            text: 'กรุณาระบุราคาที่มากกว่าหรือเท่ากับ 0'
+        });
+        input.value = formatNumber(oldPrice.toFixed(2));
+        return;
+    }
 
+    // ถ้าราคาไม่เปลี่ยนแปลง ไม่ต้องทำอะไร
+    if (oldPrice === newPrice) {
+        return;
+    }
+
+    // เก็บข้อมูลการแก้ไขปัจจุบัน
+    currentPriceEdit = {
+        courseId: input.closest('.course-item').dataset.courseId,
+        oldPrice: oldPrice,
+        newPrice: newPrice,
+        element: input
+    };
+
+    // แสดง Modal ให้กรอกเหตุผล
+    $('#oldPrice').val(formatNumber(oldPrice.toFixed(2)));
+    $('#newPrice').val(formatNumber(newPrice.toFixed(2)));
+    $('#priceEditReason').val('');
+    $('#priceEditModal').modal('show');
+}
+
+// ยืนยันการแก้ไขราคา
+function confirmPriceEdit() {
+    const reason = $('#priceEditReason').val().trim();
+    
+    if (!reason) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'กรุณาระบุเหตุผล',
+            text: 'โปรดระบุเหตุผลในการแก้ไขราคา'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'ยืนยันการแก้ไขราคา',
+        text: 'คุณแน่ใจหรือไม่ที่จะแก้ไขราคาคอร์สนี้?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยัน',
+        cancelButtonText: 'ยกเลิก',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitPriceChange(reason);
+        } else {
+            currentPriceEdit.element.value = formatNumber(currentPriceEdit.oldPrice.toFixed(2));
+            $('#priceEditModal').modal('hide');
+        }
+    });
+}
+
+function submitPriceChange(reason) {
+    $.ajax({
+        url: 'sql/update-course-price.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            course_id: currentPriceEdit.courseId,
+            old_price: currentPriceEdit.oldPrice,
+            new_price: currentPriceEdit.newPrice,
+            reason: reason
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                currentPriceEdit.confirmed = true;
+                $('#priceEditModal').modal('hide');
+                msg_ok('สำเร็จ', 'บันทึกการแก้ไขราคาเรียบร้อยแล้ว');
+                updateTotalPrice();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถบันทึกการแก้ไขราคาได้'
+                });
+                currentPriceEdit.element.value = formatNumber(currentPriceEdit.oldPrice.toFixed(2));
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+            currentPriceEdit.element.value = formatNumber(currentPriceEdit.oldPrice.toFixed(2));
+        }
+    });
+}
+
+// แสดงประวัติการแก้ไขราคา
+function showPriceHistory(courseId) {
+    const courseItem = document.querySelector(`.course-item[data-course-id="${courseId}"]`);
+    const courseName = courseItem.querySelector('.course-name').value;
+    
+    $.ajax({
+        url: 'sql/get-price-history.php',
+        type: 'GET',
+        data: {
+            order_id: currentOrderId,
+            course_id: courseId
+        },
+        success: function(response) {
+            if (response.error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.error
+                });
+                return;
+            }
+
+            const historyTableBody = $('#priceHistoryTableBody');
+            historyTableBody.empty();
+            $('#priceHistoryModalLabel').text(`ประวัติการแก้ไขราคา - ${courseName}`);
+            
+            if (response.length === 0) {
+                historyTableBody.html(`
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            ไม่พบประวัติการแก้ไขราคา
+                        </td>
+                    </tr>
+                `);
+            } else {
+                response.forEach(record => {
+                    const priceChangeClass = 
+                        parseFloat(record.new_price.replace(/,/g, '')) > 
+                        parseFloat(record.old_price.replace(/,/g, '')) 
+                            ? 'price-change-increase' 
+                            : 'price-change-decrease';
+                    
+                    const row = `
+                        <tr>
+                            <td>${new Date(record.adjusted_at).toLocaleString('th-TH')}</td>
+                            <td>${record.old_price}</td>
+                            <td class="${priceChangeClass}">${record.new_price}</td>
+                            <td>
+                                <span class="reason-tag">เหตุผล</span>
+                                ${record.reason}
+                            </td>
+                            <td>${record.adjusted_by_name}</td>
+                        </tr>
+                    `;
+                    historyTableBody.append(row);
+                });
+            }
+            
+            $('#priceHistoryModal').modal('show');
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถดึงข้อมูลประวัติการแก้ไขราคาได้'
+            });
+        }
+    });
+}
+// เพิ่มฟังก์ชันสำหรับรีเซ็ตฟอร์มเมื่อปิด Modal
+$('#priceEditModal').on('hidden.bs.modal', function () {
+    if (!currentPriceEdit.confirmed) {
+        currentPriceEdit.element.value = formatNumber(currentPriceEdit.oldPrice.toFixed(2));
+    }
+    currentPriceEdit = {
+        courseId: null,
+        oldPrice: null,
+        newPrice: null,
+        element: null,
+        confirmed: false
+    };
+    $('#priceEditReason').val('');
+});
+
+// ตัวแปรสำหรับเก็บข้อมูลการแก้ไขรายละเอียดปัจจุบัน
+let currentDetailEdit = {
+    courseId: null,
+    oldDetail: null,
+    newDetail: null,
+    element: null,
+    confirmed: false
+};
+
+function handleDetailChange(textarea) {
+    const oldDetail = textarea.defaultValue;
+    const newDetail = textarea.value.trim();
+    
+    // ถ้าไม่มีการเปลี่ยนแปลง ไม่ต้องทำอะไร
+    if (oldDetail === newDetail) {
+        return;
+    }
+
+    // เก็บข้อมูลการแก้ไขปัจจุบัน
+    currentDetailEdit = {
+        courseId: textarea.closest('.course-item').dataset.courseId,
+        oldDetail: oldDetail || '',
+        newDetail: newDetail,
+        element: textarea,
+        confirmed: false
+    };
+
+    // แสดง Modal
+    $('#oldDetail').val(oldDetail || 'ไม่มีข้อมูล');
+    $('#newDetail').val(newDetail);
+    $('#detailEditModal').modal('show');
+}
+
+function confirmDetailEdit() {
+    // const reason = $('#detailEditReason').val().trim();
+    
+    $.ajax({
+        url: 'sql/update-course-detail.php',
+        type: 'POST',
+        data: {
+            order_id: currentOrderId,
+            course_id: currentDetailEdit.courseId,
+            old_detail: currentDetailEdit.oldDetail,
+            new_detail: currentDetailEdit.newDetail,
+            // reason: reason // จะส่งเป็นสตริงว่างได้
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                currentDetailEdit.confirmed = true;
+                currentDetailEdit.element.defaultValue = currentDetailEdit.newDetail;
+                $('#detailEditModal').modal('hide');
+                msg_ok('สำเร็จ', 'บันทึกการแก้ไขรายละเอียดเรียบร้อยแล้ว');
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถบันทึกการแก้ไขรายละเอียดได้'
+                });
+                currentDetailEdit.element.value = currentDetailEdit.oldDetail;
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+            currentDetailEdit.element.value = currentDetailEdit.oldDetail;
+        }
+    });
+}
+
+function showDetailHistory(courseId) {
+    const courseItem = document.querySelector(`.course-item[data-course-id="${courseId}"]`);
+    const courseName = courseItem.querySelector('.course-name').value;
+    
+    $.ajax({
+        url: 'sql/get-detail-history.php',
+        type: 'GET',
+        data: {
+            order_id: currentOrderId,
+            course_id: courseId
+        },
+        success: function(response) {
+            const tbody = $('#detailHistoryTableBody');
+            tbody.empty();
+            
+            if (response.length === 0) {
+                tbody.html('<tr><td colspan="5" class="text-center">ไม่พบประวัติการแก้ไขรายละเอียด</td></tr>');
+            } else {
+                response.forEach(record => {
+                    tbody.append(`
+                        <tr>
+                            <td>${new Date(record.updated_at).toLocaleString('th-TH')}</td>
+                            <td>${record.old_detail || '<em>ไม่มีข้อมูล</em>'}</td>
+                            <td>${record.new_detail}</td>
+                            
+                            <td>${record.updated_by_name}</td>
+                        </tr>
+                    `);
+                });
+            }
+            
+            $('#detailHistoryModal').modal('show');
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถดึงข้อมูลประวัติการแก้ไขได้'
+            });
+        }
+    });
+}
+
+// รีเซ็ตฟอร์มเมื่อปิด Modal
+$('#detailEditModal').on('hidden.bs.modal', function () {
+    if (!currentDetailEdit.confirmed) {
+        currentDetailEdit.element.value = currentDetailEdit.oldDetail;
+    }
+    currentDetailEdit = {
+        courseId: null,
+        oldDetail: null,
+        newDetail: null,
+        element: null,
+        confirmed: false
+    };
+    // $('#detailEditReason').val('');
+});
 
     // msg error
      <?php if(isset($_SESSION['msg_error'])){ ?>

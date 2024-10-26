@@ -237,7 +237,12 @@ function convertToThaiDate($date) {
                                                         default:
                                                             $payment_class = 'payment-unpaid';
                                                     }
-                                                    echo "<span class='payment-status $payment_class'>" . htmlspecialchars($row_booking->order_payment) . "</span>";
+                                                    if($row_booking->order_payment==null){ 
+                                                        $order_payment="ไม่ได้ซื้อคอร์ส";
+                                                    }else{
+                                                        $order_payment=$row_booking->order_payment;
+                                                    }
+                                                    echo "<span class='payment-status $payment_class'>" . htmlspecialchars($order_payment) . "</span>";
                                                     ?>
                                                 </td>
                                                 <td>
