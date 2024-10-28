@@ -107,7 +107,14 @@ while ($row = $result->fetch_assoc()) {
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html
+  lang="en"
+  class="light-style layout-menu-fixed layout-compact"
+  dir="ltr"
+  data-theme="theme-default"
+  data-assets-path="../assets/"
+  data-template="horizontal-menu-template-no-customizer-starter"
+  data-style="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
@@ -163,26 +170,163 @@ while ($row = $result->fetch_assoc()) {
         border: 1px solid #ddd;
     }
 }
+.opd-header {
+    background: linear-gradient(135deg, #3a66ff 0%, #4f46e5 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(59, 89, 253, 0.1);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.opd-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg);
+    pointer-events: none;
+}
+.opd-header h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+.opd-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: center;
+    position: relative;
+}
+.opd-info span {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+.opd-info span:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}.opd-header .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.opd-header .btn-danger {
+    background: #dc3545;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+}
+
+.opd-header .btn-danger:hover {
+    background: #bb2d3b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+}
+
+.opd-header .btn-primary {
+    background: #0d6efd;
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.2);
+}
+
+.opd-header .btn-primary:hover {
+    background: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.3);
+}
+
+/* สไตล์สำหรับการแสดงสถานะบัตรกำนัล */
+#voucherStatusDisplay {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+#voucherStatusDisplay:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+#voucherStatusDisplay .badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    background: #28a745;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+#voucherCodeDisplay {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+#voucherCodeDisplay small {
+    display: inline-block;
+    margin-right: 1rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* เพิ่ม responsive design */
+@media (max-width: 768px) {
     .opd-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
     }
-    .opd-header h2 {
-        margin: 0;
-        font-size: 28px;
-    }
+
     .opd-info {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
+        grid-template-columns: 1fr;
     }
-    .opd-info span {
-        font-size: 18px;
+
+    .opd-header .btn {
+        width: 100%;
+        margin-top: 0.5rem;
     }
+
+    #voucherStatusDisplay {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+}
+
+/* เพิ่ม animation สำหรับการโหลดและการเปลี่ยนสถานะ */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.opd-header {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.opd-info span, 
+.btn, 
+#voucherStatusDisplay {
+    animation: fadeIn 0.5s ease-out forwards;
+}
     .form-section {
         background-color: #ffffff;
         border: 1px solid #dee2e6;
@@ -592,6 +736,18 @@ while ($row = $result->fetch_assoc()) {
     border-top: none;
     padding-top: 0;
 }
+.nav-tabs .nav-link.disabled {
+    color: #6c757d;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+
+
+
 
     </style>
 </head>
@@ -628,13 +784,47 @@ while ($row = $result->fetch_assoc()) {
                     <!-- Content -->
                     <div class="container-xxl flex-grow-1 container-p-y">
                         <div class="opd-header">
-                            <h2>การตรวจเบื้องต้น (OPD)</h2>
-                            <div class="opd-info">
-                                <span>HN: <?php echo 'HN-' . str_pad($queue_data['cus_id'], 6, '0', STR_PAD_LEFT); ?></span>
-                                <span>ชื่อ-นามสกุล: <?php echo $queue_data['cus_firstname'] . ' ' . $queue_data['cus_lastname']; ?></span>
-                                <span>หมายเลขคิว: <?php echo $queue_data['queue_number']; ?></span>
-                                <button id="printButton" class="btn btn-primary">พิมพ์ OPD</button>
-                                <input type="hidden" name="cus_id" value="<?=$queue_data['cus_id']?>">
+                            <h2>
+                                <i class="ri-health-book-line me-2"></i>
+                                การตรวจเบื้องต้น (OPD)
+                            </h2>
+                            <!-- แถวบนสำหรับข้อมูลผู้ป่วย -->
+                            <div class="opd-info-row patient-info">
+                                <span>
+                                    <i class="ri-folder-user-line me-2"></i>
+                                    HN: <?php echo 'HN-' . str_pad($queue_data['cus_id'], 6, '0', STR_PAD_LEFT); ?>
+                                </span>
+                                <span>
+                                    <i class="ri-user-line me-2"></i>
+                                    <?php echo $queue_data['cus_firstname'] . ' ' . $queue_data['cus_lastname']; ?>
+                                </span>
+                                <span>
+                                    <i class="ri-number-s me-2"></i>
+                                    คิวที่: <?php echo $queue_data['queue_number']; ?>
+                                </span>
+                            </div>
+                            
+                            <!-- แถวล่างสำหรับบัตรกำนัลและปุ่มต่างๆ -->
+                            <div class="opd-info-row action-buttons">
+                                <div id="voucherStatusDisplay" class="d-none mt-3">
+                                    <span class="badge">
+                                        <i class="ri-coupon-2-line me-1"></i>
+                                        บัตรกำนัลที่ใช้งาน
+                                    </span>
+                                    <div id="voucherCodeDisplay"></div>
+                                </div>
+                                
+                                <div class="buttons-group d-flex justify-content-between mt-3">
+                                    <button type="button" class="btn btn-danger" id="voucherButton" data-bs-toggle="modal" data-bs-target="#voucherModal">
+                                        <i class="ri-coupon-line me-1"></i>
+                                        ใช้บัตรกำนัล
+                                    </button>
+                                    
+                                    <button id="printButton" class="btn btn-primary">
+                                        <i class="ri-printer-line me-1"></i>
+                                        พิมพ์ OPD
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -929,6 +1119,70 @@ while ($row = $result->fetch_assoc()) {
             </div>
         </div>
     </div>
+
+<!-- Modal บัตรกำนัล -->
+<div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="voucherModalLabel">จัดการบัตรกำนัล</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs" id="voucherTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="use-voucher-tab" data-bs-toggle="tab" 
+                                data-bs-target="#use-voucher" type="button" role="tab">
+                            ใช้บัตรกำนัล
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="active-voucher-tab" data-bs-toggle="tab" 
+                                data-bs-target="#active-voucher" type="button" role="tab">
+                            บัตรกำนัลที่ใช้งาน
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content mt-3" id="voucherTabContent">
+                    <div class="tab-pane fade" id="use-voucher" role="tabpanel">
+                        <form id="voucherForm">
+                            <div class="mb-3">
+                                <label for="voucherCode" class="form-label">รหัสบัตรกำนัล</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="voucherCode" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="checkVoucherBtn">
+                                        ตรวจสอบ
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="voucherInfo" style="display: none;"></div>
+                            <div id="voucherAlert" class="alert" style="display: none;"></div>
+                        </form>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="active-voucher" role="tabpanel">
+                        <div id="activeVoucherInfo"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-danger d-none" id="cancelVoucherBtn">
+                    ยกเลิกบัตรกำนัล
+                </button>
+                <button type="button" class="btn btn-primary d-none" id="useVoucherBtn">
+                    ใช้บัตรกำนัล
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <!-- Core JS -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -1613,7 +1867,6 @@ var bookedSlots = <?php echo json_encode($booked_slots); ?>;
 // console.log('Booked Slots:', bookedSlots);
 
 document.addEventListener('DOMContentLoaded', function() {
-
     // Initialize Flatpickr for date selection
     flatpickr.localize(flatpickr.l10ns.th);
     // const clinicHours = <?php echo json_encode($clinic_hours); ?>;
@@ -1676,10 +1929,361 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('follow_up_date element not found');
     }
 
+    const voucherModal = document.getElementById('voucherModal');
+    const checkVoucherBtn = document.getElementById('checkVoucherBtn');
+    const useVoucherBtn = document.getElementById('useVoucherBtn');
+    const cancelVoucherBtn = document.getElementById('cancelVoucherBtn');
+
+    const voucherInfo = document.getElementById('voucherInfo');
+    const voucherAlert = document.getElementById('voucherAlert');
+    const cusId = document.querySelector('input[name="cus_id"]').value;
+    // เมื่อ Modal ถูกเปิด
+
+    if (voucherModal) {
+        voucherModal.addEventListener('show.bs.modal', function () {
+            console.log('Voucher modal opening');
+            loadActiveVoucher();
+        });
+        
+        // เมื่อ Modal ถูกปิด
+        voucherModal.addEventListener('hidden.bs.modal', function () {
+            console.log('Voucher modal closed');
+            loadActiveVoucher();
+        });
+    }
 
 
+    // เรียก API ตรวจสอบบัตรกำนัล
+    document.getElementById('checkVoucherBtn').addEventListener('click', function() {
+        const voucherCode = document.getElementById('voucherCode').value;
+        if (!voucherCode) {
+            showVoucherAlert('กรุณากรอกรหัสบัตรกำนัล', 'warning');
+            return;
+        }
+
+        fetch(`sql/check-voucher.php?code=${voucherCode}&cus_id=${cusId}`)
+            .then(response => response.json())
+            .then(data => handleVoucherCheck(data))
+            .catch(error => {
+                console.error('Error:', error);
+                showVoucherAlert('เกิดข้อผิดพลาดในการตรวจสอบบัตรกำนัล', 'error');
+            });
+    });
+
+// เมื่อ Modal ถูกปิด
+$('#voucherModal').on('hidden.bs.modal', function () {
+    console.log('Modal closed, reloading voucher data');
+    loadActiveVoucher();
+});
+
+    // ใช้บัตรกำนัล
+    useVoucherBtn.addEventListener('click', function() {
+        const voucherCode = document.getElementById('voucherCode').value;
+        
+        fetch('sql/use-voucher.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                voucher_code: voucherCode,
+                cus_id: cusId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showVoucherAlert('ใช้บัตรกำนัลสำเร็จ', 'success');
+                setTimeout(() => {
+                    $('#voucherModal').modal('hide');
+                    // เพิ่มการเรียกใช้ loadActiveVoucher หลังจากใช้บัตรกำนัลสำเร็จ
+                    loadActiveVoucher();
+                }, 1500);
+            } else {
+                showVoucherAlert(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showVoucherAlert('เกิดข้อผิดพลาดในการใช้บัตรกำนัล', 'danger');
+        });
+    });
+
+    function showVoucherAlert(message, type) {
+        let sweetAlertType = type;
+        if (type === 'danger') {
+            sweetAlertType = 'error';
+        }
+        
+        Swal.fire({
+            title: sweetAlertType === 'success' ? 'สำเร็จ!' : 'แจ้งเตือน!',
+            text: message,
+            icon: sweetAlertType,
+            confirmButtonText: 'ตกลง'
+        });
+
+        // ถ้าเป็นการแจ้งเตือนความสำเร็จของการตรวจสอบบัตร และไม่มีบัตร active
+        if (type === 'success' && !document.getElementById('cancelVoucherBtn').style.display === 'block') {
+            document.getElementById('useVoucherBtn').style.display = 'block';
+        } else {
+            document.getElementById('useVoucherBtn').style.display = 'none';
+        }
+    }
+
+    
+    // เพิ่มฟังก์ชันสำหรับโหลดข้อมูลบัตรกำนัลที่ใช้งาน
+    function loadActiveVoucher() {
+        console.log('Fetching active voucher for customer ID:', cusId);
+        
+        fetch(`sql/get-active-voucher.php?cus_id=${cusId}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Active voucher response:', data);
+                
+                // Get all elements
+                const useVoucherTab = document.getElementById('use-voucher-tab');
+                const activeVoucherTab = document.getElementById('active-voucher-tab');
+                const useVoucherContent = document.getElementById('use-voucher');
+                const activeVoucherContent = document.getElementById('active-voucher');
+                const activeVoucherInfo = document.getElementById('activeVoucherInfo');
+                const cancelVoucherBtn = document.getElementById('cancelVoucherBtn');
+                const voucherStatusDisplay = document.getElementById('voucherStatusDisplay');
+                
+                if (data.success && data.voucher) {
+                    console.log('Found active voucher:', data.voucher);
+                    
+                    // แสดงสถานะบัตรกำนัลในหน้าหลัก
+                    if (voucherStatusDisplay) {
+                        console.log('Updating voucher status display');
+                        voucherStatusDisplay.classList.remove('d-none');
+                        voucherStatusDisplay.innerHTML = `
+                            <span class="badge bg-success">
+                                <i class="ri-coupon-2-line me-1"></i>
+                                บัตรกำนัลที่ใช้งาน
+                            </span>
+                            <div id="voucherCodeDisplay">
+                                <div class="d-inline-block ms-2">
+                                    <small>รหัส: ${data.voucher.voucher_code}</small>
+                                    ${data.voucher.discount_type === 'percent' ? 
+                                        `<small class="ms-2">ส่วนลด: ${data.voucher.amount}%</small>` :
+                                        `<small class="ms-2">มูลค่า: ${parseFloat(data.voucher.amount).toLocaleString()} บาท</small>`
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        console.log('voucherStatusDisplay element not found');
+                    }
+                    
+                    // แสดง Tab บัตรกำนัลที่ใช้งาน
+                    activeVoucherTab.classList.add('active');
+                    activeVoucherContent.classList.add('show', 'active');
+                    
+                    // ซ่อน Tab ใช้บัตรกำนัล
+                    useVoucherTab.classList.remove('active');
+                    useVoucherTab.classList.add('disabled');
+                    useVoucherContent.classList.remove('show', 'active');
+                    
+                    // แสดงข้อมูลบัตรกำนัลใน Modal
+                    displayActiveVoucher(data.voucher);
+                    
+                    // แสดงปุ่มยกเลิก
+                    if (cancelVoucherBtn) {
+                        cancelVoucherBtn.classList.remove('d-none');
+                    }
+                    
+                } else {
+                    console.log('No active voucher found');
+                    
+                    // ซ่อนสถานะบัตรกำนัลในหน้าหลัก
+                    if (voucherStatusDisplay) {
+                        console.log('Hiding voucher status display');
+                        voucherStatusDisplay.style.display = 'none';
+                    }
+                    
+                    // แสดง Tab ใช้บัตรกำนัล
+                    useVoucherTab.classList.add('active');
+                    useVoucherContent.classList.add('show', 'active');
+                    useVoucherTab.classList.remove('disabled');
+                    
+                    // ซ่อน Tab บัตรกำนัลที่ใช้งาน
+                    activeVoucherTab.classList.remove('active');
+                    activeVoucherContent.classList.remove('show', 'active');
+                    
+                    // แสดงข้อความไม่พบบัตรกำนัล
+                    if (activeVoucherInfo) {
+                        activeVoucherInfo.innerHTML = '<div class="alert alert-info">ไม่พบบัตรกำนัลที่กำลังใช้งาน</div>';
+                    }
+                    
+                    // ซ่อนปุ่มยกเลิก
+                    if (cancelVoucherBtn) {
+                        cancelVoucherBtn.classList.add('d-none');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading active voucher:', error);
+                if (activeVoucherInfo) {
+                    activeVoucherInfo.innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
+                }
+            });
+    }
+
+    // Event Listener เมื่อ Modal เปิด
+    $('#voucherModal').on('show.bs.modal', function (e) {
+       console.log('Modal opening, loading voucher data...');
+       loadActiveVoucher();
+    });
+
+// แก้ไข HTML สำหรับ Modal
 
 
+    // โหลดข้อมูลบัตรกำนัลที่ active เมื่อเปิด Modal
+    $('#voucherModal').on('show.bs.modal', function () {
+        loadActiveVoucher();
+    });
+    
+    // เพิ่ม Event Listener สำหรับการเปิด Modal
+    $('#voucherModal').on('show.bs.modal', function () {
+        loadActiveVoucher();
+    });
+
+    // เพิ่ม Event Listener สำหรับการคลิก tab
+    document.getElementById('use-voucher-tab').addEventListener('click', function(e) {
+        if (this.classList.contains('disabled')) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'ไม่สามารถใช้งานได้',
+                text: 'คุณมีบัตรกำนัลที่ใช้งานอยู่แล้ว กรุณายกเลิกบัตรเดิมก่อนใช้บัตรใหม่',
+                confirmButtonText: 'เข้าใจแล้ว'
+            });
+        }
+    });
+
+    // เพิ่มฟังก์ชันสำหรับจัดการปุ่มใช้บัตรกำนัลใน Modal
+    function handleVoucherCheck(data) {
+        const useVoucherBtn = document.getElementById('useVoucherBtn');
+        const voucherInfo = document.getElementById('voucherInfo');
+        
+        if (data.success) {
+            if (!data.has_active_voucher) {
+                // แสดงข้อมูลและปุ่มใช้บัตรกำนัล
+                displayVoucherInfo(data.voucher);
+                if (useVoucherBtn) {
+                    useVoucherBtn.classList.remove('d-none');
+                }
+                showVoucherAlert('บัตรกำนัลสามารถใช้งานได้', 'success');
+            } else {
+                // ซ่อนข้อมูลและปุ่มใช้บัตรกำนัล
+                if (voucherInfo) voucherInfo.style.display = 'none';
+                if (useVoucherBtn) useVoucherBtn.classList.add('d-none');
+                showVoucherAlert('คุณมีบัตรกำนัลที่กำลังใช้งานอยู่แล้ว', 'warning');
+            }
+        } else {
+            // ซ่อนข้อมูลและปุ่มใช้บัตรกำนัล
+            if (voucherInfo) voucherInfo.style.display = 'none';
+            if (useVoucherBtn) useVoucherBtn.classList.add('d-none');
+            showVoucherAlert(data.message || 'ไม่สามารถใช้บัตรกำนัลนี้ได้', 'error');
+        }
+    }
+    // ปิดการใช้งาน Tab และฟอร์มถ้ามีบัตร active
+    function updateUIBasedOnActiveVoucher(hasActiveVoucher) {
+        const useVoucherTab = document.getElementById('use-voucher-tab');
+        const voucherForm = document.getElementById('voucherForm');
+        const useVoucherBtn = document.getElementById('useVoucherBtn');
+        const cancelVoucherBtn = document.getElementById('cancelVoucherBtn');
+        const voucherButton = document.getElementById('voucherButton'); // เพิ่ม
+        
+        if (hasActiveVoucher) {
+            // ซ่อนส่วนที่เกี่ยวกับการใช้บัตรกำนัลใหม่
+            useVoucherTab.classList.add('disabled');
+            voucherForm.querySelectorAll('input, button').forEach(el => {
+                el.disabled = true;
+            });
+            document.getElementById('voucherInfo').style.display = 'none';
+            useVoucherBtn.style.display = 'none';
+            voucherButton.style.display = 'none'; // ซ่อนปุ่มใช้บัตรกำนัลในหน้าหลัก
+            
+            // แสดงปุ่มยกเลิก
+            cancelVoucherBtn.style.display = 'block';
+            
+            // เปลี่ยนไปที่ tab บัตรกำนัลที่ใช้งาน
+            const activeVoucherTab = new bootstrap.Tab(document.getElementById('active-voucher-tab'));
+            activeVoucherTab.show();
+        } else {
+            // แสดงส่วนที่เกี่ยวกับการใช้บัตรกำนัลใหม่
+            useVoucherTab.classList.remove('disabled');
+            voucherForm.querySelectorAll('input, button').forEach(el => {
+                el.disabled = false;
+            });
+            voucherButton.style.display = 'block'; // แสดงปุ่มใช้บัตรกำนัลในหน้าหลัก
+            
+            // ซ่อนปุ่มยกเลิก
+            cancelVoucherBtn.style.display = 'none';
+            
+            // รีเซ็ตฟอร์ม
+            voucherForm.reset();
+            document.getElementById('voucherInfo').style.display = 'none';
+            useVoucherBtn.style.display = 'none';
+        }
+    }
+
+    // เพิ่ม Event Listener สำหรับการยกเลิกบัตรกำนัล
+    cancelVoucherBtn.addEventListener('click', function() {
+        Swal.fire({
+            title: 'ยืนยันการยกเลิก',
+            text: "คุณต้องการยกเลิกบัตรกำนัลนี้ใช่หรือไม่?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('sql/cancel-gift-voucher.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        cus_id: cusId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ!',
+                            text: data.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadActiveVoucher();
+                        updateUIBasedOnActiveVoucher(false);
+                    } else {
+                        Swal.fire('ผิดพลาด!', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('ผิดพลาด!', 'เกิดข้อผิดพลาดในการยกเลิกบัตรกำนัล', 'error');
+                });
+            }
+        });
+    });
+
+    // เรียกใช้ฟังก์ชันที่มีอยู่เดิม
+    updateUIBasedOnPermissions();
+    loadFollowUpHistory();
+    // เพิ่มการเรียกใช้ loadActiveVoucher เมื่อโหลดหน้า
+
+    if (typeof cusId !== 'undefined') {
+        console.log('Loading initial voucher data');
+        loadActiveVoucher();
+    }
 
 });
 
@@ -2359,6 +2963,223 @@ function fetchAvailableSlots(selectedDate) {
             alert('ไม่สามารถดึงข้อมูลการจองได้');
         }
     });
+}
+
+// เพิ่มฟังก์ชัน displayActiveVoucher
+function displayActiveVoucher(voucher) {
+    const activeVoucherInfo = document.getElementById('activeVoucherInfo');
+    
+    // แปลงวันที่เป็น พ.ศ.
+    const expireDate = new Date(voucher.expire_date);
+    const thaiYear = expireDate.getFullYear() + 543;
+    const thaiExpireDate = `${expireDate.getDate()}/${expireDate.getMonth() + 1}/${thaiYear}`;
+
+    // แปลงวันที่เริ่มใช้เป็น พ.ศ.
+    let thaiFirstUsedDate = '-';
+    if (voucher.first_used_at) {
+        const firstUsedDate = new Date(voucher.first_used_at);
+        const thaiFirstUsedYear = firstUsedDate.getFullYear() + 543;
+        thaiFirstUsedDate = `${firstUsedDate.getDate()}/${firstUsedDate.getMonth() + 1}/${thaiFirstUsedYear}`;
+    }
+
+    // จัดการการแสดงยอดเงินคงเหลือ
+    const amount = parseFloat(voucher.amount).toLocaleString('th-TH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    const maxDiscount = voucher.max_discount ? parseFloat(voucher.max_discount).toLocaleString('th-TH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }) : '0.00';
+
+    const remainingAmount = voucher.remaining_amount !== null ? 
+        parseFloat(voucher.remaining_amount).toLocaleString('th-TH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }) : '-';
+
+    activeVoucherInfo.innerHTML = `
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">บัตรกำนัลที่ใช้งานอยู่</h5>
+                <div class="alert alert-info">
+                    <div class="mb-2">
+                        <strong>รหัสบัตร:</strong> ${voucher.voucher_code}
+                    </div>
+                    <div class="mb-2">
+                        <strong>ประเภท:</strong> ${voucher.discount_type === 'percent' ? 
+                            `ส่วนลด ${amount}%` : 
+                            `บัตรกำนัลมูลค่า ${amount} บาท`}
+                    </div>
+                    <div class="mb-2">
+                        <strong>มูลค่า:</strong> ${voucher.discount_type === 'percent' ? 
+                            `สูงสุด ${maxDiscount} บาท` : 
+                            `${amount} บาท`}
+                    </div>
+                    <div class="mb-2">
+                        <strong>วันหมดอายุ:</strong> ${thaiExpireDate}
+                    </div>
+                    ${voucher.discount_type === 'fixed' ? `
+                        <div class="mb-2">
+                            <strong>ยอดเงินคงเหลือ:</strong> ${remainingAmount} บาท
+                        </div>
+                    ` : ''}
+                    <div class="mb-2">
+                        <strong>วันที่เริ่มใช้:</strong> ${thaiFirstUsedDate}
+                    </div>
+                    <div class="mb-2">
+                        <strong>สถานะ:</strong> 
+                        <span class="badge bg-${getVoucherStatusColor(voucher.status)}">
+                            ${getVoucherStatusText(voucher.status)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+// เพิ่มฟังก์ชันช่วยในการแสดงสถานะบัตรกำนัล
+function getVoucherStatusColor(status) {
+    switch(status) {
+        case 'unused':
+            return 'success';
+        case 'used':
+            return 'info';
+        case 'expired':
+            return 'warning';
+        case 'cancelled':
+            return 'danger';
+        default:
+            return 'secondary';
+    }
+}
+
+function getVoucherStatusText(status) {
+    switch(status) {
+        case 'unused':
+            return 'พร้อมใช้งาน';
+        case 'used':
+            return 'ใช้งานแล้ว';
+        case 'expired':
+            return 'หมดอายุ';
+        case 'cancelled':
+            return 'ยกเลิกแล้ว';
+        default:
+            return 'ไม่ทราบสถานะ';
+    }
+}
+
+// เพิ่มฟังก์ชันใหม่สำหรับอัพเดทการแสดงผลส่วน header
+function updateHeaderVoucherDisplay(hasActiveVoucher, voucherData = null) {
+    const voucherButton = document.getElementById('voucherButton');
+    const voucherStatusDisplay = document.getElementById('voucherStatusDisplay');
+    const cancelVoucherBtn = document.getElementById('cancelVoucherBtn');
+    
+    if (hasActiveVoucher && voucherData) {
+        // ซ่อนปุ่มใช้บัตรกำนัล
+        if (voucherButton) {
+            voucherButton.classList.add('d-none');
+        }
+        
+        // แสดงสถานะบัตรกำนัล
+        if (voucherStatusDisplay) {
+            voucherStatusDisplay.classList.remove('d-none');
+            voucherStatusDisplay.innerHTML = `
+                <span class="badge">
+                    <i class="ri-coupon-2-line me-1"></i>
+                    บัตรกำนัลที่ใช้งาน
+                </span>
+                <div id="voucherCodeDisplay">
+                    <div class="d-inline-block ms-2">
+                        <small>รหัส: ${voucherData.voucher_code}</small>
+                        ${voucherData.discount_type === 'percent' ? 
+                            `<small class="ms-2">ส่วนลด: ${voucherData.amount}%</small>` :
+                            `<small class="ms-2">มูลค่า: ${parseFloat(voucherData.amount).toLocaleString()} บาท</small>`
+                        }
+                    </div>
+                </div>
+            `;
+        }
+        
+        // แสดงปุ่มยกเลิก
+        if (cancelVoucherBtn) {
+            cancelVoucherBtn.classList.remove('d-none');
+        }
+        
+    } else {
+        // แสดงปุ่มใช้บัตรกำนัล
+        if (voucherButton) {
+            voucherButton.classList.remove('d-none');
+        }
+        
+        // ซ่อนสถานะบัตรกำนัล
+        if (voucherStatusDisplay) {
+            voucherStatusDisplay.classList.add('d-none');
+        }
+        
+        // ซ่อนปุ่มยกเลิก
+        if (cancelVoucherBtn) {
+            cancelVoucherBtn.classList.add('d-none');
+        }
+    }
+
+    // เพิ่ม Log เพื่อตรวจสอบ
+    console.log('Update Header Status:', {
+        hasActiveVoucher,
+        voucherData,
+        voucherButtonDisplay: voucherButton?.classList.contains('d-none'),
+        voucherStatusDisplay: voucherStatusDisplay?.classList.contains('d-none'),
+        cancelVoucherBtnDisplay: cancelVoucherBtn?.classList.contains('d-none')
+    });
+}
+
+function displayVoucherInfo(voucher) {
+    const voucherInfo = document.getElementById('voucherInfo');
+    if (!voucherInfo) return;
+
+    // แปลงวันที่เป็น พ.ศ.
+    const expireDate = new Date(voucher.expire_date);
+    const thaiYear = expireDate.getFullYear() + 543;
+    const thaiExpireDate = `${expireDate.getDate()}/${expireDate.getMonth() + 1}/${thaiYear}`;
+
+    // จัดการการแสดงยอดเงิน
+    let amountDisplay = '';
+    let maxDiscountDisplay = '';
+    
+    if (voucher.discount_type === 'percent') {
+        amountDisplay = `${parseFloat(voucher.amount)}%`;
+        if (voucher.max_discount) {
+            maxDiscountDisplay = `สูงสุด ${parseFloat(voucher.max_discount).toLocaleString()} บาท`;
+        }
+    } else {
+        amountDisplay = `${parseFloat(voucher.amount).toLocaleString()} บาท`;
+    }
+
+    // สร้าง HTML สำหรับแสดงข้อมูล
+    voucherInfo.style.display = 'block';
+    voucherInfo.innerHTML = `
+        <div class="alert alert-info">
+            <div class="mb-2">
+                <strong>ประเภท:</strong> ${voucher.discount_type === 'percent' ? 'ส่วนลด' : 'บัตรกำนัลมูลค่า'}
+            </div>
+            <div class="mb-2">
+                <strong>มูลค่า:</strong> ${amountDisplay}
+                ${maxDiscountDisplay ? `<br><small>(${maxDiscountDisplay})</small>` : ''}
+            </div>
+            <div class="mb-2">
+                <strong>วันหมดอายุ:</strong> ${thaiExpireDate}
+            </div>
+            ${voucher.discount_type === 'fixed' && voucher.remaining_amount !== null ? `
+                <div class="mb-2">
+                    <strong>ยอดเงินคงเหลือ:</strong> ${parseFloat(voucher.remaining_amount).toLocaleString()} บาท
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    // แสดงปุ่มใช้บัตรกำนัล
+    document.getElementById('useVoucherBtn').style.display = 'block';
 }
 </script>
 </body>

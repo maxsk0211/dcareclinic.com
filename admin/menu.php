@@ -183,7 +183,27 @@
               </ul>
             </li>
 
-            
+            <li class="menu-item">
+              <a href="javascript:void(0)" class="menu-link menu-toggle">
+                <i class="menu-icon ri-group-fill"></i>
+                <div data-i18n="Dashboards">บัตรกำนัล</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="gift-vouchers.php" class="menu-link" >
+                    <i class="menu-icon tf-icons ri-shopping-cart-2-line"></i>
+                    <div data-i18n="eCommerce">จัดการบัตรกำนัล</div>
+                  </a>
+                </li>
+<!--                 <li class="menu-item">
+                  <a href="dashboards-crm.html" class="menu-link">
+                    <i class="menu-icon tf-icons ri-donut-chart-fill"></i>
+                    <div data-i18n="CRM">CRM</div>
+                  </a>
+                </li> -->
+              </ul>
+            </li>
+
 <!--             <li class="menu-item">
                 <a href="manage-rooms.php" class="menu-link">
                     <i class="menu-icon tf-icons ri-calendar-todo-fill"></i>

@@ -238,6 +238,37 @@ $stmt_order->close();
 $stmt_items->close();
 $stmt_services->close();
 
+// เพิ่มหลังจากดึงข้อมูลลูกค้าและก่อนปิด connection
+$sql_vouchers = "SELECT gv.*, 
+                 COALESCE(SUM(vuh.amount_used), 0) as total_used_amount
+                 FROM gift_vouchers gv
+                 LEFT JOIN voucher_usage_history vuh ON gv.voucher_id = vuh.voucher_id
+                 WHERE gv.customer_id = ? 
+                 AND gv.status = 'unused'  -- เพิ่มเงื่อนไขสถานะ
+                 AND gv.expire_date >= CURRENT_DATE()  -- ตรวจสอบวันหมดอายุ
+                 GROUP BY gv.voucher_id";
+
+$stmt_vouchers = $conn->prepare($sql_vouchers);
+$stmt_vouchers->bind_param("i", $customer_data['cus_id']);
+$stmt_vouchers->execute();
+$result_vouchers = $stmt_vouchers->get_result();
+
+// เพิ่มหลังจาก query อื่นๆ
+$sql_voucher_usage = "SELECT vuh.*, gv.voucher_code, gv.discount_type 
+                      FROM voucher_usage_history vuh
+                      JOIN gift_vouchers gv ON vuh.voucher_id = gv.voucher_id
+                      WHERE vuh.order_id = ?";
+$stmt_voucher_usage = $conn->prepare($sql_voucher_usage);
+$stmt_voucher_usage->bind_param("i", $oc_id);
+$stmt_voucher_usage->execute();
+$voucher_usage_result = $stmt_voucher_usage->get_result();
+
+// คำนวณยอดรวมส่วนลดจากบัตรกำนัล
+$total_voucher_discount = 0;
+while ($usage = $voucher_usage_result->fetch_assoc()) {
+    $total_voucher_discount += $usage['amount_used'];
+}
+
 // ไม่ต้องปิด $conn ที่นี่เพราะอาจจะยังต้องใช้ในส่วนอื่นของหน้า
 function canRecordUsage($payment_status) {
     return $payment_status !== 'ยังไม่จ่ายเงิน';
@@ -972,6 +1003,69 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                         </form>
                                     </div>
                                 </div>
+                                <?php if ($result_vouchers && $result_vouchers->num_rows > 0): ?>
+                                <div class="card mb-4 border-2 border-primary">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0 text-white">บัตรกำนัลที่สามารถใช้ได้</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <?php while ($voucher = $result_vouchers->fetch_assoc()): 
+                                            $isPercent = $voucher['discount_type'] === 'percent';
+                                            $remainingAmount = $isPercent ? $voucher['amount'] : ($voucher['amount'] - $voucher['total_used_amount']);
+                                            
+                                            // เช็คเงื่อนไขการแสดงปุ่มใช้งาน
+                                            $canUseVoucher = $order_data['order_payment'] == 'ยังไม่จ่ายเงิน' && 
+                                                            $voucher['status'] == 'unused' && 
+                                                            strtotime($voucher['expire_date']) >= strtotime('today');
+                                        ?>
+                                            <div class="voucher-item mb-3 p-3 border rounded">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0">รหัสบัตร: <?php echo $voucher['voucher_code']; ?></h6>
+                                                    <div>
+                                                        <span class="badge bg-info">
+                                                            <?php echo $isPercent ? "ส่วนลด {$voucher['amount']}%" : "ส่วนลด " . number_format($voucher['amount'], 2) . " บาท"; ?>
+                                                        </span>
+                                                        <?php if (strtotime($voucher['expire_date']) == strtotime('today')): ?>
+                                                            <span class="badge bg-warning">หมดอายุวันนี้</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                                <div class="voucher-details">
+                                                    <p class="mb-1">
+                                                        <small>วันหมดอายุ: <?php echo thai_date($voucher['expire_date']); ?></small>
+                                                    </p>
+                                                    <?php if (!$isPercent): ?>
+                                                        <p class="mb-1">
+                                                            <small>ยอดคงเหลือ: <?php echo number_format($remainingAmount, 2); ?> บาท</small>
+                                                        </p>
+                                                    <?php endif; ?>
+                                                    <?php if ($voucher['max_discount']): ?>
+                                                        <p class="mb-1">
+                                                            <small>ลดสูงสุด: <?php echo number_format($voucher['max_discount'], 2); ?> บาท</small>
+                                                        </p>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <?php if ($canUseVoucher): ?>
+                                                    <div class="mt-2">
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-primary"
+                                                                onclick="useVoucher(
+                                                                    '<?php echo $voucher['voucher_id']; ?>', 
+                                                                    '<?php echo $voucher['voucher_code']; ?>', 
+                                                                    <?php echo $voucher['amount']; ?>, 
+                                                                    '<?php echo $voucher['discount_type']; ?>', 
+                                                                    <?php echo $remainingAmount; ?>,
+                                                                    <?php echo $voucher['max_discount'] ?? 'null'; ?>
+                                                                )">
+                                                            ใช้บัตรกำนัล
+                                                        </button>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endwhile; ?>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
                                 <div class="card payment-summary mt-4 border-2 border-primary">
                                     <h5 class="card-header">สรุปการชำระเงิน</h5>
                                     <div class="card-body">
@@ -980,19 +1074,44 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                                 <span class="label">ยอดรวมทั้งสิ้น:</span>
                                                 <span class="value"><?php echo format_money($total_amount); ?> บาท</span>
                                             </div>
+                                            
+                                            <!-- แสดงข้อมูลมัดจำ ถ้ามี -->
+                                            <?php if ($order_data['deposit_amount'] > 0): ?>
                                             <div class="summary-item">
                                                 <span class="label">หักเงินมัดจำ:</span>
                                                 <span class="value"><?php echo format_money($order_data['deposit_amount']); ?> บาท</span>
                                             </div>
+                                            <?php endif; ?>
+
+                                            <!-- แสดงการใช้บัตรกำนัล -->
+                                            <?php 
+                                            $stmt_voucher_usage->data_seek(0);
+                                            while ($usage = $voucher_usage_result->fetch_assoc()): 
+                                            ?>
+                                            <div class="summary-item">
+                                                <span class="label">
+                                                    ส่วนลดบัตรกำนัล (<?php echo $usage['voucher_code']; ?>):
+                                                </span>
+                                                <span class="value text-success">
+                                                    - <?php echo format_money($usage['amount_used']); ?> บาท
+                                                </span>
+                                            </div>
+                                            <?php endwhile; ?>
+
+                                            <!-- ยอดที่ต้องชำระจริง -->
                                             <div class="summary-item total">
-                                                <span class="label">ยอดที่ต้องชำระเพิ่ม:</span>
-                                                <span class="value" id="remainingAmount"><?php echo format_money($total_amount - $order_data['deposit_amount']); ?> บาท</span>
+                                                <span class="label">ยอดที่ต้องชำระ:</span>
+                                                <span class="value" id="remainingAmount">
+                                                    <?php echo format_money($total_amount - $order_data['deposit_amount'] - $total_voucher_discount); ?> บาท
+                                                </span>
                                             </div>
                                         </div>
 
                                         <?php if ($order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
                                         <form id="paymentForm" enctype="multipart/form-data">
                                             <input type="hidden" name="order_id" value="<?php echo $oc_id; ?>">
+                                            <input type="hidden" name="total_amount" value="<?php echo $total_amount - $order_data['deposit_amount'] - $total_voucher_discount; ?>">
+                                            
                                             <div class="mb-3">
                                                 <label for="payment_type" class="form-label">ประเภทการชำระเงิน</label>
                                                 <select class="form-select" id="payment_type" name="payment_type" required>
@@ -1002,23 +1121,30 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                                     <option value="เงินโอน">เงินโอน</option>
                                                 </select>
                                             </div>
+
                                             <div id="paymentSlipSection" style="display: none;">
                                                 <div class="mb-3">
                                                     <label for="payment_slip" class="form-label">แนบสลิปการชำระเงิน</label>
                                                     <input type="file" class="form-control" id="payment_slip" name="payment_slip" accept="image/*">
                                                 </div>
                                             </div>
+
                                             <div class="mb-3">
                                                 <label for="received_amount" class="form-label">จำนวนเงินที่รับมา</label>
-                                                <input type="number" class="form-control" id="received_amount" name="received_amount" step="0.01" required>
+                                                <input type="number" class="form-control" id="received_amount" name="received_amount" 
+                                                       step="0.01" required min="<?php echo $total_amount - $order_data['deposit_amount'] - $total_voucher_discount; ?>">
                                             </div>
-                                            <div class="mb-3" id="changeSection">
+
+                                            <div class="mb-3" id="changeSection" style="display: none;">
                                                 <label for="change_amount" class="form-label">เงินทอน</label>
                                                 <input type="text" class="form-control" id="change_amount" readonly>
                                             </div>
+
                                             <button type="submit" class="btn btn-primary btn-lg w-100">บันทึกการชำระเงิน</button>
                                         </form>
+
                                         <?php else: ?>
+                                        <!-- แสดงข้อมูลการชำระเงินที่เสร็จสิ้นแล้ว -->
                                         <div class="summary-box">
                                             <div class="summary-item">
                                                 <span class="label">สถานะการชำระเงิน:</span>
@@ -1036,6 +1162,7 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                                 <span class="label">ผู้รับชำระเงิน:</span>
                                                 <span class="value"><?php echo $order_data['seller_name']; ?></span>
                                             </div>
+                                            
                                             <?php if ($order_data['payment_proofs']): ?>
                                             <div class="mt-3">
                                                 <button type="button" class="btn btn-info btn-sm" onclick="showPaymentSlip('<?php echo $order_data['payment_proofs']; ?>')">
@@ -1044,10 +1171,13 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                             </div>
                                             <?php endif; ?>
                                         </div>
+                                        
                                         <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
                                             <div class="d-flex justify-content-between mt-3">
                                                 <button id="printReceiptBtn" class="btn btn-primary">พิมพ์ใบเสร็จ</button>
-                                                <button type="button" class="btn btn-danger btn-lg " onclick="cancelPayment(<?php echo $oc_id; ?>)">ยกเลิกการชำระเงิน</button>
+                                                <button type="button" class="btn btn-danger btn-lg" onclick="cancelPayment(<?php echo $oc_id; ?>)">
+                                                    ยกเลิกการชำระเงิน
+                                                </button>
                                             </div>
                                         <?php endif; ?>
                                         <?php endif; ?>
@@ -1443,7 +1573,8 @@ $(document).ready(function() {
 
     $('#received_amount').on('input', function() {
         var receivedAmount = parseFloat($(this).val()) || 0;
-        var changeAmount = receivedAmount - remainingAmount;
+        var totalAmount = parseFloat($('input[name="total_amount"]').val()) || 0;
+        var changeAmount = receivedAmount - totalAmount;
         $('#change_amount').val(changeAmount >= 0 ? changeAmount.toFixed(2) : '0.00');
     });
 
@@ -1703,6 +1834,17 @@ function printReceipt() {
                     second: '2-digit', 
                     hour12: false 
                 });
+                let voucherDiscountHtml = '';
+                <?php 
+                $stmt_voucher_usage->data_seek(0);
+                while ($usage = $voucher_usage_result->fetch_assoc()): 
+                ?>
+                voucherDiscountHtml += `
+                    <p>ส่วนลดบัตรกำนัล (<?php echo $usage['voucher_code']; ?>): 
+                       <?php echo number_format($usage['amount_used'], 2); ?> บาท</p>
+                `;
+                <?php endwhile; ?>
+                
                 var printContent = `
 <style>
             @page {
@@ -1796,6 +1938,7 @@ function printReceipt() {
                         <p><strong>รวมเป็นเงิน:</strong> ${parseFloat(receiptData.order_net_total).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
                         <p>มัดจำแล้ว : ${parseFloat(receiptData.deposit_amount).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
                         <p>วันที่มัดจำ : ${receiptData.deposit_date ? new Date(receiptData.deposit_date).toLocaleString('th-TH') : '-'}</p>
+
                         <p><strong>จำนวนเงินชำระสุทธิ:</strong> ${(parseFloat(receiptData.order_net_total) - parseFloat(receiptData.deposit_amount)).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
                         <p><strong>วิธีการชำระเงิน:</strong> ${receiptData.order_payment} <strong>จำนวนเงิน:</strong> ${parseFloat(receiptData.order_net_total).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
                         <p>วันที่ชำระเงิน : ${receiptData.order_payment_date ? new Date(receiptData.order_payment_date).toLocaleString('th-TH') : '-'}</p>
@@ -2470,6 +2613,94 @@ function deductStockAndPay(orderId) {
                 reject(error);
             }
         });
+    });
+}
+
+function useVoucher(voucherId, voucherCode, amount, discountType, remainingAmount, maxDiscount) {
+    const orderTotal = parseFloat(<?php echo $total_amount - $order_data['deposit_amount']; ?>);
+    
+    if (discountType === 'percent') {
+        const discountAmount = (orderTotal * amount) / 100;
+        const finalDiscount = maxDiscount ? Math.min(discountAmount, maxDiscount) : discountAmount;
+        
+        Swal.fire({
+            title: 'ยืนยันการใช้บัตรกำนัล',
+            html: `
+                <p>ส่วนลด ${amount}% คิดเป็นเงิน ${finalDiscount.toFixed(2)} บาท</p>
+                <p>จากยอดชำระ ${orderTotal.toFixed(2)} บาท</p>
+                <p>ยอดชำระสุทธิ ${(orderTotal - finalDiscount).toFixed(2)} บาท</p>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'ใช้บัตรกำนัล',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                applyVoucher(voucherId, finalDiscount);
+            }
+        });
+    } else {
+        Swal.fire({
+            title: 'ระบุจำนวนเงินที่ต้องการใช้',
+            input: 'number',
+            inputAttributes: {
+                min: 1,
+                max: Math.min(remainingAmount, orderTotal),
+                step: '0.01'
+            },
+            inputValue: Math.min(remainingAmount, orderTotal),
+            showCancelButton: true,
+            confirmButtonText: 'ใช้บัตรกำนัล',
+            cancelButtonText: 'ยกเลิก',
+            inputValidator: (value) => {
+                const numValue = parseFloat(value);
+                if (!numValue) return 'กรุณาระบุจำนวนเงิน';
+                if (numValue > remainingAmount) return 'จำนวนเงินเกินยอดคงเหลือในบัตร';
+                if (numValue > orderTotal) return 'จำนวนเงินเกินยอดที่ต้องชำระ';
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                applyVoucher(voucherId, parseFloat(result.value));
+            }
+        });
+    }
+}
+
+function applyVoucher(voucherId, discountAmount) {
+    $.ajax({
+        url: 'sql/apply-voucher.php',
+        type: 'POST',
+        data: {
+            voucher_id: voucherId,
+            order_id: <?php echo $oc_id; ?>,
+            discount_amount: discountAmount
+        },
+        success: function(response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ใช้บัตรกำนัลสำเร็จ',
+                    text: 'ระบบจะทำการรีเฟรชหน้าเพื่อแสดงข้อมูลล่าสุด',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถใช้บัตรกำนัลได้'
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+        }
     });
 }
 </script>
