@@ -784,141 +784,6 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
     .table-hover tbody tr:hover {
         background-color: rgba(0,0,0,.075);
     }
-    /* เพิ่มต่อจาก CSS เดิม */
-.summary-section {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-}
-
-.section-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #4e73df;
-}
-
-.summary-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    padding: 5px 0;
-}
-
-.summary-item:last-child {
-    margin-bottom: 0;
-}
-
-.summary-item .label {
-    font-weight: 500;
-}
-
-.summary-item .value {
-    font-weight: 600;
-}
-
-.summary-item.total {
-    border-top: 2px solid #e3e6f0;
-    margin-top: 15px;
-    padding-top: 15px;
-}
-
-.summary-item.total .value {
-    font-size: 1.2rem;
-    color: #e74a3b;
-}
-
-.deposit-details {
-    margin-top: 5px;
-    padding-left: 15px;
-}
-
-.text-success { color: #28a745 !important; }
-.text-danger { color: #dc3545 !important; }
-.text-info { color: #17a2b8 !important; }
-.text-warning { color: #ffc107 !important; }
-
-.summary-box {
-    background-color: #ffffff;
-    border: 1px solid #e3e6f0;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-}
-
-.voucher-item, .adjustment-item {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-
-.voucher-item:last-child, .adjustment-item:last-child {
-    margin-bottom: 0;
-}
-
-.discount-badge {
-    display: inline-block;
-    padding: 0.25em 0.5em;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 0.25rem;
-    margin-left: 0.5rem;
-}
-
-.spinner-border {
-    width: 2rem;
-    height: 2rem;
-}
-
-.deposit-history-modal .modal-header {
-    background-color: #4e73df;
-    color: white;
-}
-
-.deposit-history-modal .table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-}
-
-.deposit-history-modal .table tr:hover {
-    background-color: #f8f9fa;
-}
-
-.deposit-history-modal .modal-dialog {
-    max-width: 800px;
-}
-
-.history-btn {
-    transition: all 0.3s;
-}
-
-.history-btn:hover {
-    transform: scale(1.05);
-}
-
-.history-empty-message {
-    text-align: center;
-    padding: 2rem;
-    color: #6c757d;
-    font-style: italic;
-}
-
-.modal-backdrop {
-    opacity: 0.5;
-}
-
-.modal-content {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    border: none;
-    border-radius: 0.5rem;
-}
-
-.table td {
-    vertical-align: middle;
-}
 </style>
 </head>
 <body>
@@ -1079,16 +944,11 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                 <div class="card deposit-info mb-4 border-2 border-primary">
                                     <div class="card-header d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0 text-white">ข้อมูลการชำระเงินมัดจำ</h5>
-                                        <div>
-                                            <button type="button" class="btn btn-info btn-sm me-2" onclick="showDepositHistory()">
-                                                <i class="ri-history-line me-1"></i> ประวัติการยกเลิกมัดจำ
-                                            </button>
-                                            <?php if ($order_data['deposit_amount'] > 0): ?>
-                                                <span class="badge bg-success">ชำระแล้ว</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-warning">ยังไม่ได้ชำระ</span>
-                                            <?php endif; ?>
-                                        </div>
+                                        <?php if ($order_data['deposit_amount'] > 0): ?>
+                                            <span class="badge bg-success">ชำระแล้ว</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning">ยังไม่ได้ชำระ</span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="card-body">
                                         <form id="depositForm" enctype="multipart/form-data">
@@ -1149,10 +1009,7 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                         <h5 class="mb-0 text-white">บัตรกำนัลที่สามารถใช้ได้</h5>
                                     </div>
                                     <div class="card-body">
-                                        <?php 
-                                        // รีเซ็ต pointer ของ result set
-                                        $result_vouchers->data_seek(0);
-                                        while ($voucher = $result_vouchers->fetch_assoc()): 
+                                        <?php while ($voucher = $result_vouchers->fetch_assoc()): 
                                             $isPercent = $voucher['discount_type'] === 'percent';
                                             $remainingAmount = $isPercent ? $voucher['amount'] : ($voucher['amount'] - $voucher['total_used_amount']);
                                             
@@ -1164,18 +1021,15 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                             <div class="voucher-item mb-3 p-3 border rounded">
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                                     <h6 class="mb-0">รหัสบัตร: <?php echo $voucher['voucher_code']; ?></h6>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <span class="badge <?php echo $isPercent ? 'bg-info' : 'bg-primary'; ?>">
+                                                    <div>
+                                                        <span class="badge bg-info">
                                                             <?php echo $isPercent ? "ส่วนลด {$voucher['amount']}%" : "ส่วนลด " . number_format($voucher['amount'], 2) . " บาท"; ?>
                                                         </span>
-                                                        <button type="button" 
-                                                                class="btn btn-info btn-sm" 
-                                                                onclick="showVoucherHistory('<?php echo $voucher['voucher_id']; ?>')">
-                                                            <i class="ri-history-line me-1"></i> ประวัติการใช้
-                                                        </button>
+                                                        <?php if (strtotime($voucher['expire_date']) == strtotime('today')): ?>
+                                                            <span class="badge bg-warning">หมดอายุวันนี้</span>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
-                                                
                                                 <div class="voucher-details">
                                                     <p class="mb-1">
                                                         <small>วันหมดอายุ: <?php echo thai_date($voucher['expire_date']); ?></small>
@@ -1191,7 +1045,6 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                                         </p>
                                                     <?php endif; ?>
                                                 </div>
-
                                                 <?php if ($canUseVoucher): ?>
                                                     <div class="mt-2">
                                                         <button type="button" 
@@ -1212,68 +1065,122 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                         <?php endwhile; ?>
                                     </div>
                                 </div>
-                            <?php endif; ?>
+                                <?php endif; ?>
                                 <div class="card payment-summary mt-4 border-2 border-primary">
                                     <h5 class="card-header">สรุปการชำระเงิน</h5>
                                     <div class="card-body">
-                                        <!-- Loading indicator -->
-                                        <div id="paymentSummaryLoading" class="text-center d-none">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">กำลังโหลด...</span>
+                                        <div class="summary-box mb-3">
+                                            <div class="summary-item">
+                                                <span class="label">ยอดรวมทั้งสิ้น:</span>
+                                                <span class="value"><?php echo format_money($total_amount); ?> บาท</span>
                                             </div>
+                                            
+                                            <!-- แสดงข้อมูลมัดจำ ถ้ามี -->
+                                            <?php if ($order_data['deposit_amount'] > 0): ?>
+                                            <div class="summary-item">
+                                                <span class="label">หักเงินมัดจำ:</span>
+                                                <span class="value"><?php echo format_money($order_data['deposit_amount']); ?> บาท</span>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <!-- แสดงการใช้บัตรกำนัล -->
+                                            <?php 
+                                            $stmt_voucher_usage->data_seek(0);
+                                            while ($usage = $voucher_usage_result->fetch_assoc()): 
+                                            ?>
+                                            <div class="summary-item">
+                                                <span class="label">
+                                                    ส่วนลดบัตรกำนัล (<?php echo $usage['voucher_code']; ?>):
+                                                </span>
+                                                <span class="value text-success">
+                                                    - <?php echo format_money($usage['amount_used']); ?> บาท
+                                                </span>
+                                            </div>
+                                            <?php endwhile; ?>
+
+                                            <!-- ยอดที่ต้องชำระจริง -->
+                                            <div class="summary-item total">
+                                                <span class="label">ยอดที่ต้องชำระ:</span>
+                                                <span class="value" id="remainingAmount">
+                                                    <?php echo format_money($total_amount - $order_data['deposit_amount'] - $total_voucher_discount); ?> บาท
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <?php if ($order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
+                                        <form id="paymentForm" enctype="multipart/form-data">
+                                            <input type="hidden" name="order_id" value="<?php echo $oc_id; ?>">
+                                            <input type="hidden" name="total_amount" value="<?php echo $total_amount - $order_data['deposit_amount'] - $total_voucher_discount; ?>">
+                                            
+                                            <div class="mb-3">
+                                                <label for="payment_type" class="form-label">ประเภทการชำระเงิน</label>
+                                                <select class="form-select" id="payment_type" name="payment_type" required>
+                                                    <option value="">เลือกประเภท</option>
+                                                    <option value="เงินสด">เงินสด</option>
+                                                    <option value="บัตรเครดิต">บัตรเครดิต</option>
+                                                    <option value="เงินโอน">เงินโอน</option>
+                                                </select>
+                                            </div>
+
+                                            <div id="paymentSlipSection" style="display: none;">
+                                                <div class="mb-3">
+                                                    <label for="payment_slip" class="form-label">แนบสลิปการชำระเงิน</label>
+                                                    <input type="file" class="form-control" id="payment_slip" name="payment_slip" accept="image/*">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="received_amount" class="form-label">จำนวนเงินที่รับมา</label>
+                                                <input type="number" class="form-control" id="received_amount" name="received_amount" 
+                                                       step="0.01" required min="<?php echo $total_amount - $order_data['deposit_amount'] - $total_voucher_discount; ?>">
+                                            </div>
+
+                                            <div class="mb-3" id="changeSection" style="display: none;">
+                                                <label for="change_amount" class="form-label">เงินทอน</label>
+                                                <input type="text" class="form-control" id="change_amount" readonly>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary btn-lg w-100">บันทึกการชำระเงิน</button>
+                                        </form>
+
+                                        <?php else: ?>
+                                        <!-- แสดงข้อมูลการชำระเงินที่เสร็จสิ้นแล้ว -->
+                                        <div class="summary-box">
+                                            <div class="summary-item">
+                                                <span class="label">สถานะการชำระเงิน:</span>
+                                                <span class="value"><?php echo $order_data['order_payment']; ?></span>
+                                            </div>
+                                            <div class="summary-item">
+                                                <span class="label">จำนวนเงินที่ชำระ:</span>
+                                                <span class="value"><?php echo format_money($order_data['order_net_total']); ?> บาท</span>
+                                            </div>
+                                            <div class="summary-item">
+                                                <span class="label">วันที่ชำระเงิน:</span>
+                                                <span class="value"><?php echo date('d/m/Y H:i:s', strtotime($order_data['order_payment_date'])); ?></span>
+                                            </div>
+                                            <div class="summary-item">
+                                                <span class="label">ผู้รับชำระเงิน:</span>
+                                                <span class="value"><?php echo $order_data['seller_name']; ?></span>
+                                            </div>
+                                            
+                                            <?php if ($order_data['payment_proofs']): ?>
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-info btn-sm" onclick="showPaymentSlip('<?php echo $order_data['payment_proofs']; ?>')">
+                                                    ดูสลิปการชำระเงิน
+                                                </button>
+                                            </div>
+                                            <?php endif; ?>
                                         </div>
                                         
-                                        <!-- Payment summary content -->
-                                        <div id="paymentSummaryContent">
-                                            <div class="summary-box mb-3">
-                                                <!-- Total amount -->
-                                                <div class="summary-item">
-                                                    <span class="label">ยอดรวมทั้งสิ้น:</span>
-                                                    <span class="value text-success" id="totalAmount">0.00 บาท</span>
-                                                </div>
-
-                                                <!-- Deposit section -->
-                                                <div id="depositSection" class="summary-section mb-2 d-none">
-                                                    <h6 class="section-title text-primary">ข้อมูลมัดจำ</h6>
-                                                    <div class="summary-item">
-                                                        <span class="label">จำนวนเงินมัดจำ:</span>
-                                                        <span class="value text-info" id="depositAmount">0.00 บาท</span>
-                                                    </div>
-                                                    <div class="deposit-details">
-                                                        <small class="text-muted" id="depositDate"></small><br>
-                                                        <small class="text-muted" id="depositType"></small>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Voucher discount section -->
-                                                <div id="voucherSection" class="summary-section mb-2 d-none">
-                                                    <h6 class="section-title text-primary">ส่วนลดบัตรกำนัล</h6>
-                                                    <div id="voucherDiscountList">
-                                                        <!-- Voucher items will be inserted here -->
-                                                    </div>
-                                                </div>
-
-                                                <!-- Price adjustment section -->
-                                                <div id="priceAdjustmentSection" class="summary-section mb-2 d-none">
-                                                    <h6 class="section-title text-primary">ส่วนลดจากการปรับราคา</h6>
-                                                    <div id="priceAdjustmentList">
-                                                        <!-- Price adjustment items will be inserted here -->
-                                                    </div>
-                                                </div>
-
-                                                <!-- Final amount -->
-                                                <div class="summary-item total">
-                                                    <span class="label">ยอดที่ต้องชำระ:</span>
-                                                    <span class="value" id="remainingAmount">0.00 บาท</span>
-                                                </div>
+                                        <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
+                                            <div class="d-flex justify-content-between mt-3">
+                                                <button id="printReceiptBtn" class="btn btn-primary">พิมพ์ใบเสร็จ</button>
+                                                <button type="button" class="btn btn-danger btn-lg" onclick="cancelPayment(<?php echo $oc_id; ?>)">
+                                                    ยกเลิกการชำระเงิน
+                                                </button>
                                             </div>
-
-                                            <!-- Payment form -->
-                                            <div id="paymentFormSection">
-                                                <!-- Existing payment form content -->
-                                            </div>
-
-                                        </div>
+                                        <?php endif; ?>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -1431,81 +1338,6 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
     </div>
 </div>
 
-<!-- เพิ่มที่ส่วนท้ายของไฟล์ก่อน </body> -->
-<div class="modal fade" id="depositHistoryModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">ประวัติการยกเลิกมัดจำ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>วันที่ยกเลิก</th>
-                                <th>จำนวนเงิน</th>
-                                <th>เหตุผลการยกเลิก</th>
-                                <th>ยกเลิกโดย</th>
-                            </tr>
-                        </thead>
-                        <tbody id="depositHistoryTableBody">
-                            <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- เพิ่มที่ส่วนท้ายของไฟล์ก่อน </body> -->
-<div class="modal fade" id="voucherHistoryModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary">
-                <h5 class="modal-title text-white">ประวัติการใช้บัตรกำนัล</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="voucher-info mb-4">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>รหัสบัตรกำนัล:</strong> <span id="voucherCode"></span></p>
-                            <p><strong>มูลค่า:</strong> <span id="voucherAmount"></span></p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>วันที่สร้าง:</strong> <span id="voucherCreatedDate"></span></p>
-                            <p><strong>วันหมดอายุ:</strong> <span id="voucherExpireDate"></span></p>
-                        </div>
-                    </div>
-                    <div class="progress mt-2">
-                        <div id="voucherUsageProgress" class="progress-bar" role="progressbar"></div>
-                    </div>
-                    <p class="text-center mt-2">
-                        <small>ใช้ไปแล้ว <span id="voucherUsedAmount">0</span> จากทั้งหมด <span id="voucherTotalAmount">0</span> บาท</small>
-                    </p>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>วันที่ใช้</th>
-                                <th>เลขที่ใบสั่งซื้อ</th>
-                                <th>ชื่อลูกค้า</th>
-                                <th>จำนวนเงินที่ใช้</th>
-                            </tr>
-                        </thead>
-                        <tbody id="voucherHistoryTableBody">
-                            <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
     <!-- Core JS -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
@@ -1608,6 +1440,9 @@ $(document).ready(function() {
 
     updateDepositFormState();
 
+    $('#deposit_payment_type').change(function() {
+        $('#transferSlipSection').toggle($(this).val() === 'เงินโอน');
+    });
 
     $('#depositForm').submit(function(e) {
         e.preventDefault();
@@ -1615,7 +1450,24 @@ $(document).ready(function() {
         var depositAmount = parseFloat($('#deposit_amount').val()) || 0;
         var depositPaymentType = $('#deposit_payment_type').val();
 
-        // ตรวจสอบการกรอกข้อมูล...
+        // ตรวจสอบว่าได้เลือกประเภทการชำระเงินมัดจำหรือไม่
+        if (!depositPaymentType) {
+            Swal.fire({
+                icon: 'error',
+                title: 'กรุณาเลือกประเภทการชำระเงินมัดจำ',
+                text: 'โปรดเลือกประเภทการชำระเงินมัดจำก่อนบันทึกข้อมูล',
+            });
+            return;
+        }
+        // ตรวจสอบว่าได้แนบสลิปหรือไม่ (กรณีเลือกเงินโอน)
+        if (depositPaymentType === 'เงินโอน' && !$('#deposit_slip')[0].files.length) {
+            Swal.fire({
+                icon: 'error',
+                title: 'กรุณาแนบสลิปการโอนเงิน',
+                text: 'โปรดแนบสลิปการโอนเงินก่อนบันทึกข้อมูล',
+            });
+            return;
+        }
 
         var formData = new FormData(this);
         $.ajax({
@@ -1634,7 +1486,7 @@ $(document).ready(function() {
                         showConfirmButton: false,
                         timer: 1500
                     }).then(() => {
-                        window.location.reload();
+                        location.reload();
                     });
                 } else {
                     Swal.fire({
@@ -1655,46 +1507,23 @@ $(document).ready(function() {
     });
 
     $('#cancelDepositBtn').click(function() {
-        const currentDepositAmount = parseFloat($('#deposit_amount').val()) || 0;
-        
         Swal.fire({
             title: 'ยืนยันการยกเลิกค่ามัดจำ',
-            html: `
-                <form id="cancelDepositForm">
-                    <div class="mb-3">
-                        <label for="cancellation_reason" class="form-label">เหตุผลในการยกเลิก:</label>
-                        <textarea id="cancellation_reason" class="form-control" rows="3" 
-                                 placeholder="กรุณาระบุเหตุผลในการยกเลิกค่ามัดจำ" required></textarea>
-                    </div>
-                </form>
-            `,
+            text: "คุณแน่ใจหรือไม่ที่จะยกเลิกค่ามัดจำนี้?",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
             confirmButtonText: 'ใช่, ยกเลิก',
-            cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ',
-            preConfirm: () => {
-                const reason = document.getElementById('cancellation_reason').value.trim();
-                if (!reason) {
-                    Swal.showValidationMessage('กรุณาระบุเหตุผลในการยกเลิก');
-                    return false;
-                }
-                return reason;
-            }
+            cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ'
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
                     url: 'sql/cancel-deposit.php',
                     type: 'POST',
-                    data: { 
-                        order_id: <?php echo $oc_id; ?>,
-                        reason: result.value,
-                        deposit_amount: currentDepositAmount
-                    },
+                    data: { order_id: <?php echo $oc_id; ?> },
                     dataType: 'json',
                     success: function(response) {
-                        console.log('Server response:', response); // For debugging
                         if (response.success) {
                             Swal.fire({
                                 icon: 'success',
@@ -1713,9 +1542,7 @@ $(document).ready(function() {
                             });
                         }
                     },
-                    error: function(xhr, status, error) {
-                        console.error('Ajax error:', error);
-                        console.log('Response:', xhr.responseText);
+                    error: function() {
                         Swal.fire({
                             icon: 'error',
                             title: 'เกิดข้อผิดพลาด',
@@ -1833,103 +1660,12 @@ $(document).ready(function() {
                 });
             });
     });
-    // โหลดรายชื่อแพทย์
-    loadDoctors();
 
-    // จัดการการเลือกแพทย์
-    $('#doctorSelect').change(function() {
-        const hasQueue = <?php echo json_encode($hasQueue); ?>;
-        const selectedDoctor = $(this).val();
-        const isPaymentCompleted = <?php echo json_encode($isPaymentCompleted); ?>;
-        
-        $('#printMedicalCertificateBtn').prop('disabled', 
-            !selectedDoctor || !isPaymentCompleted || !hasQueue
-        );
-    });
 
-    // จัดการการคลิกปุ่มพิมพ์
-    $('#printMedicalCertificateBtn').click(function() {
-        const selectedDoctor = $('#doctorSelect').val();
-        if (selectedDoctor) {
-            if (!<?php echo json_encode($isPaymentCompleted); ?>) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'แจ้งเตือน',
-                    text: 'กรุณาชำระเงินก่อนพิมพ์ใบรับรองแพทย์'
-                });
-                return;
-            }
-            printMedicalCertificate(selectedDoctor);
-        } else {
-            Swal.fire({
-                icon: 'info',
-                title: 'แจ้งเตือน',
-                text: 'กรุณาเลือกแพทย์ก่อนพิมพ์ใบรับรองแพทย์'
-            });
-        }
-    });
 
-    updateFormState();
-    $('#deposit_payment_type').change(function() {
-        $('#transferSlipSection').toggle($(this).val() === 'เงินโอน');
-    });
 
-    reloadPaymentSummary();
 
 });
-
-
-// เพิ่มฟังก์ชันอัพเดทการแสดงผลข้อมูลมัดจำ
-function updateDepositDisplay(amount, date, paymentType) {
-    // อัพเดทค่าในฟอร์ม
-    $('#deposit_amount').val(amount);
-    $('#deposit_payment_type').val('');
-    
-    // อัพเดทการแสดงผล
-    if (amount > 0) {
-        $('#deposit_date').text('วันที่มัดจำ: ' + (date || '-'));
-        $('#deposit_type').text('ช่องทางชำระเงิน: ' + (paymentType || '-'));
-        $('.deposit-info .badge')
-            .removeClass('bg-warning')
-            .addClass('bg-success')
-            .text('ชำระแล้ว');
-    } else {
-        $('#deposit_date').text('');
-        $('#deposit_type').text('');
-        $('.deposit-info .badge')
-            .removeClass('bg-success')
-            .addClass('bg-warning')
-            .text('ยังไม่ได้ชำระ');
-    }
-
-    // อัพเดทสถานะฟอร์ม
-    const hasDeposit = amount > 0;
-    $('#deposit_amount, #deposit_payment_type, #deposit_slip').prop('disabled', hasDeposit);
-    $('#saveDepositBtn').toggle(!hasDeposit);
-    $('#cancelDepositBtn').toggle(hasDeposit);
-}
-
-// เพิ่มฟังก์ชันรีเซ็ตฟอร์ม
-function resetDepositForm() {
-    $('#deposit_amount').val('0');
-    $('#deposit_payment_type').val('');
-    $('#deposit_slip').val('');
-    $('#transferSlipSection').hide();
-}
-
-// เพิ่มฟังก์ชันอัพเดทสถานะฟอร์ม
-function updateFormState() {
-    const depositAmount = parseFloat($('#deposit_amount').val()) || 0;
-    const hasDeposit = depositAmount > 0;
-    
-    // อัพเดทการ disable/enable input fields
-    $('#deposit_amount, #deposit_payment_type, #deposit_slip').prop('disabled', hasDeposit);
-    
-    // แสดง/ซ่อนปุ่ม
-    $('#saveDepositBtn').toggle(!hasDeposit);
-    $('#cancelDepositBtn').toggle(hasDeposit);
-}
-
 function cancelPayment(orderId) {
     Swal.fire({
         title: 'ยืนยันการยกเลิกการชำระเงิน',
@@ -2087,7 +1823,7 @@ function printReceipt() {
         data: { oc_id: <?php echo $oc_id; ?> },
         dataType: 'json',
         success: function(receiptData) {
-            if (receiptData && receiptData.success) {
+            if (receiptData) {
                 var currentDate = new Date();
                 var printDateTime = currentDate.toLocaleString('th-TH', { 
                     year: 'numeric', 
@@ -2098,383 +1834,190 @@ function printReceipt() {
                     second: '2-digit', 
                     hour12: false 
                 });
-
-                // สร้าง HTML สำหรับรายการสินค้า
-                let itemsHtml = '';
-                let itemNumber = 1; // ตัวแปรสำหรับลำดับรายการ
-
-                if (receiptData.items_array && Array.isArray(receiptData.items_array)) {
-                    itemsHtml = receiptData.items_array.map(item => {
-                        let priceHtml = '';
-                        if (item.has_price_adjustment) {
-                            priceHtml = `
-                                <div>
-                                    <span class="original-price">${formatMoney(item.original_price)}</span>
-                                    <span class="new-price">${formatMoney(item.adjusted_price)}</span>
-                                </div>
-                                <div class="discount-info">ส่วนลด ${calculateDiscountPercentage(item.original_price, item.adjusted_price)}%</div>
-                            `;
-                        } else {
-                            priceHtml = formatMoney(item.price);
-                        }
-                        let row = `
-                            <tr>
-                                <td style="text-align: center;">${itemNumber}</td>
-                                <td>${item.course_name}</td>
-                                <td style="text-align: center;">${item.amount}</td>
-                                <td style="text-align: right;">${priceHtml}</td>
-                                <td style="text-align: right;">${formatMoney(item.total_price)}</td>
-                            </tr>
-                        `;
-                        itemNumber++;
-                        return row;
-                    }).join('');
-                }
-
-                // สร้าง HTML สำหรับส่วนสรุปการชำระเงิน
-                let summaryHtml = '';
-                if (receiptData.summary) {
-                    summaryHtml = `
-                        <div class="summary-section" style="margin-top: 10px; text-align: right; font-size: 14px;">
-                            <table style="width: 50%; margin-left: auto;">
-                                <tr>
-                                    <td style="border: none; text-align: right;"><strong>รวมเป็นเงิน:</strong></td>
-                                    <td style="border: none; text-align: right;">${formatMoney(receiptData.summary.subtotal)} บาท</td>
-                                </tr>
-                    `;
-
-                    // ตรวจสอบการมีอยู่ของส่วนลดจากการปรับราคา
-                    if (receiptData.summary.price_adjustment_discount > 0) {
-                        summaryHtml += `
-                            <tr>
-                                <td style="border: none; text-align: right;"><strong>ส่วนลดจากการปรับราคา:</strong></td>
-                                <td style="border: none; text-align: right; color: #dc3545;">-${formatMoney(receiptData.summary.price_adjustment_discount)} บาท</td>
-                            </tr>
-                        `;
-                    }
-
-                    // ตรวจสอบการมีอยู่ของเงินมัดจำ
-                    if (receiptData.order && receiptData.order.deposit_amount > 0) {
-                        summaryHtml += `
-                            <tr>
-                                <td style="border: none; text-align: right;"><strong>มัดจำแล้ว:</strong></td>
-                                <td style="border: none; text-align: right; color: #28a745;">-${formatMoney(receiptData.order.deposit_amount)} บาท</td>
-                            </tr>
-                        `;
-                    }
-
-                    // ตรวจสอบการมีอยู่ของส่วนลดบัตรกำนัล
-                    if (receiptData.voucher_discounts && receiptData.voucher_discounts.length > 0) {
-                        summaryHtml += `
-                            <tr>
-                                <td style="border: none; text-align: right;"><strong>ส่วนลดบัตรกำนัล:</strong></td>
-                                <td style="border: none; text-align: right; color: #dc3545;">-${formatMoney(receiptData.summary.voucher_discount)} บาท</td>
-                            </tr>
-                        `;
-                    }
-
-                    // ยอดสุทธิ
-                    summaryHtml += `
-                            <tr style="border-top: 2px solid #000;">
-                                <td style="border: none; text-align: right;"><strong>ยอดชำระสุทธิ:</strong></td>
-                                <td style="border: none; text-align: right; font-size: 16px; font-weight: bold;"><strong>${formatMoney(receiptData.summary.net_total)} บาท</strong></td>
-                            </tr>
-                        </table>
-                    </div>
-                    `;
-
-                    // เพิ่มส่วนแสดงวิธีการชำระเงิน
-                    if (receiptData.order.order_payment && receiptData.order.order_payment_date) {
-                        summaryHtml += `
-                            <div class="payment-info" style="margin-top: 10px; text-align: right;">
-                                <p><strong>วิธีการชำระเงิน:</strong> ${receiptData.order.order_payment}</p>
-                                <p><strong>วันที่ชำระเงิน:</strong> ${formatThaiDateTime(receiptData.order.order_payment_date)}</p>
-                            </div>
-                        `;
-                    }
-                }
-
-                var headerHtml = `
-                    <div class="header" style="margin-bottom: 10px;">
-                        <!-- ส่วนบนสุด แบ่ง 3 คอลัมน์ -->
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                            <!-- Logo ซ้าย -->
-                            <div style="width: 15%;">
-                                <img src="../img/d.png" alt="Medical Logo" style="width: 60px; height: auto;">
-                                <div style="text-align: center; font-weight: bold; font-size: 16px;">MEDICAL</div>
-                            </div>
-
-                            <!-- ข้อมูลคลินิก ตรงกลาง -->
-                            <div style="width: 60%; text-align: left;">
-                                <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">
-                                    ${receiptData.branch_info.name || 'DEMO CLINIC คลินิก ศัลยกรรม เสริมความงาม'}
-                                </div>
-                                <div style="font-size: 14px; margin-bottom: 3px;">
-                                    ${receiptData.branch_info.address || '100/1 ซ รื่นรมย์ 1 รัชดา จังหวัดกรุงเทพ รหัสไปรษณีย์ 10100'}
-                                </div>
-                                <div style="font-size: 14px; margin-bottom: 3px;">
-                                    โทรศัพท์: ${receiptData.branch_info.phone || '0852225450'} 
-                                    อีเมล์: ${receiptData.branch_info.email || 'demo@gmail.com'}
-                                </div>
-                                <div style="font-size: 14px; margin-bottom: 3px;">
-                                    เลขที่ผู้เสียภาษี: ${receiptData.branch_info.tax_id || '8888888888'} 
-                                </div>
-                                <div style="font-size: 14px;">
-                                    เลขที่ใบอนุญาต: ${receiptData.branch_info.license_no || '4221178916'}
-                                </div>
-                            </div>
-
-                            <!-- ใบเสร็จ ขวา -->
-                            <div style="width: 20%; text-align: right">
-                                <div style="font-size: 14px; font-weight: bold;">ใบเสร็จรับเงิน</div>
-                                <div style="font-size: 16px;">[ RECEIPT ]</div>
-                            </div>
-                        </div>
-
-                        <!-- เส้นคั่น -->
-                        <div style="border-bottom: 1px solid #000; margin: 10px 0;"></div>
-
-                        <!-- ข้อมูลลูกค้าและเลขที่เอกสาร -->
-                        <div style="display: flex; justify-content: space-between;">
-                            <!-- ข้อมูลลูกค้า ซ้าย -->
-                            <div style="width: 60%;">
-                                <table style="width: 100%; border: none;">
-                                    <tr>
-                                        <td style="border: none; padding: 3px 0; font-size: 14px;">รหัสลูกค้า:</td>
-                                        <td style="border: none; padding: 3px 0; font-size: 14px;">${formatCustomerId(receiptData.order.cus_id)}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="border: none; padding: 3px 0; width: 100px; font-size: 14px;">ชื่อลูกค้า:</td>
-                                        <td style="border: none; padding: 3px 0; font-size: 14px;">
-                                            ${receiptData.order.cus_title} ${receiptData.order.cus_firstname} ${receiptData.order.cus_lastname}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="border: none; padding: 3px 0; font-size: 14px;">ที่อยู่:</td>
-                                        <td style="border: none; padding: 3px 0; font-size: 14px;">${formatAddress(receiptData.order)}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="border: none; padding: 3px 0; font-size: 14px;">โทรศัพท์:</td>
-                                        <td style="border: none; padding: 3px 0; font-size: 14px;">${receiptData.order.cus_tel || '-'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" style="border: none; padding: 3px 0; font-size: 14px;">เลขประจำตัวผู้เสียภาษี: ${receiptData.order.cus_id_card_number || '-'}</td>
-                                    </tr>
-
-                                </table>
-                            </div>
-
-                            <!-- ข้อมูลเอกสาร ขวา -->
-                            <div style="width: 40%;">
-                                <table style="width: 100%; border: none; " class="align-bottom">
-                                    <tr>
-                                        <td style="border: none; padding: 3px 0; text-align:right">สถานะชำระเงิน: ${receiptData.order.order_payment || 'ชำระเงินแล้ว'}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="border: none; padding: 3px 0; text-align:right">เลขที่: ${formatOrderNumber(receiptData.order.oc_id)}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="border: none; padding: 3px 0; text-align:right">วันที่: ${printDateTime}
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- เส้นคั่นก่อนรายการสินค้า -->
-                        <div style="border-bottom: 1px solid #000; margin: 10px 0;"></div>
-                    </div>
+                let voucherDiscountHtml = '';
+                <?php 
+                $stmt_voucher_usage->data_seek(0);
+                while ($usage = $voucher_usage_result->fetch_assoc()): 
+                ?>
+                voucherDiscountHtml += `
+                    <p>ส่วนลดบัตรกำนัล (<?php echo $usage['voucher_code']; ?>): 
+                       <?php echo number_format($usage['amount_used'], 2); ?> บาท</p>
                 `;
-
+                <?php endwhile; ?>
+                
                 var printContent = `
-                    <style>
-                        @page {
-                            size: A4;
-                            margin: 15mm; // เพิ่มระยะขอบ
-                        }
-                        body {
-                            font-family: 'Sarabun', sans-serif;
-                            line-height: 1.5;
-                            font-size: 14px; // ปรับจาก 8px เป็น 14px
-                            padding: 0;
-                            margin: 0;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin: 15px 0;
-                        }
-                        th {
-                            font-size: 15px;
-                            background-color: #f8f9fa;
-                            padding: 8px;
-                        }
-                        td {
-                            font-size: 14px;
-                            padding: 6px;
-                        }
-                        .header {
-                            margin-bottom: 10px;
-                        }
-                        .clinic-logo {
-                            margin-bottom: 10px;
-                        }
-                        .contact-info p, .license-info p {
-                            margin: 5px 0;
-                        }
-                        .receipt-info {
-                            margin: 15px 0;
-                            padding: 10px 0;
-                            border-top: 1px solid #ddd;
-                            border-bottom: 1px solid #ddd;
-                        }
-                        .original-price {
-                            text-decoration: line-through;
-                            color: #999;
-                            font-size: 0.9em;
-                        }
-                        .new-price {
-                            color: #dc3545;
-                            font-weight: bold;
-                        }
-                        .discount-info {
-                            color: #28a745;
-                            font-size: 0.9em;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin: 10px 0;
-                        }
-                        th, td {
-                            border: 1px solid #ddd;
-                            padding: 8px;
-                            text-align: left;
-                        }
-                        th {
-                            background-color: #f8f9fa;
-                        }
-                        .footer {
-                            margin-top: 20px;
-                            text-align: center;
-                        }
-                        .signature-section {
-                            display: flex;
-                            justify-content: space-between;
-                            margin-top: 20px;
-                            font-size: 14px;
-                        }
-                        .signature-box {
-                            text-align: center;
-                            width: 180px;
-                        }
-                        .signature-line {
-                            border-top: 1px solid #000;
-                            margin-top: 40px;
-                            margin-bottom: 10px;
-                        }
-                        .print-info {
-                            font-size: 12px;
-                            color: #666;
-                            text-align: right;
-                            margin-top: 15px;
-                        }
-                    </style>
+<style>
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                font-family: 'Sarabun', sans-serif;
+                padding: 10mm;
+                margin: 0;
+                font-size: 12px;
+                line-height: 1.3;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 3mm;
+            }
+            .logo {
+                width: 40px;
+                height: 40px;
+            }
+            h3 {
+                margin: 5px 0;
+            }
+            p {
+                margin: 3px 0;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 5mm 0;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 4px;
+                text-align: left;
+                font-size: 11px;
+            }
+            .footer {
+                margin-top: 5mm;
+                font-size: 11px;
+            }
+            .text-end {
+                text-align: right;
+            }
+            .print-datetime {
+                position: fixed;
+                bottom: 10mm;
+                right: 10mm;
+                font-size: 10px;
+                color: #888;
+            }
+        </style>
+                    <div class="header">
+                        <img src="../img/d.png" alt="Logo" class="logo">
+                        <h3>DEMO CLINIC คลินิก ศัลยกรรม เสริมความงาม</h3>
+                        <p>100/1 ซ วิภาวดี 1 รัชดา จังหวัดกรุงเทพ รหัสไปรษณีย์ 10100</p>
+                        <p>โทรศัพท์: 0852225450 อีเมล์: demo@gmail.com</p>
+                        <p>เลขที่ผู้เสียภาษี: 8888888888 เลขที่ใบอนุญาต: 4221178916</p>
+                    </div>
+                    <h3 style="text-align: center; margin: 5px 0;">ใบเสร็จรับเงิน [ RECEIPT ]</h3>
+                    <p><strong>ชื่อลูกค้า:</strong> ${receiptData.cus_title} ${receiptData.cus_firstname} ${receiptData.cus_lastname}</p>
+                    <p><strong>ที่อยู่:</strong> ${receiptData.full_address}</p>
+                    <p><strong>เลขประจำตัวผู้เสียภาษี:</strong> ${receiptData.cus_id_card_number}</p>
+                    <p><strong>รหัสลูกค้า:</strong> HN-${String(receiptData.cus_id).padStart(6, '0')} </p>
+                    <div class="text-end">
+                        <p><strong>สถานะชำระเงิน:</strong> ${receiptData.order_payment}</p>
+                        <p><strong>เลขที่คำสั่งซื้อ:</strong> ORDER-${String(receiptData.oc_id).padStart(6, '0')} <strong>วันที่:</strong> ${new Date(receiptData.order_datetime).toLocaleDateString('th-TH')}</p>
+                    </div>
 
-                    ${headerHtml}
-                    
-                    <!-- ส่วนของตารางรายการสินค้า -->
                     <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 10%;">ลำดับ</th>
-                                <th style="width: 45%;">รายการ</th>
-                                <th style="width: 15%; text-align: center;">จำนวน</th>
-                                <th style="width: 15%; text-align: right;">ราคา/หน่วย</th>
-                                <th style="width: 15%; text-align: right;">จำนวนเงิน</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
+                        <tr>
+                            <th>รหัสคอร์ส</th>
+                            <th>รายการ</th>
+                            <th style="text-align: center;">จำนวน</th>
+                            <th style="text-align: center;">หน่วย</th>
+                            <th style="text-align: center;">จำนวนเงิน</th>
+                        </tr>
+                    ${receiptData.items_array.map(item => `
+                        <tr>
+                            <td>${item.course_id}</td>
+                            <td>${item.course_name}</td>
+                            <td style="text-align: center;">${item.amount}</td>
+                            <td style="text-align: center;">ครั้ง/หน่วย</td>
+                            <td class="text-end">${parseFloat(item.price).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        </tr>
+                    `).join('')}
                     </table>
 
-                    ${summaryHtml}
+                    <div class="text-end">
+                        <p><strong>รวมเป็นเงิน:</strong> ${parseFloat(receiptData.order_net_total).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
+                        <p>มัดจำแล้ว : ${parseFloat(receiptData.deposit_amount).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
+                        <p>วันที่มัดจำ : ${receiptData.deposit_date ? new Date(receiptData.deposit_date).toLocaleString('th-TH') : '-'}</p>
 
-                    <div class="signature-section">
-                        <div class="signature-box">
-                            <div class="signature-line"></div>
-                            <p>ผู้รับบริการ</p>
-                            <p>${receiptData.order.cus_firstname} ${receiptData.order.cus_lastname}</p>
-                            <p>วันที่ _____/_____/_____</p>
-                        </div>
-                        <div class="signature-box">
-                            <div class="signature-line"></div>
-                            <p>ผู้รับเงิน</p>
-                            <p>${receiptData.order.seller_name || '................................'}</p>
-                            <p>วันที่ _____/_____/_____</p>
-                        </div>
+                        <p><strong>จำนวนเงินชำระสุทธิ:</strong> ${(parseFloat(receiptData.order_net_total) - parseFloat(receiptData.deposit_amount)).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
+                        <p><strong>วิธีการชำระเงิน:</strong> ${receiptData.order_payment} <strong>จำนวนเงิน:</strong> ${parseFloat(receiptData.order_net_total).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</p>
+                        <p>วันที่ชำระเงิน : ${receiptData.order_payment_date ? new Date(receiptData.order_payment_date).toLocaleString('th-TH') : '-'}</p>
                     </div>
-
-                    <div class="print-info">
-                        <p>พิมพ์เมื่อ: ${printDateTime}</p>
-                        <p>เลขที่เอกสาร: ${formatOrderNumber(receiptData.order.oc_id)}</p>
+                    <br><br><br>
+                    <div class="footer">
+                        <p>ลูกค้า Customer _________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ผู้ตรวจ Auditor _________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ผู้รับเงิน Collector _________________________</p>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ ${new Date().toLocaleDateString('th-TH')} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ ${new Date().toLocaleDateString('th-TH')} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; วันที่ ${new Date().toLocaleDateString('th-TH')}</p>
+                    </div>
+                    <div class="print-datetime">
+                        พิมพ์เมื่อ: ${printDateTime}
                     </div>
                 `;
 
-                var printWindow = window.open('', '', 'height=800,width=800');
-                printWindow.document.write('<html><head><title>ใบเสร็จรับเงิน</title>');
+                var printWindow = window.open('', '', 'height=600,width=800');
+                printWindow.document.write('<html><head><title>Print Receipt</title>');
                 printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(printContent);
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
-                printWindow.focus();
-
-               // รอให้รูปภาพโหลดเสร็จก่อนพิมพ์
-               setTimeout(function() {
-                   printWindow.print();
-                   // printWindow.close();
-               }, 1000);
-           } else {
-               Swal.fire({
-                   icon: 'error',
-                   title: 'เกิดข้อผิดพลาด',
-                   text: 'ไม่สามารถดึงข้อมูลใบเสร็จได้'
-               });
-           }
-       },
-       error: function(xhr, status, error) {
-           console.error('Error:', error);
-           Swal.fire({
-               icon: 'error',
-               title: 'เกิดข้อผิดพลาด',
-               text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
-           });
-       }
-   });
+                printWindow.print();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่พบข้อมูลใบเสร็จ'
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'เกิดข้อผิดพลาดในการดึงข้อมูลใบเสร็จ'
+            });
+        }
+    });
 }
 
-function formatOrderNumber(number) {
-   return 'ORDER-' + String(number).padStart(6, '0');
-}
-
-function formatCustomerId(id) {
-   return 'HN-' + String(id).padStart(6, '0');
-}
-
-function calculateDiscountPercentage(originalPrice, newPrice) {
-   if (!originalPrice || !newPrice) return '0.00';
-   const discount = ((originalPrice - newPrice) / originalPrice) * 100;
-   return discount.toFixed(2);
-}
 // เพิ่ม Event Listener สำหรับปุ่มพิมพ์ใบเสร็จ
-// document.getElementById('printReceiptBtn').addEventListener('click', printReceipt);
+document.getElementById('printReceiptBtn').addEventListener('click', printReceipt);
 
 $(document).ready(function() {
+    // โหลดรายชื่อแพทย์
+    loadDoctors();
 
+    // จัดการการเลือกแพทย์
+    $('#doctorSelect').change(function() {
+        const hasQueue = <?php echo json_encode($hasQueue); ?>;
+        const selectedDoctor = $(this).val();
+        const isPaymentCompleted = <?php echo json_encode($isPaymentCompleted); ?>;
+        
+        $('#printMedicalCertificateBtn').prop('disabled', 
+            !selectedDoctor || !isPaymentCompleted || !hasQueue
+        );
+    });
+
+    // จัดการการคลิกปุ่มพิมพ์
+    $('#printMedicalCertificateBtn').click(function() {
+        const selectedDoctor = $('#doctorSelect').val();
+        if (selectedDoctor) {
+            if (!<?php echo json_encode($isPaymentCompleted); ?>) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'แจ้งเตือน',
+                    text: 'กรุณาชำระเงินก่อนพิมพ์ใบรับรองแพทย์'
+                });
+                return;
+            }
+            printMedicalCertificate(selectedDoctor);
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'แจ้งเตือน',
+                text: 'กรุณาเลือกแพทย์ก่อนพิมพ์ใบรับรองแพทย์'
+            });
+        }
+    });
 });
 
 function loadDoctors() {
@@ -3137,11 +2680,11 @@ function applyVoucher(voucherId, discountAmount) {
                 Swal.fire({
                     icon: 'success',
                     title: 'ใช้บัตรกำนัลสำเร็จ',
-                    text: 'บันทึกการใช้บัตรกำนัลเรียบร้อยแล้ว',
+                    text: 'ระบบจะทำการรีเฟรชหน้าเพื่อแสดงข้อมูลล่าสุด',
                     showConfirmButton: false,
                     timer: 1500
                 }).then(() => {
-                    reloadPaymentSummary(); // เพิ่มการรีโหลดข้อมูล
+                    location.reload();
                 });
             } else {
                 Swal.fire({
@@ -3159,601 +2702,6 @@ function applyVoucher(voucherId, discountAmount) {
             });
         }
     });
-}
-
-// เพิ่มฟังก์ชันสำหรับโหลดและแสดงข้อมูลสรุปการชำระเงิน
-function loadPaymentSummary() {
-    const orderId = <?php echo $oc_id; ?>;
-    console.log('Loading payment summary for order:', orderId); // เพิ่ม debug log
-    
-    $('#paymentSummaryLoading').removeClass('d-none');
-    $('#paymentSummaryContent').addClass('d-none');
-
-    $.ajax({
-        url: 'sql/get-payment-summary.php',
-        type: 'GET',
-        data: { order_id: orderId },
-        dataType: 'json',
-        success: function(response) {
-            console.log('Payment summary response:', response); // เพิ่ม debug log
-            if (response.success) {
-                updatePaymentSummary(response.data);
-            } else {
-                console.error('Error loading payment summary:', response.message);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: response.message || 'ไม่สามารถโหลดข้อมูลสรุปการชำระเงินได้'
-                });
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Ajax error:', error);
-            console.log('Response:', xhr.responseText);
-            Swal.fire({
-                icon: 'error',
-                title: 'เกิดข้อผิดพลาด',
-                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
-            });
-        },
-        complete: function() {
-            $('#paymentSummaryLoading').addClass('d-none');
-            $('#paymentSummaryContent').removeClass('d-none');
-        }
-    });
-}
-
-function updatePaymentSummary(data) {
-    console.log('Updating payment summary with data:', data); // เพิ่ม debug log
-
-    // แสดงยอดรวม
-    $('#totalAmount').text(formatMoney(data.summary.total) + ' บาท');
-
-    // แสดงข้อมูลมัดจำ
-    if (parseFloat(data.deposit.amount) > 0) {
-        $('#depositSection').removeClass('d-none');
-        $('#depositAmount').text(formatMoney(data.deposit.amount) + ' บาท');
-        if (data.deposit.date) {
-            $('#depositDate').text('วันที่มัดจำ: ' + formatThaiDateTime(data.deposit.date));
-        }
-        if (data.deposit.payment_type) {
-            $('#depositType').text('ช่องทางชำระเงิน: ' + data.deposit.payment_type);
-        }
-    } else {
-        $('#depositSection').addClass('d-none');
-    }
-
-    // แสดงส่วนลดบัตรกำนัล
-    if (data.voucher_usage && data.voucher_usage.length > 0) {
-        $('#voucherSection').removeClass('d-none');
-        let voucherHtml = '';
-        data.voucher_usage.forEach(voucher => {
-            voucherHtml += `
-                <div class="summary-item">
-                    <span class="label">
-                        บัตรกำนัล ${voucher.voucher_code}
-                        <small class="text-muted">
-                            (${voucher.discount_type === 'percent' ? 'ส่วนลด %' : 'ส่วนลดเงินสด'})
-                        </small>
-                    </span>
-                    <span class="value text-danger">
-                        - ${formatMoney(voucher.amount_used)} บาท
-                    </span>
-                </div>`;
-        });
-        $('#voucherDiscountList').html(voucherHtml);
-    } else {
-        $('#voucherSection').addClass('d-none');
-    }
-
-    // แสดงยอดที่ต้องชำระ
-    $('#remainingAmount').text(formatMoney(data.summary.remaining) + ' บาท');
-
-    // อัพเดทส่วนฟอร์มการชำระเงิน
-    updatePaymentForm(data.summary.remaining);
-}
-
-// Utility functions
-function formatMoney(amount) {
-   return parseFloat(amount).toLocaleString('th-TH', {
-       minimumFractionDigits: 2,
-       maximumFractionDigits: 2
-   });
-}
-
-// เพิ่มฟังก์ชัน number_format ถ้ายังไม่มี
-function number_format(number, decimals, dec_point, thousands_sep) {
-    number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
-    var n = !isFinite(+number) ? 0 : +number,
-        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-        sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-        dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-        s = '',
-        toFixedFix = function(n, prec) {
-            var k = Math.pow(10, prec);
-            return '' + Math.round(n * k) / k;
-        };
-    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
-    if (s[0].length > 3) {
-        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-    }
-    if ((s[1] || '').length < prec) {
-        s[1] = s[1] || '';
-        s[1] += new Array(prec - s[1].length + 1).join('0');
-    }
-    return s.join(dec);
-}
-
-function formatThaiDateTime(datetime) {
-   if (!datetime) return '';
-   const date = new Date(datetime);
-   const options = {
-       year: 'numeric',
-       month: 'long',
-       day: 'numeric',
-       hour: '2-digit',
-       minute: '2-digit',
-       hour12: false
-   };
-   
-   // แปลงปีเป็น พ.ศ.
-   let thaiDate = date.toLocaleDateString('th-TH', options);
-   return thaiDate;
-}
-
-function formatAddress(orderData) {
-   const addressParts = [
-       orderData.cus_address,
-       orderData.cus_district,
-       orderData.cus_city,
-       orderData.cus_province,
-       orderData.cus_postal_code
-   ].filter(Boolean); // กรองค่า null หรือ empty string ออก
-   return addressParts.join(' ');
-}
-// โหลดข้อมูลเมื่อโหลดหน้า
-// $(document).ready(function() {
-//     loadPaymentSummary();
-// });
-
-// เพิ่ม event listener สำหรับรีโหลดข้อมูลเมื่อมีการเปลี่ยนแปลง
-function reloadPaymentSummary() {
-    loadPaymentSummary();
-}
-
-// เรียกใช้ reloadPaymentSummary() หลังจากการทำรายการต่างๆ เช่น
-// - หลังใช้บัตรกำนัล
-// - หลังปรับราคา
-// - หลังชำระมัดจำ
-// - หลังยกเลิกการใช้บัตรกำนัล
-// - หลังยกเลิกการมัดจำ
-
-function showVoucherDetails(voucherId) {
-    $.ajax({
-        url: 'sql/get-voucher-details.php',
-        type: 'GET',
-        data: { voucher_id: voucherId },
-        success: function(response) {
-            if (response.success) {
-                Swal.fire({
-                    title: 'รายละเอียดบัตรกำนัล',
-                    html: `
-                        <div class="text-start">
-                            <p><strong>รหัสบัตร:</strong> ${response.data.voucher_code}</p>
-                            <p><strong>ประเภท:</strong> ${response.data.discount_type === 'percent' ? 'ส่วนลด %' : 'ส่วนลดเงินสด'}</p>
-                            <p><strong>มูลค่า:</strong> ${formatMoney(response.data.amount)} ${response.data.discount_type === 'percent' ? '%' : 'บาท'}</p>
-                            <p><strong>วันที่ใช้งาน:</strong> ${formatThaiDateTime(response.data.used_at)}</p>
-                        </div>
-                    `,
-                    confirmButtonText: 'ปิด'
-                });
-            }
-        }
-    });
-}
-
-function showPriceAdjustmentDetails(adjustmentId) {
-    $.ajax({
-        url: 'sql/get-price-adjustment-details.php',
-        type: 'GET',
-        data: { adjustment_id: adjustmentId },
-        success: function(response) {
-            if (response.success) {
-                Swal.fire({
-                    title: 'รายละเอียดการปรับราคา',
-                    html: `
-                        <div class="text-start">
-                            <p><strong>คอร์ส:</strong> ${response.data.course_name}</p>
-                            <p><strong>ราคาเดิม:</strong> ${formatMoney(response.data.old_price)} บาท</p>
-                            <p><strong>ราคาใหม่:</strong> ${formatMoney(response.data.new_price)} บาท</p>
-                            <p><strong>ส่วนต่าง:</strong> ${formatMoney(response.data.old_price - response.data.new_price)} บาท</p>
-                            <p><strong>เหตุผล:</strong> ${response.data.reason}</p>
-                            <p><strong>ปรับราคาเมื่อ:</strong> ${formatThaiDateTime(response.data.adjusted_at)}</p>
-                        </div>
-                    `,
-                    confirmButtonText: 'ปิด'
-                });
-            }
-        }
-    });
-}
-
-function updatePaymentForm(remainingAmount) {
-    // เช็คว่ายังไม่ได้ชำระเงิน
-    if (<?php echo json_encode($order_data['order_payment'] == 'ยังไม่จ่ายเงิน'); ?>) {
-        const formHtml = `
-            <form id="paymentForm" enctype="multipart/form-data">
-                <input type="hidden" name="order_id" value="<?php echo $oc_id; ?>">
-                <input type="hidden" name="total_amount" value="${remainingAmount}">
-                
-                <div class="mb-3">
-                    <label for="payment_type" class="form-label">ประเภทการชำระเงิน</label>
-                    <select class="form-select" id="payment_type" name="payment_type" required>
-                        <option value="">เลือกประเภท</option>
-                        <option value="เงินสด">เงินสด</option>
-                        <option value="บัตรเครดิต">บัตรเครดิต</option>
-                        <option value="เงินโอน">เงินโอน</option>
-                    </select>
-                </div>
-
-                <div id="paymentSlipSection" style="display: none;">
-                    <div class="mb-3">
-                        <label for="payment_slip" class="form-label">แนบสลิปการชำระเงิน</label>
-                        <input type="file" class="form-control" id="payment_slip" name="payment_slip" accept="image/*">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="received_amount" class="form-label">จำนวนเงินที่รับมา</label>
-                    <input type="number" class="form-control" id="received_amount" name="received_amount" 
-                           step="0.01" required min="${remainingAmount}"
-                           value="${remainingAmount}">
-                </div>
-
-                <div class="mb-3" id="changeSection" style="display: none;">
-                    <label for="change_amount" class="form-label">เงินทอน</label>
-                    <input type="text" class="form-control" id="change_amount" readonly>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-lg w-100">บันทึกการชำระเงิน</button>
-            </form>
-        `;
-
-        $('#paymentFormSection').html(formHtml);
-
-        // เพิ่ม event listeners
-        $('#payment_type').change(function() {
-            const selectedType = $(this).val();
-            $('#paymentSlipSection').toggle(selectedType === 'เงินโอน');
-            
-            if (selectedType === 'เงินสด') {
-                $('#changeSection').show();
-                $('#received_amount').prop('required', true);
-            } else {
-                $('#changeSection').hide();
-                $('#change_amount').val('0.00');
-                $('#received_amount')
-                    .prop('required', false)
-                    .val(remainingAmount.toFixed(2));
-            }
-        });
-
-        $('#received_amount').on('input', function() {
-            const receivedAmount = parseFloat($(this).val()) || 0;
-            const changeAmount = receivedAmount - remainingAmount;
-            $('#change_amount').val(changeAmount >= 0 ? changeAmount.toFixed(2) : '0.00');
-        });
-
-        // จัดการการ submit form
-        $('#paymentForm').submit(function(e) {
-            e.preventDefault();
-            
-            const paymentType = $('#payment_type').val();
-            if (!paymentType) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'กรุณาเลือกประเภทการชำระเงิน',
-                    text: 'โปรดเลือกประเภทการชำระเงินก่อนบันทึกข้อมูล'
-                });
-                return;
-            }
-
-            if (paymentType === 'เงินโอน' && !$('#payment_slip')[0].files.length) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'กรุณาแนบสลิปการชำระเงิน',
-                    text: 'โปรดแนบสลิปการชำระเงินก่อนบันทึกข้อมูล'
-                });
-                return;
-            }
-
-            // ตรวจสอบและตัดสต๊อก
-            checkAndDeductStock(<?php echo $oc_id; ?>)
-                .then(() => {
-                    const formData = new FormData(this);
-                    
-                    $.ajax({
-                        url: 'sql/update-payment.php',
-                        type: 'POST',
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        dataType: 'json',
-                        success: function(response) {
-                            if(response.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'สำเร็จ',
-                                    text: 'บันทึกการชำระเงินและตัดสต๊อกเรียบร้อยแล้ว',
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                }).then(() => {
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'เกิดข้อผิดพลาด',
-                                    text: response.message || 'ไม่สามารถบันทึกการชำระเงินได้'
-                                });
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Error:', error);
-                            console.log('Response:', xhr.responseText);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'เกิดข้อผิดพลาด',
-                                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
-                            });
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Stock Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'เกิดข้อผิดพลาด',
-                        text: error
-                    });
-                });
-        });
-    } else {
-        // กรณีชำระเงินแล้ว แสดงข้อมูลการชำระเงิน
-        const paymentInfo = `
-            <div class="summary-box">
-                <div class="summary-item">
-                    <span class="label">สถานะการชำระเงิน:</span>
-                    <span class="value"><?php echo $order_data['order_payment']; ?></span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">จำนวนเงินที่ชำระ:</span>
-                    <span class="value"><?php echo number_format($order_data['order_net_total'], 2); ?> บาท</span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">วันที่ชำระเงิน:</span>
-                    <span class="value"><?php echo date('d/m/Y H:i:s', strtotime($order_data['order_payment_date'])); ?></span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">ผู้รับชำระเงิน:</span>
-                    <span class="value"><?php echo $order_data['seller_name']; ?></span>
-                </div>
-                <?php if ($order_data['payment_proofs']): ?>
-                <div class="mt-3">
-                    <button type="button" class="btn btn-info btn-sm" 
-                            onclick="showPaymentSlip('<?php echo $order_data['payment_proofs']; ?>')">
-                        ดูสลิปการชำระเงิน
-                    </button>
-                </div>
-                <?php endif; ?>
-            </div>
-            
-            
-            <div class="d-flex justify-content-between mt-3">
-                <button id="printReceiptBtn" class="btn btn-primary">พิมพ์ใบเสร็จ</button>
-                <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
-                    <button type="button" class="btn btn-danger btn-lg" 
-                            onclick="cancelPayment(<?php echo $oc_id; ?>)">
-                        ยกเลิกการชำระเงิน
-                    </button>
-                <?php endif; ?>   
-            </div>
-            
-        `;
-
-        $('#paymentFormSection').html(paymentInfo);
-        // เพิ่ม event listener หลังจากสร้างปุ่ม
-        const printReceiptBtn = document.getElementById('printReceiptBtn');
-        if (printReceiptBtn) {
-            printReceiptBtn.addEventListener('click', printReceipt);
-        }
-
-    }
-}
-
-function showDepositHistory() {
-    $.ajax({
-        url: 'sql/get-deposit-history.php',
-        type: 'GET',
-        data: { order_id: <?php echo $oc_id; ?> },
-        success: function(response) {
-            if (response.success) {
-                const tableBody = $('#depositHistoryTableBody');
-                tableBody.empty();
-
-                if (response.data.length === 0) {
-                    tableBody.html('<tr><td colspan="4" class="text-center">ไม่พบประวัติการยกเลิกมัดจำ</td></tr>');
-                } else {
-                    response.data.forEach(item => {
-                        const date = new Date(item.cancelled_at);
-                        const formattedDate = date.toLocaleDateString('th-TH', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
-
-                        const row = `
-                            <tr>
-                                <td>${formattedDate}</td>
-                                <td>${formatMoney(item.deposit_amount)} บาท</td>
-                                <td>${escapeHtml(item.cancellation_reason)}</td>
-                                <td>${escapeHtml(item.cancelled_by_name)}</td>
-                            </tr>
-                        `;
-                        tableBody.append(row);
-                    });
-                }
-
-                $('#depositHistoryModal').modal('show');
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: response.message || 'ไม่สามารถดึงข้อมูลประวัติได้'
-                });
-            }
-        },
-        error: function() {
-            Swal.fire({
-                icon: 'error',
-                title: 'เกิดข้อผิดพลาด',
-                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
-            });
-        }
-    });
-}
-
-// Utility function for escaping HTML
-function escapeHtml(unsafe) {
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-function showVoucherHistory(voucherId) {
-    console.log('Voucher ID:', voucherId); // เพิ่ม debug log
-    
-    if (!voucherId) {
-        Swal.fire({
-            icon: 'error',
-            title: 'เกิดข้อผิดพลาด',
-            text: 'ไม่พบรหัสบัตรกำนัล'
-        });
-        return;
-    }
-
-    $.ajax({
-        url: 'sql/get-voucher-history.php',
-        type: 'GET',
-        data: { voucher_id: voucherId },
-        dataType: 'json',
-        success: function(response) {
-            console.log('Response:', response); // เพิ่ม debug log
-            
-            if (response.success) {
-                updateVoucherHistoryModal(response.voucher, response.history);
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: response.message || 'ไม่สามารถดึงข้อมูลประวัติได้'
-                });
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Ajax error:', error);
-            console.log('Response:', xhr.responseText);
-            Swal.fire({
-                icon: 'error',
-                title: 'เกิดข้อผิดพลาด',
-                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
-            });
-        }
-    });
-}
-
-function updateVoucherHistoryModal(voucher, history) {
-    // อัพเดทข้อมูลบัตรกำนัล
-    $('#voucherCode').text(voucher.voucher_code);
-    $('#voucherAmount').text(formatMoney(voucher.amount) + 
-        (voucher.discount_type === 'percent' ? '%' : ' บาท'));
-    $('#voucherCreatedDate').text(formatThaiDate(voucher.created_at));
-    $('#voucherExpireDate').text(formatThaiDate(voucher.expire_date));
-
-    // คำนวณและแสดงความคืบหน้าการใช้งาน
-    const totalAmount = parseFloat(voucher.amount);
-    const usedAmount = parseFloat(voucher.total_used) || 0;
-    const usagePercentage = (usedAmount / totalAmount) * 100;
-
-    $('#voucherUsageProgress')
-        .css('width', `${Math.min(usagePercentage, 100)}%`)
-        .attr('aria-valuenow', usagePercentage)
-        .addClass(usagePercentage >= 100 ? 'bg-success' : 'bg-primary');
-
-    $('#voucherUsedAmount').text(formatMoney(usedAmount));
-    $('#voucherTotalAmount').text(formatMoney(totalAmount));
-
-    // แสดงประวัติการใช้งาน
-    const tableBody = $('#voucherHistoryTableBody');
-    tableBody.empty();
-
-    if (!history || history.length === 0) {
-        tableBody.html(`
-            <tr>
-                <td colspan="4" class="text-center">
-                    <span class="text-muted">ยังไม่มีประวัติการใช้งาน</span>
-                </td>
-            </tr>
-        `);
-    } else {
-        history.forEach(item => {
-            const row = `
-                <tr>
-                    <td>${formatThaiDateTime(item.used_at)}</td>
-                    <td>
-                        <a href="bill.php?id=${item.order_id}" target="_blank">
-                            ORDER-${String(item.order_id).padStart(6, '0')}
-                        </a>
-                    </td>
-                    <td>${escapeHtml(item.customer_name)}</td>
-                    <td>${formatMoney(item.amount_used)} บาท</td>
-                </tr>
-            `;
-            tableBody.append(row);
-        });
-    }
-
-    $('#voucherHistoryModal').modal('show');
-}
-
-// Utility functions
-function formatThaiDate(dateString) {
-    const date = new Date(dateString);
-    const options = { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        timeZone: 'Asia/Bangkok'
-    };
-    return date.toLocaleDateString('th-TH', options);
-}
-
-function formatThaiDateTime(dateString) {
-    const date = new Date(dateString);
-    const options = { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Asia/Bangkok'
-    };
-    return date.toLocaleDateString('th-TH', options);
 }
 </script>
 

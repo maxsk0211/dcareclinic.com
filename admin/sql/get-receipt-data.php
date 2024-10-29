@@ -1,93 +1,120 @@
 <?php
-require '../../dbcon.php';
+require_once '../../dbcon.php';
 
-// เพิ่ม error reporting เพื่อ debug
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+$oc_id = $_GET['oc_id'];
+$response = [];
 
-$oc_id = isset($_GET['oc_id']) ? intval($_GET['oc_id']) : 0;
-
-if ($oc_id > 0) {
-    $receiptData = getReceiptData($oc_id);
-    if ($receiptData) {
-        echo json_encode($receiptData);
-    } else {
-        echo json_encode(['error' => 'ไม่พบข้อมูลใบเสร็จ']);
-    }
-} else {
-    echo json_encode(['error' => 'ไม่ได้ระบุ oc_id']);
-}
-
-function getReceiptData($oc_id) {
-    global $conn;
-    
-    $sql = "SELECT oc.*, c.cus_title, c.cus_firstname, c.cus_lastname, 
-            c.cus_address, c.cus_district, c.cus_city, c.cus_province, c.cus_postal_code, 
-            c.cus_id_card_number,
-            u.users_fname, u.users_lname,
-            GROUP_CONCAT(CONCAT(co.course_id, ':', co.course_name, ':', od.od_amount, ':', od.od_price) SEPARATOR '|') as items
+try {
+    // ดึงข้อมูลของ order และ branch (คงเดิม)
+    $sql = "SELECT oc.*, c.*, b.*,
+            CONCAT(u.users_fname, ' ', u.users_lname) as seller_name
             FROM order_course oc
             JOIN customer c ON oc.cus_id = c.cus_id
-            JOIN order_detail od ON oc.oc_id = od.oc_id
-            JOIN course co ON od.course_id = co.course_id
+            JOIN branch b ON oc.branch_id = b.branch_id
             LEFT JOIN users u ON oc.seller_id = u.users_id
-            WHERE oc.oc_id = ?
-            GROUP BY oc.oc_id";
+            WHERE oc.oc_id = ?";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $oc_id);
     $stmt->execute();
     $result = $stmt->get_result();
+    $order = $result->fetch_assoc();
+
+    // ดึงข้อมูลรายการสินค้าพร้อมการปรับราคา
+    $sql = "SELECT od.*, c.course_name,
+            (SELECT pal.old_price 
+             FROM price_adjustment_logs pal 
+             WHERE pal.order_id = od.oc_id 
+             AND pal.course_id = od.course_id 
+             ORDER BY pal.adjusted_at DESC LIMIT 1) as original_price,
+            (SELECT pal.new_price 
+             FROM price_adjustment_logs pal 
+             WHERE pal.order_id = od.oc_id 
+             AND pal.course_id = od.course_id 
+             ORDER BY pal.adjusted_at DESC LIMIT 1) as adjusted_price
+            FROM order_detail od
+            JOIN course c ON od.course_id = c.course_id
+            WHERE od.oc_id = ?";
     
-    if ($result->num_rows > 0) {
-        $data = $result->fetch_assoc();
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $oc_id);
+    $stmt->execute();
+    $items_result = $stmt->get_result();
+    
+    $items_array = [];
+    $subtotal = 0;
+
+    while ($item = $items_result->fetch_assoc()) {
+        $has_price_adjustment = !is_null($item['original_price']);
+        $current_price = $has_price_adjustment ? $item['adjusted_price'] : $item['od_price'];
+        $total_price = $current_price * $item['od_amount'];
         
-        // จัดรูปแบบที่อยู่
-        $data['full_address'] = implode(' ', array_filter([
-            $data['cus_address'],
-            $data['cus_district'],
-            $data['cus_city'],
-            $data['cus_province'],
-            $data['cus_postal_code']
-        ]));
-
-        // แยกข้อมูลที่อยู่
-        $data['address_parts'] = [
-            'address' => $data['cus_address'],
-            'district' => $data['cus_district'],
-            'city' => $data['cus_city'],
-            'province' => $data['cus_province'],
-            'postal_code' => $data['cus_postal_code']
+        $items_array[] = [
+            'course_id' => $item['course_id'],
+            'course_name' => $item['course_name'],
+            'amount' => $item['od_amount'],
+            'price' => $current_price,
+            'total_price' => $total_price,
+            'has_price_adjustment' => $has_price_adjustment,
+            'original_price' => $item['original_price'],
+            'adjusted_price' => $item['adjusted_price']
         ];
-
-        // แปลงข้อมูลรายการสินค้า
-        $itemsArray = [];
-        $total = 0;
-        $items = explode('|', $data['items']);
-        foreach ($items as $item) {
-            list($courseId, $courseName, $amount, $price) = explode(':', $item);
-            $subtotal = $amount * $price;
-            $total += $subtotal;
-            $itemsArray[] = [
-                'course_id' => 'C-' . str_pad($courseId, 6, '0', STR_PAD_LEFT),
-                'course_name' => $courseName,
-                'amount' => $amount,
-                'price' => $price,
-                'subtotal' => $subtotal
-            ];
-        }
-        $data['items_array'] = $itemsArray;
-        $data['total_amount'] = $total;
-
-        // จัดรูปแบบวันที่
-        $data['formatted_order_datetime'] = date('d/m/Y H:i', strtotime($data['order_datetime']));
-        $data['formatted_deposit_date'] = $data['deposit_date'] ? date('d/m/Y H:i', strtotime($data['deposit_date'])) : '-';
-        $data['formatted_order_payment_date'] = $data['order_payment_date'] ? date('d/m/Y H:i', strtotime($data['order_payment_date'])) : '-';
-
-        // เพิ่มข้อมูลผู้ขาย
-        $data['seller_name'] = $data['users_fname'] . ' ' . $data['users_lname'];
-
-        return $data;
+        
+        $subtotal += $total_price;
     }
-    return null;
+
+    // ดึงข้อมูลส่วนลดบัตรกำนัล
+    $sql = "SELECT vh.*, gv.voucher_code, gv.discount_type 
+            FROM voucher_usage_history vh
+            JOIN gift_vouchers gv ON vh.voucher_id = gv.voucher_id
+            WHERE vh.order_id = ?";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $oc_id);
+    $stmt->execute();
+    $voucher_result = $stmt->get_result();
+    $voucher_discounts = [];
+    $total_voucher_discount = 0;
+
+    while ($voucher = $voucher_result->fetch_assoc()) {
+        $voucher_discounts[] = $voucher;
+        $total_voucher_discount += floatval($voucher['amount_used']);
+    }
+
+    // ดึงข้อมูลมัดจำ
+    $deposit_amount = floatval($order['deposit_amount']);
+
+    // คำนวณยอดรวมต่างๆ
+    $summary = [
+        'subtotal' => $subtotal,                     // ยอดรวมทั้งหมด
+        'deposit' => $deposit_amount,                // จำนวนเงินมัดจำ
+        'voucher_discount' => $total_voucher_discount, // ส่วนลดจากบัตรกำนัล
+        'net_total' => $subtotal - $deposit_amount - $total_voucher_discount // ยอดสุทธิ
+    ];
+
+    $response = [
+        'success' => true,
+        'order' => $order,
+        'items_array' => $items_array,
+        'voucher_discounts' => $voucher_discounts,
+        'summary' => $summary,
+        'branch_info' => [
+            'name' => $order['branch_name'],
+            'address' => $order['branch_address'],
+            'phone' => $order['branch_phone'],
+            'email' => $order['branch_email'],
+            'tax_id' => $order['branch_tax_id'],
+            'license_no' => $order['branch_license_no']
+        ]
+    ];
+
+} catch (Exception $e) {
+    $response = [
+        'success' => false,
+        'message' => $e->getMessage()
+    ];
 }
+
+header('Content-Type: application/json');
+echo json_encode($response);
+?>
