@@ -30,13 +30,37 @@ if (isset($_GET['cancel']) && $_GET['cancel'] == 1) {
 }
 
 // ดึงข้อมูลการจองทั้งหมด
-$sql = "SELECT cb.*, cu.cus_id AS customer_id, cu.cus_firstname, cu.cus_lastname, u.users_fname, oc.oc_id, oc.order_net_total, oc.order_payment
-        FROM course_bookings cb
-        JOIN customer cu ON cb.cus_id = cu.cus_id
-        LEFT JOIN users u ON cb.users_id = u.users_id
-        LEFT JOIN order_course oc ON cb.id = oc.course_bookings_id
-        WHERE cb.branch_id = {$_SESSION['branch_id']}
-        ORDER BY cb.booking_datetime DESC";
+// ดึงข้อมูลการจองทั้งหมด
+$sql = "SELECT 
+    cb.*,
+    c.cus_firstname, 
+    c.cus_lastname,
+    c.cus_tel,
+    c.cus_email,
+    c.cus_address,
+    c.cus_district,
+    c.cus_city,
+    c.cus_province,
+    c.cus_postal_code,
+    r.room_name,
+    u.users_fname,
+    u.users_lname,
+    GROUP_CONCAT(DISTINCT CONCAT(co.course_name, ' (', co.course_amount, ' ครั้ง)') SEPARATOR ', ') as booked_courses,
+    oc.oc_id,
+    oc.order_net_total,
+    oc.order_payment,
+    fn.note as follow_up_note
+FROM course_bookings cb
+LEFT JOIN customer c ON cb.cus_id = c.cus_id
+LEFT JOIN rooms r ON cb.room_id = r.room_id
+LEFT JOIN users u ON cb.users_id = u.users_id
+LEFT JOIN order_course oc ON cb.id = oc.course_bookings_id
+LEFT JOIN order_detail od ON oc.oc_id = od.oc_id
+LEFT JOIN course co ON od.course_id = co.course_id
+LEFT JOIN follow_up_notes fn ON cb.id = fn.booking_id
+WHERE cb.branch_id = {$_SESSION['branch_id']}
+GROUP BY cb.id
+ORDER BY cb.created_at DESC";
 
 $result_booking = $conn->query($sql);
 
@@ -156,6 +180,133 @@ function convertToThaiDate($date) {
     .clickable-row:hover {
         background-color: #f5f5f5;
     }
+     .datatables-bookings tbody tr {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .datatables-bookings tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+        transform: translateY(-1px);
+    }
+
+    /* สถานะการจอง */
+    .booking-status {
+        padding: 0.4em 0.8em;
+        border-radius: 30px;
+        font-weight: 500;
+        font-size: 0.85em;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3em;
+    }
+
+    .booking-status i {
+        font-size: 1.1em;
+    }
+
+    /* Modal Styles */
+    .booking-detail-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s;
+    }
+
+    .booking-detail-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        background: linear-gradient(45deg, #6b21a8, #3730a3);
+        color: white;
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    /* Course Progress */
+    .course-progress {
+        height: 10px;
+        border-radius: 5px;
+        background-color: #e9ecef;
+    }
+
+    .course-progress-bar {
+        height: 100%;
+        border-radius: 5px;
+        transition: width 0.3s ease;
+    }
+
+    /* Resource List */
+    .resource-list {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 0.8rem;
+    }
+
+    .resource-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        border-bottom: 1px dashed #dee2e6;
+    }
+
+    .resource-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Payment Info */
+    .payment-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .payment-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+        padding: 0.4em 1em;
+        border-radius: 30px;
+        font-weight: 500;
+    }
+
+    /* ป้ายกำกับสถานะ */
+    .status-badge {
+        padding: 0.5em 0.8em;
+        border-radius: 6px;
+        font-size: 0.85em;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+
+    /* Follow-up Badge */
+    .follow-up-badge {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        padding: 0.4em 0.8em;
+        border-radius: 4px;
+        font-size: 0.85em;
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        padding: 0.4em 0.8em;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    /* Modal Animation */
+    .modal.fade .modal-dialog {
+        transform: scale(0.95);
+        transition: transform 0.2s ease-out;
+    }
+
+    .modal.show .modal-dialog {
+        transform: scale(1);
+    }
     </style>
 </head>
 
@@ -173,104 +324,116 @@ function convertToThaiDate($date) {
                         <!-- Booking List Table -->
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">รายการจองคอร์สทั้งหมด</h5>
+                                <h5 class="mb-0 text-white">รายการจองคอร์สทั้งหมด</h5>
                                 <a href="booking.php" class="btn btn-primary">
                                     <i class="ri-add-line me-1"></i> จองคอร์สใหม่
                                 </a>
                             </div>
                             <div class="card-datatable table-responsive">
-                                <table class="datatables-bookings table border-top">
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>รหัสการจอง</th>
-                                            <th>ชื่อลูกค้า</th>
-                                            <th>วันที่จอง</th>
-                                            <th>ผู้ทำรายการ</th>
-                                            <th>ยอดรวม</th>
-                                            <th>สถานะการจอง</th>
-                                            <th>สถานะการชำระเงิน</th>
-                                            <th>การดำเนินการ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php while ($row_booking = mysqli_fetch_object($result_booking)): ?>
-                                            <tr class="clickable-row" data-customer-id="<?php echo $row_booking->customer_id; ?>">
+                                <div class="card-datatable table-responsive">
+                                    <table class="datatables-bookings table border-top">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>วันที่นัด</th>
+                                                <th>เวลา</th>
+                                                <th>ลูกค้า</th>
+                                                <th>ห้อง</th>
+                                                <th>คอร์สที่จอง</th>
+                                                <th>ติดตามผล</th>
+                                                <th>สถานะ</th>
+                                                <th>การชำระเงิน</th>
+                                                <th>ผู้ทำรายการ</th>
+                                                <th>การดำเนินการ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php while ($booking = mysqli_fetch_object($result_booking)): ?>
+                                            <tr class="clickable-row" data-customer-id="<?php echo $booking->cus_id; ?>">
                                                 <td></td>
-                                                <td><?php echo formatOrderId($row_booking->oc_id); ?></td>
-                                                <td><?php echo htmlspecialchars($row_booking->cus_firstname . ' ' . $row_booking->cus_lastname); ?></td>
-                                                <td><?php echo convertToThaiDate($row_booking->booking_datetime); ?></td>
-                                                <td><?php echo $row_booking->users_fname ?? 'N/A'; ?></td>
-                                                <td><?php echo number_format($row_booking->order_net_total, 2); ?> บาท</td>
+                                                <td><?php echo date('d/m/Y', strtotime($booking->booking_datetime)); ?></td>
+                                                <td><?php echo date('H:i', strtotime($booking->booking_datetime)); ?></td>
+                                                <td>
+                                                    <a href="customer-detail.php?id=<?php echo $booking->cus_id; ?>">
+                                                        <?php echo htmlspecialchars($booking->cus_firstname . ' ' . $booking->cus_lastname); ?>
+                                                    </a>
+                                                </td>
+                                                <td><?php echo htmlspecialchars($booking->room_name); ?></td>
+                                                <td><?php echo htmlspecialchars($booking->booked_courses); ?></td>
+                                                <td>
+                                                    <?php if ($booking->is_follow_up): ?>
+                                                        <span class="badge bg-info">นัดติดตาม</span>
+                                                        <i class="ri-information-line" data-bs-toggle="tooltip" title="<?php echo htmlspecialchars($booking->follow_up_note); ?>"></i>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary">ปกติ</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <?php
                                                     $status_class = '';
-                                                    switch ($row_booking->status) {
+                                                    $status_text = '';
+                                                    switch ($booking->status) {
                                                         case 'confirmed':
-                                                            $status_class = 'status-confirmed';
+                                                            $status_class = 'success';
                                                             $status_text = 'ยืนยันแล้ว';
                                                             break;
                                                         case 'cancelled':
-                                                            $status_class = 'status-cancelled';
+                                                            $status_class = 'danger';
                                                             $status_text = 'ยกเลิกแล้ว';
                                                             break;
                                                         default:
-                                                            $status_class = 'status-pending';
+                                                            $status_class = 'warning';
                                                             $status_text = 'รอยืนยัน';
                                                     }
-                                                    echo "<span class='status-badge $status_class'>$status_text</span>";
                                                     ?>
+                                                    <span class="badge bg-<?php echo $status_class; ?>"><?php echo $status_text; ?></span>
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    $payment_class = '';
-                                                    switch ($row_booking->order_payment) {
-                                                        case 'เงินสด':
-                                                            $payment_class = 'payment-cash';
-                                                            break;
-                                                        case 'บัตรเครดิต':
-                                                            $payment_class = 'payment-credit';
-                                                            break;
-                                                        case 'โอนเงิน':
-                                                            $payment_class = 'payment-transfer';
-                                                            break;
-                                                        default:
-                                                            $payment_class = 'payment-unpaid';
+                                                    if ($booking->order_payment) {
+                                                        $payment_class = match($booking->order_payment) {
+                                                            'เงินสด' => 'success',
+                                                            'บัตรเครดิต' => 'info',
+                                                            'โอนเงิน' => 'primary',
+                                                            default => 'secondary'
+                                                        };
+                                                        echo "<span class='badge bg-{$payment_class}'>{$booking->order_payment}</span>";
+                                                    } else {
+                                                        echo "<span class='badge bg-danger'>ยังไม่ชำระ</span>";
                                                     }
-                                                    if($row_booking->order_payment==null){ 
-                                                        $order_payment="ไม่ได้ซื้อคอร์ส";
-                                                    }else{
-                                                        $order_payment=$row_booking->order_payment;
-                                                    }
-                                                    echo "<span class='payment-status $payment_class'>" . htmlspecialchars($order_payment) . "</span>";
                                                     ?>
                                                 </td>
+                                                <td><?php echo htmlspecialchars($booking->users_fname . ' ' . $booking->users_lname); ?></td>
                                                 <td>
                                                     <div class="dropdown">
-                                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow dropdown-toggle-z-index" data-bs-toggle="dropdown">
+                                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                                             <i class="ri-more-fill"></i>
                                                         </button>
-                                                        <div class="dropdown-menu dropdown-menu-z-index">
-                                                            <a class="dropdown-item dropdown-item-z-index" href="javascript:void(0);" onclick="showOrderDetails(<?php echo $row_booking->oc_id; ?>)">
-                                                                <i class="ri-eye-line me-1"></i> ดูรายละเอียด
+                                                        <div class="dropdown-menu">
+                                                            <a class="dropdown-item" href="javascript:void(0);" 
+                                                               onclick="showBookingDetails(<?php echo $booking->id; ?>)">
+                                                                <i class="ri-eye-line me-1"></i> รายละเอียด
                                                             </a>
-                                                            <?php if ($row_booking->status == 'pending'): ?>
-                                                                <a class="dropdown-item dropdown-item-z-index" href="javascript:void(0);" onclick="confirmApprove('booking-show.php?booking_id=<?php echo $row_booking->id; ?>&approve=1')">
-                                                                    <i class="ri-check-line me-1"></i> อนุมัติ
-                                                                </a>
+                                                            <?php if ($booking->status === 'pending'): ?>
+                                                            <a class="dropdown-item" href="javascript:void(0);" 
+                                                               onclick="confirmApprove(<?php echo $booking->id; ?>)">
+                                                                <i class="ri-check-line me-1"></i> อนุมัติ
+                                                            </a>
                                                             <?php endif; ?>
-                                                            <?php if ($row_booking->status != 'cancelled'): ?>
-                                                                <a class="dropdown-item dropdown-item-z-index" href="javascript:void(0);" onclick="confirmCancel('booking-show.php?booking_id=<?php echo $row_booking->id; ?>&cancel=1')">
-                                                                    <i class="ri-close-line me-1"></i> ยกเลิก
-                                                                </a>
+                                                            <?php if ($booking->status !== 'cancelled'): ?>
+                                                            <a class="dropdown-item text-danger" href="javascript:void(0);" 
+                                                               onclick="confirmCancel(<?php echo $booking->id; ?>)">
+                                                                <i class="ri-close-line me-1"></i> ยกเลิก
+                                                            </a>
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        <?php endwhile; ?>
-                                    </tbody>
-                                </table>
+                                            <?php endwhile; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         <!--/ Booking List Table -->
@@ -283,20 +446,68 @@ function convertToThaiDate($date) {
         </div>
     </div>
 
-    <!-- Modal for Order Details -->
-    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="orderDetailsModalLabel">รายละเอียดการสั่งซื้อ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="orderDetailsContent">
-                    <!-- Order details will be loaded here -->
+   <!-- Modal -->
+<div class="modal fade" id="bookingDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">รายละเอียดการจอง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- ข้อมูลลูกค้า -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0 text-white">ข้อมูลลูกค้า</h6>
+                            </div>
+                            <div class="card-body" id="customerDetails">
+                                <!-- จะถูกเติมด้วย JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ข้อมูลการจอง -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0 text-white">ข้อมูลการจอง</h6>
+                            </div>
+                            <div class="card-body" id="bookingDetails">
+                                <!-- จะถูกเติมด้วย JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ข้อมูลคอร์ส -->
+                    <div class="col-12">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0 text-white">รายละเอียดคอร์ส</h6>
+                            </div>
+                            <div class="card-body" id="courseDetails">
+                                <!-- จะถูกเติมด้วย JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ข้อมูลการชำระเงิน -->
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0 text-white">ข้อมูลการชำระเงิน</h6>
+                            </div>
+                            <div class="card-body" id="paymentDetails">
+                                <!-- จะถูกเติมด้วย JavaScript -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -319,51 +530,68 @@ function convertToThaiDate($date) {
 
     <script>
 $(document).ready(function() {
-    var table = $('.datatables-bookings').DataTable({
+    const bookingTable = $('.datatables-bookings').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+             '<"row"<"col-sm-12"tr>>' +
+             '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
         displayLength: 10,
-        lengthMenu: [ 10, 25, 50, 75, 100],
-        buttons: [], // Export buttons removed
+        lengthMenu: [10, 25, 50, 75, 100],
         responsive: {
             details: {
                 display: $.fn.dataTable.Responsive.display.modal({
                     header: function(row) {
-                        var data = row.data();
-                        return 'รายละเอียดการจองของ ' + data[2];
+                        const data = row.data();
+                        return 'รายละเอียดการจอง ' + data[3];
                     }
                 }),
                 type: 'column',
                 renderer: function(api, rowIdx, columns) {
-                    var data = $.map(columns, function(col, i) {
-                        return col.title !== '' // ? Do not show actions column in modal
-                            ? '<tr data-dt-row="' +
-                                col.rowIndex +
-                                '" data-dt-column="' +
-                                col.columnIndex +
-                                '">' +
-                                '<td>' +
-                                col.title +
-                                ':' +
-                                '</td> ' +
-                                '<td>' +
-                                col.data +
-                                '</td>' +
-                                '</tr>'
-                            : '';
+                    const data = $.map(columns, function(col, i) {
+                        return col.hidden ?
+                            '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
+                            '<td>' + col.title + ':</td> ' +
+                            '<td>' + col.data + '</td>' +
+                            '</tr>' :
+                            '';
                     }).join('');
 
-                    return data ? $('<table class="table"/><tbody />').append(data) : false;
+                    return data ? 
+                        $('<table class="table"/><tbody />').append(data) :
+                        false;
                 }
             }
         },
-        createdRow: function(row, data, dataIndex) {
-            $(row).addClass('clickable-row');
-            $(row).attr('data-cus-id', data[1]); // Assuming cus_id is the second column (index 1)
-        }
+        language: {
+            search: 'ค้นหา:',
+            lengthMenu: 'แสดง _MENU_ รายการ',
+            info: 'แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ',
+            infoEmpty: 'ไม่พบรายการ',
+            infoFiltered: '(กรองจากทั้งหมด _MAX_ รายการ)',
+            zeroRecords: 'ไม่พบรายการที่ตรงกับการค้นหา',
+            paginate: {
+                first: 'หน้าแรก',
+                previous: 'ก่อนหน้า',
+                next: 'ถัดไป',
+                last: 'หน้าสุดท้าย'
+            }
+        },
+        //order: [[1, 'desc']],  เรียงตามวันที่จากใหม่ไปเก่า
+        columnDefs: [
+            {
+                targets: 0,
+                orderable: false,
+                searchable: false,
+                className: 'control'
+            },
+            {
+                targets: -1,
+                orderable: false,
+                searchable: false
+            }
+        ]
     });
 
-    // $('div.head-label').html('<h5 class="card-title mb-0">รายการจองคอร์สทั้งหมด</h5>');
-
-    // เพิ่ม event listener สำหรับการคลิกที่แถว
+    // Event Handlers
     $('.datatables-bookings tbody').on('click', 'tr', function(e) {
         // ตรวจสอบว่าคลิกที่ปุ่ม dropdown หรือรายการเมนูหรือไม่
         if (!$(e.target).closest('.dropdown-toggle, .dropdown-item').length) {
@@ -374,62 +602,194 @@ $(document).ready(function() {
         }
     });
 
-    // เพิ่ม event listener สำหรับปุ่ม dropdown และรายการเมนู
-    $('.dropdown-toggle, .dropdown-item').on('click', function(e) {
-        e.stopPropagation(); // ป้องกันการ bubble up ของ event
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
 
-function showOrderDetails(orderId) {
+function showBookingDetails(bookingId) {
+    Swal.fire({
+        title: 'กำลังโหลดข้อมูล...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
     $.ajax({
-        url: 'sql/get-order-details.php',
+        url: 'sql/get-booking-details.php',
         type: 'GET',
-        data: { order_id: orderId },
+        data: { id: bookingId },
         success: function(response) {
-            $('#orderDetailsContent').html(response);
-            $('#orderDetailsModal').modal('show');
+            Swal.close();
+            
+            // เติมข้อมูลลูกค้า
+            const customerHtml = `
+                <p><strong>ชื่อ-นามสกุล:</strong> ${response.customer?.fullname || '-'}</p>
+                <p><strong>ชื่อเล่น:</strong> ${response.customer?.nickname || '-'}</p>
+                <p><strong>เบอร์โทร:</strong> ${response.customer?.tel || '-'}</p>
+                <p><strong>อีเมล:</strong> ${response.customer?.email || '-'}</p>
+                <p><strong>ที่อยู่:</strong> ${response.customer?.address || '-'}</p>
+            `;
+            $('#customerDetails').html(customerHtml);
+
+            // เติมข้อมูลการจอง
+            const bookingHtml = `
+                <p><strong>วันที่นัด:</strong> ${response.booking?.datetime || '-'}</p>
+                <p><strong>ห้อง:</strong> ${response.booking?.room || '-'}</p>
+                <p><strong>สถานะ:</strong> 
+                    <span class="badge bg-${response.booking?.status_class || 'secondary'}">
+                        ${response.booking?.status_text || '-'}
+                    </span>
+                </p>
+                ${response.booking?.follow_up?.is_follow_up ? `
+                    <p><strong>หมายเหตุการติดตาม:</strong> ${response.booking.follow_up.note || '-'}</p>
+                ` : ''}
+            `;
+            $('#bookingDetails').html(bookingHtml);
+
+            // เติมข้อมูลคอร์ส
+            if (response.courses && response.courses.length > 0) {
+                const coursesHtml = response.courses.map(course => `
+                    <div class="course-item mb-3">
+                        <h6>${course.name || '-'}</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" 
+                                style="width: ${course.total_sessions ? (course.used_sessions/course.total_sessions*100) : 0}%">
+                                ${course.used_sessions || 0}/${course.total_sessions || 0}
+                            </div>
+                        </div>
+                        <p class="mb-2">ราคา: ${(course.price || 0).toLocaleString()} บาท</p>
+                        ${course.resources && course.resources.length > 0 ? `
+                            <div class="resources-used">
+                                <small>ทรัพยากรที่ใช้:</small>
+                                <ul class="list-unstyled">
+                                    ${course.resources.map(resource => `
+                                        <li>${resource.name || '-'} (${resource.quantity || 0} ${resource.unit || '-'})</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        ` : '<p class="mb-0"><small>ไม่มีการใช้ทรัพยากร</small></p>'}
+                    </div>
+                `).join('');
+                $('#courseDetails').html(coursesHtml);
+            } else {
+                $('#courseDetails').html('<p class="text-muted">ไม่พบข้อมูลคอร์ส</p>');
+            }
+
+            // เติมข้อมูลการชำระเงิน
+            const payment = response.payment || {};
+            const paymentHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>ยอดรวม:</strong> ${(payment.total || 0).toLocaleString()} บาท</p>
+                        ${payment.deposit?.amount ? `
+                            <p><strong>เงินมัดจำ:</strong> ${payment.deposit.amount.toLocaleString()} บาท</p>
+                        ` : ''}
+                        ${payment.vouchers?.length > 0 ? `
+                            <div class="mb-2">
+                                <strong>บัตรกำนัลที่ใช้:</strong>
+                                ${payment.vouchers.map(v => `
+                                    <div class="ps-3">
+                                        <small>
+                                            ${v.code} - ${v.type === 'fixed' ? 
+                                                `${(v.used_amount || 0).toLocaleString()} บาท` : 
+                                                `${v.amount}%`}
+                                        </small>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        <p><strong>ยอดสุทธิ:</strong> ${((payment.total || 0) - (payment.deposit?.amount || 0)).toLocaleString()} บาท</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>สถานะ:</strong> 
+                            <span class="badge bg-${payment.status_class || 'secondary'}">
+                                ${payment.status || 'รอชำระเงิน'}
+                            </span>
+                        </p>
+                        ${payment.payment_date ? `
+                            <p><strong>วันที่ชำระ:</strong> ${payment.payment_date}</p>
+                        ` : ''}
+                        ${payment.deposit?.date ? `
+                            <p><strong>วันที่มัดจำ:</strong> ${payment.deposit.date}</p>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            $('#paymentDetails').html(paymentHtml);
+
+            // แสดง modal
+            $('#bookingDetailsModal').modal('show');
         },
-        error: function() {
+        error: function(xhr, status, error) {
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
-                text: 'ไม่สามารถโหลดข้อมูลรายละเอียดการสั่งซื้อได้',
-                customClass: {
-                    confirmButton: 'btn btn-primary'
-                },
-                buttonsStyling: false
+                text: 'ไม่สามารถโหลดข้อมูลได้: ' + error
             });
         }
     });
 }
 
-function confirmApprove(url) {
+
+
+// สำหรับการจัดการการอนุมัติและยกเลิก
+function confirmApprove(bookingId) {
     Swal.fire({
-        title: 'ยืนยันการอนุมัติ?',
-        text: "คุณต้องการอนุมัติการจองนี้ใช่หรือไม่?",
-        icon: 'warning',
+        title: 'ยืนยันการอนุมัติ',
+        text: 'คุณต้องการอนุมัติการจองนี้ใช่หรือไม่?',
+        icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'ใช่, อนุมัติ!',
+        confirmButtonText: 'ใช่, อนุมัติ',
         cancelButtonText: 'ยกเลิก',
         customClass: {
             confirmButton: 'btn btn-primary me-3',
             cancelButton: 'btn btn-label-secondary'
         },
-        buttonsStyling: false
+        buttonsStyling: false,
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = url;
+            $.ajax({
+                url: 'sql/process-booking.php',
+                type: 'POST',
+                data: {
+                    action: 'approve',
+                    booking_id: bookingId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'อนุมัติสำเร็จ',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: response.message
+                        });
+                    }
+                }
+            });
         }
     });
 }
 
-function confirmCancel(url) {
+function confirmCancel(bookingId) {
     Swal.fire({
-        title: 'ยืนยันการยกเลิก?',
-        text: "คุณต้องการยกเลิกการจองนี้ใช่หรือไม่?",
+        title: 'ยืนยันการยกเลิก',
+        text: 'คุณต้องการยกเลิกการจองนี้ใช่หรือไม่?',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'ใช่, ยกเลิก!',
+        confirmButtonText: 'ใช่, ยกเลิก',
         cancelButtonText: 'ไม่',
         customClass: {
             confirmButton: 'btn btn-danger me-3',
@@ -438,34 +798,59 @@ function confirmCancel(url) {
         buttonsStyling: false
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = url;
+            Swal.fire({
+                title: 'ระบุเหตุผลการยกเลิก',
+                input: 'textarea',
+                inputPlaceholder: 'กรุณาระบุเหตุผล...',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                customClass: {
+                    confirmButton: 'btn btn-primary me-3',
+                    cancelButton: 'btn btn-label-secondary'
+                },
+                buttonsStyling: false,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'กรุณาระบุเหตุผลการยกเลิก';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: 'sql/process-booking.php',
+                        type: 'POST',
+                        data: {
+                            action: 'cancel',
+                            booking_id: bookingId,
+                            reason: result.value
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'ยกเลิกสำเร็จ',
+                                    text: response.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'เกิดข้อผิดพลาด',
+                                    text: response.message
+                                });
+                            }
+                        }
+                    });
+                }
+            });
         }
     });
 }
 
-<?php if(isset($_SESSION['msg_ok'])): ?>
-Swal.fire({
-    icon: 'success',
-    title: 'สำเร็จ!',
-    text: '<?php echo $_SESSION['msg_ok']; ?>',
-    customClass: {
-        confirmButton: 'btn btn-success'
-    },
-    buttonsStyling: false
-});
-<?php unset($_SESSION['msg_ok']); endif; ?>
-
-<?php if(isset($_SESSION['msg_error'])): ?>
-Swal.fire({
-    icon: 'error',
-    title: 'เกิดข้อผิดพลาด!',
-    text: '<?php echo $_SESSION['msg_error']; ?>',
-    customClass: {
-        confirmButton: 'btn btn-danger'
-    },
-    buttonsStyling: false
-});
-<?php unset($_SESSION['msg_error']); endif; ?>
 </script>
 </body>
 </html>

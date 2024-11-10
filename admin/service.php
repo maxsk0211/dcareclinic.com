@@ -333,6 +333,84 @@ $result_courses->data_seek(0);
         border-top: 1px solid #e9ecef;
         padding: 20px;
     }
+    .seller-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .seller-record {
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+
+    .seller-record:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .seller-record p {
+        margin-bottom: 5px;
+        font-size: 16px;
+    }
+
+    .seller-record .seller-name {
+        font-weight: bold;
+        color: #3366cc;
+    }
+
+    .seller-record .commission-amount {
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    .seller-record .remove-btn {
+        margin-top: 10px;
+    }
+
+    .seller-total {
+        font-size: 18px;
+        font-weight: bold;
+        text-align: right;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 2px solid #e9ecef;
+    }
+
+    .add-seller-btn {
+        margin-top: 20px;
+    }
+/* df-styles.css */
+.df-container, .seller-container {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.df-record, .seller-record {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.df-total, .seller-total {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 2px solid #e9ecef;
+}
+
 </style>
 </head>
 <body>
@@ -452,34 +530,61 @@ $result_courses->data_seek(0);
                         
                     <!-- / Content -->
                     <!-- df -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title text-white">ค่าธรรมเนียมแพทย์และพยาบาล (DF)</h5>
-    </div>
-    <div class="card-body">
-        <div class="df-container">
-            <div id="dfList">
-                <!-- DF records will be displayed here -->
-            </div>
-            <div class="df-total">รวม DF: <span id="totalDF">0</span> บาท</div>
-        </div>
-        <button type="button" class="btn btn-primary add-df-btn" data-bs-toggle="modal" data-bs-target="#addDFModal">
-            <i class="fas fa-plus-circle"></i> เพิ่ม DF
-        </button>
-    </div>
-    <div class="card-footer text-center">
-        <button type="button" class="btn btn-success btn-lg" onclick="completeService()">
-            <i class="fas fa-check-circle"></i> เสร็จสิ้น
-        </button>
-    </div>
-</div>
+                        <div class="row">
+                            <!-- ส่วนของ DF -->
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="card-title text-white">ค่าธรรมเนียมแพทย์และพยาบาล (DF)</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="df-container">
+                                            <div id="dfList">
+                                                <!-- DF records -->
+                                            </div>
+                                            <div class="df-total">รวม DF: <span id="totalDF">0</span> บาท</div>
+                                        </div>
+                                        <button type="button" class="btn btn-primary add-df-btn" data-bs-toggle="modal" data-bs-target="#addDFModal">
+                                            <i class="fas fa-plus-circle"></i> เพิ่ม DF
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ส่วนของผู้ขาย -->
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="card-title text-white">ผู้ขายคอร์ส</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="seller-container">
+                                            <div id="sellerList">
+                                                <!-- Seller records -->
+                                            </div>
+                                            <div class="seller-total">รวมค่าคอมมิชชั่น: <span id="totalCommission">0</span> บาท</div>
+                                        </div>
+                                        <button type="button" class="btn btn-primary add-seller-btn" data-bs-toggle="modal" data-bs-target="#addSellerModal">
+                                            <i class="fas fa-plus-circle"></i> เพิ่มผู้ขาย
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer text-center">
+                                <button type="button" class="btn btn-success btn-lg" onclick="completeService()">
+                                    <i class="fas fa-check-circle"></i> เสร็จสิ้น
+                                </button>
+                            </div>
+                        </div>
 
 <!-- Modal for adding DF -->
 <div class="modal fade" id="addDFModal" tabindex="-1" aria-labelledby="addDFModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="addDFModalLabel"><i class="fas fa-plus-circle"></i> เพิ่มค่าธรรมเนียม (DF)</h5>
+                <h5 class="modal-title" id="addDFModalLabel">
+                    <i class="fas fa-plus-circle"></i> เพิ่มค่าธรรมเนียม (DF)
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -517,7 +622,46 @@ $result_courses->data_seek(0);
             </div>
         </div>
     </div>
-</div>                    <!-- df -->
+</div>
+
+<!-- Modal for adding Seller -->
+<div class="modal fade" id="addSellerModal" tabindex="-1" aria-labelledby="addSellerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addSellerModalLabel">
+                    <i class="fas fa-plus-circle"></i> เพิ่มผู้ขายคอร์ส
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSellerForm">
+                    <div class="mb-3">
+                        <label for="sellerId" class="form-label">เลือกผู้ขาย</label>
+                        <select class="form-select" id="sellerId" required>
+                            <option value="">เลือกผู้ขาย</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="commissionAmount" class="form-label">จำนวนค่าคอมมิชชั่น</label>
+                        <input type="number" class="form-control" id="commissionAmount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="commissionType" class="form-label">ประเภทค่าคอมมิชชั่น</label>
+                        <select class="form-select" id="commissionType" required>
+                            <option value="amount">บาท</option>
+                            <option value="percent">เปอร์เซ็นต์</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-primary" onclick="addSeller()">เพิ่มผู้ขาย</button>
+            </div>
+        </div>
+    </div>
+</div>
                     <!-- Footer -->
                     <?php include 'footer.php'; ?>
                     <!-- / Footer -->
@@ -537,7 +681,7 @@ $result_courses->data_seek(0);
     <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/hammer/hammer.js"></script>
     <script src="../assets/vendor/js/menu.js"></script>
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
@@ -595,8 +739,15 @@ function createOrder() {
     });
 }
 
+// Function to show/hide modals
 function showAddDFModal() {
-    $('#addDFModal').modal('show');
+    const modal = new bootstrap.Modal(document.getElementById('addDFModal'));
+    modal.show();
+}
+
+function showAddSellerModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addSellerModal'));
+    modal.show();
 }
 
 function loadStaff(type) {
@@ -668,21 +819,42 @@ function loadDFRecords() {
             let totalDF = 0;
 
             records.forEach(record => {
-            const dfAmount = record.staff_df_type === 'amount' 
-                ? parseFloat(record.staff_df) 
-                : (parseFloat(record.staff_df) / 100) * <?php echo json_encode($order['order_net_total']); ?>;
+                const dfAmount = record.staff_df_type === 'amount' 
+                    ? parseFloat(record.staff_df) 
+                    : (parseFloat(record.staff_df) / 100) * <?php echo isset($order['order_net_total']) ? $order['order_net_total'] : 0; ?>;
                 
                 totalDF += dfAmount;
 
+                // กำหนดไอคอนและสีตามประเภทบุคลากร
+                const staffIcon = record.staff_type === 'doctor' ? 'user-md' : 'user-nurse';
+                const staffColor = record.staff_type === 'doctor' ? 'text-primary' : 'text-success';
+                const staffTitle = record.staff_type === 'doctor' ? 'แพทย์' : 'พยาบาล';
+
                 dfList.append(`
                     <div class="df-record">
-                        <p class="staff-name">${record.staff_type === 'doctor' ? '<i class="fas fa-user-md"></i> แพทย์' : '<i class="fas fa-user-nurse"></i> พยาบาล'}: ${record.staff_name}</p>
-                        <p class="df-amount">DF: ${record.staff_df_type === 'amount' 
-                            ? record.staff_df + ' บาท' 
-                            : record.staff_df + '% (' + (dfAmount ? dfAmount.toFixed(2) : '0.00') + ' บาท)'}</p>
-                        <button class="btn btn-danger btn-sm remove-btn" onclick="removeDF(${record.staff_record_id})">
-                            <i class="fas fa-trash-alt"></i> ลบ
-                        </button>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-${staffIcon} ${staffColor} me-2" style="font-size: 1.2em;"></i>
+                            <div>
+                                <p class="staff-name mb-0">
+                                    <span class="badge bg-${record.staff_type === 'doctor' ? 'primary' : 'success'} me-2">
+                                        ${staffTitle}
+                                    </span>
+                                    ${record.staff_name}
+                                </p>
+                                
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="df-amount mb-0">
+                                <strong>DF:</strong> 
+                                ${record.staff_df_type === 'amount' 
+                                    ? record.staff_df + ' บาท' 
+                                    : record.staff_df + '% (' + (dfAmount ? dfAmount.toFixed(2) : '0.00') + ' บาท)'}
+                            </p>
+                            <button class="btn btn-danger btn-sm" onclick="removeDF(${record.staff_record_id})">
+                                <i class="fas fa-trash-alt"></i> ลบ
+                            </button>
+                        </div>
                     </div>
                 `);
             });
@@ -691,6 +863,55 @@ function loadDFRecords() {
         },
         error: function(xhr, status, error) {
             console.error('Error loading DF records:', error);
+            msg_error('เกิดข้อผิดพลาดในการโหลดข้อมูล DF');
+        }
+    });
+}
+
+function loadSellerRecords() {
+    $.ajax({
+        url: 'sql/get-sellers.php',
+        type: 'GET',
+        data: { service_id: <?php echo $queue_id; ?> },
+        success: function(response) {
+            const sellers = JSON.parse(response);
+            const sellerList = $('#sellerList');
+            sellerList.empty();
+            let totalCommission = 0;
+
+            sellers.forEach(record => {
+                const commissionAmount = record.staff_df_type === 'amount' 
+                    ? parseFloat(record.staff_df) 
+                    : (parseFloat(record.staff_df) / 100) * <?php echo isset($order['order_net_total']) ? $order['order_net_total'] : 0; ?>;
+                
+                totalCommission += commissionAmount;
+
+                sellerList.append(`
+                    <div class="seller-record">
+                        <div class="d-flex align-items-center mb-2">
+                            <p class="seller-name">
+                                <i class="fas fa-user"></i> ผู้ขาย: ${record.staff_name}
+                            </p>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="commission-amount">
+                                ค่าคอมมิชชั่น: ${record.staff_df_type === 'amount' 
+                                    ? record.staff_df + ' บาท' 
+                                    : record.staff_df + '% (' + (commissionAmount ? commissionAmount.toFixed(2) : '0.00') + ' บาท)'}
+                            </p>
+                            <button class="btn btn-danger btn-sm remove-btn" onclick="removeSeller(${record.staff_record_id})">
+                                <i class="fas fa-trash-alt"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                `);
+            });
+
+            $('#totalCommission').text(totalCommission.toFixed(2));
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading sellers:', error);
+            msg_error('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ขาย');
         }
     });
 }
@@ -735,8 +956,36 @@ function removeDF(recordId) {
     });
 }
 
+// Initialize when document is ready
 $(document).ready(function() {
+    // Load initial data
     loadDFRecords();
+    loadSellerRecords();
+    loadSellerOptions();
+
+    // Initialize Bootstrap Modal
+    const dfModal = new bootstrap.Modal(document.getElementById('addDFModal'));
+    const sellerModal = new bootstrap.Modal(document.getElementById('addSellerModal'));
+
+    // Add event listeners for modals
+    document.getElementById('addDFModal').addEventListener('show.bs.modal', function() {
+        $('#staffType').val('');
+        $('#staffId').val('');
+        $('#dfAmount').val('');
+        $('#dfType').val('amount');
+    });
+
+    document.getElementById('addSellerModal').addEventListener('show.bs.modal', function() {
+        $('#sellerId').val('');
+        $('#commissionAmount').val('');
+        $('#commissionType').val('amount');
+        loadSellerOptions();
+    });
+
+    // Add event listener for staff type change
+    $('#staffType').on('change', function() {
+        loadStaff($(this).val());
+    });
 });
 
 function completeService() {
@@ -785,6 +1034,152 @@ function completeService() {
                         'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
                         'error'
                     );
+                }
+            });
+        }
+    });
+}
+// Function to load seller options in modal
+function loadSellerOptions() {
+    $.ajax({
+        url: 'sql/get-seller-options.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                const select = $('#sellerId');
+                select.empty();
+                select.append('<option value="">เลือกผู้ขาย</option>');
+                
+                response.data.forEach(seller => {
+                    select.append(`<option value="${seller.id}">${seller.name}</option>`);
+                });
+            } else {
+                console.error('Error loading sellers:', response.message);
+                msg_error('ไม่สามารถโหลดรายชื่อผู้ขายได้');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', error);
+            msg_error('เกิดข้อผิดพลาดในการโหลดรายชื่อผู้ขาย');
+        }
+    });
+}
+
+// Function to load all seller records
+function loadSellers() {
+    $.ajax({
+        url: 'sql/get-sellers.php',
+        type: 'GET',
+        data: { service_id: <?php echo $queue_id; ?> },
+        success: function(response) {
+            const sellers = JSON.parse(response);
+            const sellerList = $('#sellerList');
+            sellerList.empty();
+            let totalCommission = 0;
+
+            sellers.forEach(record => {
+                const commissionAmount = record.staff_df_type === 'amount' 
+                    ? parseFloat(record.staff_df) 
+                    : (parseFloat(record.staff_df) / 100) * <?php echo isset($order['order_net_total']) ? $order['order_net_total'] : 0; ?>;
+                
+                totalCommission += commissionAmount;
+
+                sellerList.append(`
+                    <div class="seller-record">
+                        <p class="seller-name">
+                            <i class="fas fa-user"></i> ผู้ขาย: ${record.staff_name}
+                        </p>
+                        <p class="commission-amount">
+                            ค่าคอมมิชชั่น: ${record.staff_df_type === 'amount' 
+                                ? record.staff_df + ' บาท' 
+                                : record.staff_df + '% (' + (commissionAmount ? commissionAmount.toFixed(2) : '0.00') + ' บาท)'}
+                        </p>
+                        <button class="btn btn-danger btn-sm remove-btn" onclick="removeSeller(${record.staff_record_id})">
+                            <i class="fas fa-trash-alt"></i> ลบ
+                        </button>
+                    </div>
+                `);
+            });
+
+            $('#totalCommission').text(totalCommission.toFixed(2));
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading sellers:', error);
+            msg_error('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ขาย');
+        }
+    });
+}
+
+// Function to add new seller
+function addSeller() {
+    const sellerId = $('#sellerId').val();
+    const commissionAmount = $('#commissionAmount').val();
+    const commissionType = $('#commissionType').val();
+
+    if (!sellerId || !commissionAmount) {
+        msg_error('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+    }
+
+    $.ajax({
+        url: 'sql/add-seller.php',
+        type: 'POST',
+        data: {
+            service_id: <?php echo $queue_id; ?>,
+            staff_id: sellerId,
+            commission_amount: commissionAmount,
+            commission_type: commissionType
+        },
+        success: function(response) {
+            const result = JSON.parse(response);
+            if (result.success) {
+                loadSellers();
+                $('#addSellerModal').modal('hide');
+                msg_ok('สำเร็จ', 'เพิ่มผู้ขายคอร์สเรียบร้อยแล้ว');
+            } else {
+                msg_error(result.message || 'เกิดข้อผิดพลาดในการเพิ่มผู้ขาย');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error adding seller:', error);
+            msg_error('เกิดข้อผิดพลาดในการเพิ่มผู้ขาย');
+        }
+    });
+}
+
+// Function to remove seller
+function removeSeller(recordId) {
+    Swal.fire({
+        title: 'คุณแน่ใจหรือไม่?',
+        text: "ที่จะลบข้อมูลผู้ขายคนนี้",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
+        customClass: {
+          confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
+          cancelButton: 'btn btn-outline-secondary waves-effect'
+        },
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'sql/remove-seller.php',
+                type: 'POST',
+                data: { record_id: recordId },
+                success: function(response) {
+                    const result = JSON.parse(response);
+                    if (result.success) {
+                        loadSellers();
+                        msg_ok('สำเร็จ', 'ลบข้อมูลผู้ขายเรียบร้อยแล้ว');
+                    } else {
+                        msg_error(result.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error removing seller:', error);
+                    msg_error('เกิดข้อผิดพลาดในการลบข้อมูล');
                 }
             });
         }

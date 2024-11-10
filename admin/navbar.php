@@ -66,11 +66,11 @@
             <li>
               <div class="dropdown-divider"></div>
             </li>
-            <li>
+<!--             <li>
               <a class="dropdown-item" href="#">
                 <i class="ri-user-3-line me-3"></i><span class="align-middle">My Profile</span>
               </a>
-            </li>
+            </li> -->
             <?php if($_SESSION['position_id']==1){ ?>
             <li>
               <a class="dropdown-item" href="branch.php">
@@ -80,8 +80,8 @@
             <?php } ?>
             <?php if($_SESSION['position_id']==1 or $_SESSION['position_id']==2){ ?>
             <li>
-              <a class="dropdown-item" href="clinic-settings.php">
-                <i class="ri-settings-4-line me-3"></i><span class="align-middle">คั้งค่าสาขา</span>
+              <a class="dropdown-item" href="permissions.php">
+                <i class="ri-settings-4-line me-3"></i><span class="align-middle">สิทธิ์การใช้งาน</span>
               </a>
             </li>
             <?php } ?>

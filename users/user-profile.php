@@ -152,23 +152,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <form method="POST">
                             <div class="row">
                                 <div class="mb-3 col-md-6">
-                                    <label for="cus_id_card_number" class="form-label">หมายเลขบัตรประชาชน</label>
+                                    <label for="cus_id_card_number" class="form-label  text-danger">หมายเลขบัตรประชาชน</label>
                                     <input class="form-control" type="text" id="cus_id_card_number" name="cus_id_card_number" value="<?php echo htmlspecialchars($user->cus_id_card_number); ?>" required />
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="cus_birthday" class="form-label">วันเกิด</label>
+                                    <label for="cus_birthday" class="form-label text-danger">วันเกิด</label>
                                     <input class="form-control" type="date" id="cus_birthday" name="cus_birthday" value="<?php echo htmlspecialchars($user->cus_birthday); ?>" required />
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="cus_firstname" class="form-label">ชื่อ</label>
+                                    <label for="cus_firstname" class="form-label text-danger">ชื่อ</label>
                                     <input class="form-control" type="text" id="cus_firstname" name="cus_firstname" value="<?php echo htmlspecialchars($user->cus_firstname); ?>" required />
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="cus_lastname" class="form-label">นามสกุล</label>
+                                    <label for="cus_lastname" class="form-label text-danger">นามสกุล</label>
                                     <input class="form-control" type="text" id="cus_lastname" name="cus_lastname" value="<?php echo htmlspecialchars($user->cus_lastname); ?>" required />
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="cus_title" class="form-label">คำนำหน้า</label>
+                                    <label for="cus_title" class="form-label text-danger">คำนำหน้า</label>
                                     <select class="form-select" id="cus_title" name="cus_title" required>
                                         <option value="" disabled selected>โปรดเลือก</option>
                                         <option value="นาย" <?= ($user->cus_title == 'นาย') ? 'selected' : '' ?>>นาย</option>
@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     </select>
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="cus_gender" class="form-label">เพศ</label>
+                                    <label for="cus_gender" class="form-label text-danger">เพศ</label>
                                     <select class="form-select" id="cus_gender" name="cus_gender" required>
                                         <option value="" disabled selected>โปรดเลือก</option>
                                         <option value="ชาย" <?= ($user->cus_gender == 'ชาย') ? 'selected' : '' ?>>ชาย</option>
@@ -185,62 +185,73 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     </select>
                                 </div>
                                 <div class="mb-3 col-md-6">
-                                    <label for="cus_nickname" class="form-label">ชื่อเล่น</label>
-                                    <input class="form-control" type="text" id="cus_nickname" name="cus_nickname" value="<?php echo htmlspecialchars($user->cus_nickname); ?>" />
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="cus_email" class="form-label">Email</label>
-                                    <input class="form-control" type="email" id="cus_email" name="cus_email" value="<?php echo htmlspecialchars($user->cus_email); ?>" />
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="cus_blood" class="form-label">กรุ๊ปเลือด</label>
-                                    <select class="form-select" id="cus_blood" name="cus_blood">
-                                        <option value="" disabled selected>โปรดเลือก</option>
-                                        <option value="A+" <?= ($user->cus_blood == 'A+') ? 'selected' : '' ?>>A+</option>
-                                        <option value="A-" <?= ($user->cus_blood == 'A-') ? 'selected' : '' ?>>A-</option>
-                                        <option value="B+" <?= ($user->cus_blood == 'B+') ? 'selected' : '' ?>>B+</option>
-                                        <option value="B-" <?= ($user->cus_blood == 'B-') ? 'selected' : '' ?>>B-</option>
-                                        <option value="O+" <?= ($user->cus_blood == 'O+') ? 'selected' : '' ?>>O+</option>
-                                        <option value="O-" <?= ($user->cus_blood == 'O-') ? 'selected' : '' ?>>O-</option>
-                                        <option value="AB+" <?= ($user->cus_blood == 'AB+') ? 'selected' : '' ?>>AB+</option>
-                                        <option value="AB-" <?= ($user->cus_blood == 'AB-') ? 'selected' : '' ?>>AB-</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3 col-md-6">
                                     <label for="cus_tel" class="form-label">เบอร์โทร</label>
                                     <input class="form-control" type="text" id="cus_tel" name="cus_tel" value="<?php echo htmlspecialchars($user->cus_tel); ?>" required />
                                 </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="cus_drugallergy" class="form-label">ประวัติการแพ้ยา</label>
-                                    <textarea class="form-control" id="cus_drugallergy" name="cus_drugallergy"><?php echo htmlspecialchars($user->cus_drugallergy); ?></textarea>
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="cus_congenital" class="form-label">โรคประจำตัว</label>
-                                    <textarea class="form-control" id="cus_congenital" name="cus_congenital"><?php echo htmlspecialchars($user->cus_congenital); ?></textarea>
-                                </div>
-                                <div class="mb-3 col-md-12">
-                                    <label for="cus_remark" class="form-label">หมายเหตุ</label>
-                                    <textarea class="form-control" id="cus_remark" name="cus_remark"><?php echo htmlspecialchars($user->cus_remark); ?></textarea>
-                                </div>
-                                <div class="mb-3 col-md-12">
-                                    <label for="cus_address" class="form-label">ที่อยู่</label>
-                                    <input class="form-control" type="text" id="cus_address" name="cus_address" value="<?php echo htmlspecialchars($user->cus_address); ?>" required />
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="cus_district" class="form-label">ตำบล</label>
-                                    <input class="form-control" type="text" id="cus_district" name="cus_district" value="<?php echo htmlspecialchars($user->cus_district); ?>" required />
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="cus_city" class="form-label">อำเภอ</label>
-                                    <input class="form-control" type="text" id="cus_city" name="cus_city" value="<?php echo htmlspecialchars($user->cus_city); ?>" required />
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="cus_province" class="form-label">จังหวัด</label>
-                                    <input class="form-control" type="text" id="cus_province" name="cus_province" value="<?php echo htmlspecialchars($user->cus_province); ?>" required />
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="cus_postal_code" class="form-label">รหัสไปรษณีย์</label>
-                                    <input class="form-control" type="text" id="cus_postal_code" name="cus_postal_code" value="<?php echo htmlspecialchars($user->cus_postal_code); ?>" required />
+                                <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWidthExample" aria-expanded="false" aria-controls="collapseWidthExample">
+                                ข้อมูลเพิ่มเติม (ไม่บังคับ)
+                                </button>
+                                <div style="min-height: 120px;">
+                                  <div class="collapse collapse-horizontal" id="collapseWidthExample">
+                                    <div class="row">
+                                        
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_nickname" class="form-label">ชื่อเล่น</label>
+                                            <input class="form-control" type="text" id="cus_nickname" name="cus_nickname" value="<?php echo htmlspecialchars($user->cus_nickname); ?>" />
+                                        </div>
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_email" class="form-label">Email</label>
+                                            <input class="form-control" type="email" id="cus_email" name="cus_email" value="<?php echo htmlspecialchars($user->cus_email); ?>" />
+                                        </div>
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_blood" class="form-label">กรุ๊ปเลือด</label>
+                                            <select class="form-select" id="cus_blood" name="cus_blood">
+                                                <option value="" disabled selected>โปรดเลือก</option>
+                                                <option value="A+" <?= ($user->cus_blood == 'A+') ? 'selected' : '' ?>>A+</option>
+                                                <option value="A-" <?= ($user->cus_blood == 'A-') ? 'selected' : '' ?>>A-</option>
+                                                <option value="B+" <?= ($user->cus_blood == 'B+') ? 'selected' : '' ?>>B+</option>
+                                                <option value="B-" <?= ($user->cus_blood == 'B-') ? 'selected' : '' ?>>B-</option>
+                                                <option value="O+" <?= ($user->cus_blood == 'O+') ? 'selected' : '' ?>>O+</option>
+                                                <option value="O-" <?= ($user->cus_blood == 'O-') ? 'selected' : '' ?>>O-</option>
+                                                <option value="AB+" <?= ($user->cus_blood == 'AB+') ? 'selected' : '' ?>>AB+</option>
+                                                <option value="AB-" <?= ($user->cus_blood == 'AB-') ? 'selected' : '' ?>>AB-</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_drugallergy" class="form-label">ประวัติการแพ้ยา</label>
+                                            <textarea class="form-control" id="cus_drugallergy" name="cus_drugallergy"><?php echo htmlspecialchars($user->cus_drugallergy); ?></textarea>
+                                        </div>
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_congenital" class="form-label">โรคประจำตัว</label>
+                                            <textarea class="form-control" id="cus_congenital" name="cus_congenital"><?php echo htmlspecialchars($user->cus_congenital); ?></textarea>
+                                        </div>
+                                        <div class="mb-3 col-md-12">
+                                            <label for="cus_remark" class="form-label">หมายเหตุ</label>
+                                            <textarea class="form-control" id="cus_remark" name="cus_remark"><?php echo htmlspecialchars($user->cus_remark); ?></textarea>
+                                        </div>
+                                        <div class="mb-3 col-md-12">
+                                            <label for="cus_address" class="form-label">ที่อยู่</label>
+                                            <input class="form-control" type="text" id="cus_address" name="cus_address" value="<?php echo htmlspecialchars($user->cus_address); ?>" />
+                                        </div>
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_district" class="form-label">ตำบล</label>
+                                            <input class="form-control" type="text" id="cus_district" name="cus_district" value="<?php echo htmlspecialchars($user->cus_district); ?>"  />
+                                        </div>
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_city" class="form-label">อำเภอ</label>
+                                            <input class="form-control" type="text" id="cus_city" name="cus_city" value="<?php echo htmlspecialchars($user->cus_city); ?>"  />
+                                        </div>
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_province" class="form-label">จังหวัด</label>
+                                            <input class="form-control" type="text" id="cus_province" name="cus_province" value="<?php echo htmlspecialchars($user->cus_province); ?>"  />
+                                        </div>
+                                        <div class="mb-3 col-md-6">
+                                            <label for="cus_postal_code" class="form-label">รหัสไปรษณีย์</label>
+                                            <input class="form-control" type="text" id="cus_postal_code" name="cus_postal_code" value="<?php echo htmlspecialchars($user->cus_postal_code); ?>"  />
+                                        </div>
+                                    </div>
+                                  </div>
                                 </div>
                             </div>
                             <div class="mt-2">

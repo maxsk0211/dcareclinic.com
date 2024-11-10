@@ -3,10 +3,10 @@ session_start();
 require '../../dbcon.php';
 
 // ตรวจสอบสิทธิ์ของผู้ใช้
-if ($_SESSION['position_id'] != 1 && $_SESSION['position_id'] != 2) {
-    echo json_encode(['success' => false, 'message' => 'คุณไม่มีสิทธิ์ในการยกเลิกการชำระเงิน']);
-    exit;
-}
+// if ($_SESSION['position_id'] != 1 && $_SESSION['position_id'] != 2) {
+//     echo json_encode(['success' => false, 'message' => 'คุณไม่มีสิทธิ์ในการยกเลิกการชำระเงิน']);
+//     exit;
+// }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $order_id = intval($_POST['order_id']);

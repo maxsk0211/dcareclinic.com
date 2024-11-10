@@ -128,13 +128,14 @@ while ($course = $result_courses->fetch_assoc()) {
     
     $courses[] = array(
         'id' => $course['course_id'],
+        'od_id' => $course['od_id'],  // เพิ่มบรรทัดนี้
         'name' => $course['course_name'],
         'amount' => $course['od_amount'],
         'price' => $course['od_price'],
         'resources' => $resources,
         'used_sessions' => intval($course['used_sessions']),
         'course_amount' => intval($course['course_amount']),
-        'detail' => $course['course_detail'] // เพิ่มบรรทัดนี้
+        'detail' => $course['course_detail']
     );
 
     $stmt_resources->close();

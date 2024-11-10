@@ -10,9 +10,9 @@ try {
     }
 
     // ตรวจสอบสิทธิ์
-    if ($_SESSION['position_id'] > 2) {
-        throw new Exception('ไม่มีสิทธิ์ยกเลิกบัตรกำนัล');
-    }
+    // if ($_SESSION['position_id'] > 2) {
+    //     throw new Exception('ไม่มีสิทธิ์ยกเลิกบัตรกำนัล');
+    // }
 
     // ตรวจสอบข้อมูลที่ส่งมา
     if (!isset($_POST['voucher_id'])) {

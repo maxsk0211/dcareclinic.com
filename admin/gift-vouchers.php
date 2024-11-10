@@ -19,32 +19,48 @@ require '../dbcon.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <title>จัดการบัตรกํานัล - D Care Clinic</title>
 
+    <meta name="description" content="" />
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
+      rel="stylesheet" />
 
-    <!-- Icons -->
     <link rel="stylesheet" href="../assets/vendor/fonts/remixicon/remixicon.css" />
+    <!-- <link rel="stylesheet" href="../assets/vendor/fonts/flag-icons.css" /> -->
 
-    <!-- CSS -->
+    <!-- Menu waves for no-customizer fix -->
+    <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
+
+    <!-- Core CSS -->
     <link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" />
     <link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" />
     <link rel="stylesheet" href="../assets/css/demo.css" />
+
+    <!-- Vendors CSS -->
     <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="../assets/js/config.js"></script>
+    <!-- sweet Alerts 2 -->
     <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
-    <!-- DataTables -->
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
-    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet" />
-    
-    <!-- Core JS -->
-    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
-    <script src="../assets/vendor/js/bootstrap.js"></script>
+
+    <!-- datatables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
+
+
 
     <style>
     .card {
@@ -73,57 +89,157 @@ require '../dbcon.php';
         background: linear-gradient(45deg, #e53935, #ff5252);
     }
 
-    .status-badge {
-        padding: 0.35em 0.65em;
-        border-radius: 0.25rem;
-        font-weight: 600;
-        font-size: 0.85em;
-        text-align: center;
-    }
+.status-badge {
+    padding: 0.35em 0.65em;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    font-size: 0.85em;
+    text-align: center;
+    display: inline-block;
+}
 
-    .status-unused {
-        background-color: #e8f5e9;
-        color: #2e7d32;
-    }
+.status-unused {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
 
-    .status-used {
-        background-color: #ffebee;
-        color: #c62828;
-    }
+.status-used {
+    background-color: #ffebee;
+    color: #c62828;
+}
 
-    .status-expired {
-        background-color: #eceff1;
-        color: #546e7a;
-    }
+.status-expired {
+    background-color: #eceff1;
+    color: #546e7a;
+}
 
     .table th {
         background-color: #f8f9fa;
         font-weight: 600;
     }
-    .status-badge {
-        padding: 0.35em 0.65em;
-        border-radius: 0.25rem;
-        font-weight: 600;
-        font-size: 0.85em;
-        text-align: center;
-        white-space: nowrap;
-    }
-    .status-unused {
-        background-color: #e8f5e9;
-        color: #2e7d32;
-    }
-    .status-partial {
-        background-color: #fff3e0;
-        color: #ef6c00;
-    }
-    .status-used {
-        background-color: #ffebee;
-        color: #c62828;
-    }
-    .status-expired {
-        background-color: #eceff1;
-        color: #546e7a;
-    }
+
+
+.status-partial {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.status-unknown {
+    background-color: #f5f5f5;
+    color: #757575;
+}
+
+/* เพิ่ม CSS ใหม่สำหรับ Modal รายละเอียดบัตรกำนัล */
+.voucher-detail-modal .modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.voucher-detail-modal .modal-header {
+    background: linear-gradient(45deg, #2196F3, #1976D2);
+    color: white;
+    border-radius: 1rem 1rem 0 0;
+    padding: 1.5rem;
+}
+
+.voucher-detail-modal .modal-body {
+    padding: 2rem;
+}
+
+.voucher-detail-modal .modal-footer {
+    border-top: 1px solid #eee;
+    padding: 1rem 2rem;
+}
+
+.voucher-info-card {
+    background: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+.voucher-info-title {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.voucher-info-value {
+    font-size: 1rem;
+    color: #2d3436;
+    margin-bottom: 0;
+}
+
+.voucher-code {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-family: monospace;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 1.5rem;
+}
+
+.voucher-amount {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.voucher-amount.percent {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.usage-history {
+    margin-top: 1.5rem;
+}
+
+.usage-history-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.usage-history-table th {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.usage-history-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.alert-box {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.alert-box.info {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+}
+
+.alert-box.warning {
+    background: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid #ffe0b2;
+}
     </style>
     <!-- Page JS -->
     <script src="../assets/vendor/js/helpers.js"></script>
@@ -276,7 +392,7 @@ require '../dbcon.php';
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                    <button type="button" class="btn btn-primary" onclick="printVoucher()">พิมพ์บัตรกำนัล</button>
+                    <!-- <button type="button" class="btn btn-primary" onclick="printVoucher(${data.voucher_id})">พิมพ์บัตรกำนัล</button> -->
                 </div>
             </div>
         </div>
@@ -320,24 +436,38 @@ require '../dbcon.php';
 
     <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- build:js assets/vendor/js/core.js -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/libs/popper/popper.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/libs/hammer/hammer.js"></script>
 
-<script src="../assets/vendor/libs/jquery/jquery.js"></script>
-<script src="../assets/vendor/libs/popper/popper.js"></script>
-<script src="../assets/vendor/js/bootstrap.js"></script>
-<script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-<script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
-<script src="../assets/vendor/libs/hammer/hammer.js"></script>
-<script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
 
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<!-- เพิ่ม DataTables Buttons Extensions ทั้งหมดที่จำเป็น -->
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+
+    <!-- Main JS -->
+    <script src="../assets/js/main.js"></script>
+
+    <!-- Page JS -->
+
+    <!-- datatables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script> -->
+    <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+
+
+
     <script>
         let vouchersTable; // ประกาศตัวแปรในระดับ global
 $(document).ready(function() {
@@ -399,52 +529,64 @@ $(document).ready(function() {
                     return data ? formatDate(data) : '-';
                 }
             },
-            { 
-                // คอลัมน์สถานะ
+            // ในส่วนของ DataTables columns
+            {
                 data: null,
                 render: function(data) {
+                    // console.log('Voucher data:', data);
                     let statusClass = '';
                     let statusText = '';
-                    let statusHtml = '';
 
-                    // กำหนดสถานะ
                     if (data.status === 'expired' || new Date(data.expire_date) < new Date()) {
                         statusClass = 'status-expired';
                         statusText = 'หมดอายุ';
-                    } else if (data.discount_type === 'percent') {
-                        if (data.status === 'used') {
-                            statusClass = 'status-used';
-                            statusText = 'ใช้แล้ว';
-                        } else {
-                            statusClass = 'status-unused';
-                            statusText = 'พร้อมใช้งาน';
-                        }
-                    } else {
+                    } else if (data.discount_type === 'fixed') {
                         // บัตรแบบจำนวนเงิน
-                        if (data.remaining_amount === data.amount) {
+                        if (!data.customer_id) {
                             statusClass = 'status-unused';
                             statusText = 'พร้อมใช้งาน';
-                        } else if (data.remaining_amount > 0) {
+                        } else if (parseFloat(data.remaining_amount) === parseFloat(data.amount)) {
+                            statusClass = 'status-unused';
+                            statusText = 'พร้อมใช้งาน';
+                        } else if (parseFloat(data.remaining_amount) > 0) {
                             statusClass = 'status-partial';
                             statusText = 'ใช้บางส่วน';
                         } else {
                             statusClass = 'status-used';
                             statusText = 'ใช้หมดแล้ว';
                         }
+                    } else {
+                        // บัตรแบบเปอร์เซ็นต์
+                        if (data.customer_id) {
+                            statusClass = 'status-used';
+                            statusText = 'ใช้แล้ว';
+                        } else {
+                            statusClass = 'status-unused';
+                            statusText = 'พร้อมใช้งาน';
+                        }
                     }
 
-                    statusHtml = `<span class="status-badge ${statusClass}">${statusText}</span>`;
+                    let html = `<span class="status-badge ${statusClass}">${statusText}</span>`;
                     
-                    // แสดงชื่อผู้ถือบัตร
-                    if (data.customer_id) {
-                        statusHtml += `<div class="mt-1">
+                    // แสดงจำนวนเงินคงเหลือสำหรับบัตรแบบ fixed amount
+                    if (data.discount_type === 'fixed' && data.customer_id) {
+                        // html += `<div class="mt-1">
+                        //     <small class="${parseFloat(data.remaining_amount) > 0 ? 'text-success' : 'text-danger'}">
+                        //         คงเหลือ: ${formatCurrency(data.remaining_amount)}
+                        //     </small>
+                        // </div>`;
+                    }
+
+                    // แสดงชื่อผู้ใช้
+                    if (data.customer_name) {
+                        html += `<div class="mt-1">
                             <small class="text-muted">
                                 <i class="ri-user-line"></i> ${data.customer_name}
                             </small>
                         </div>`;
                     }
 
-                    return statusHtml;
+                    return html;
                 }
             },
             { 
@@ -499,11 +641,8 @@ $(document).ready(function() {
                                     title="ดูรายละเอียด">
                                 <i class="ri-eye-line"></i>
                             </button>
-                            <button type="button" class="btn btn-primary" 
-                                    onclick="printVoucher(${data.voucher_id})" 
-                                    data-bs-toggle="tooltip" 
-                                    title="พิมพ์บัตรกำนัล">
-                                <i class="ri-printer-line"></i>
+                            <button type="button" class="btn btn-primary" onclick="printVoucher(${data.voucher_id})" data-id="${data.voucher_id}">
+                                <i class="ri-printer-line"></i> พิมพ์บัตรกำนัล
                             </button>`;
 
                     // แสดงปุ่มยกเลิกเฉพาะบัตรที่ยังไม่ถูกใช้และผู้ใช้มีสิทธิ์
@@ -722,144 +861,183 @@ function viewVoucher(voucherId) {
     $.ajax({
         url: 'sql/get-voucher-details.php',
         type: 'GET',
-        data: { 
-            voucher_id: voucherId,
-            branch_id: <?php echo $_SESSION['branch_id']; ?> 
-        },
+        data: { voucher_id: voucherId },
         success: function(response) {
             if (response.success) {
                 const voucher = response.data;
                 let html = `
-                    <div class="mb-3">
-                        <h6>รหัสบัตรกำนัล</h6>
-                        <p>${voucher.voucher_code}</p>
-                    </div>
-                    <div class="mb-3">
-                        <h6>ประเภทส่วนลด</h6>
-                        <p>${voucher.discount_type === 'fixed' ? 'ลดเป็นจำนวนเงิน' : 'ลดเป็นเปอร์เซ็นต์'}</p>
-                    </div>
-                    <div class="mb-3">
-                        <h6>มูลค่าส่วนลด</h6>
-                        <p>${getDiscountText(voucher)}</p>
-                    </div>
-                    <div class="mb-3">
-                        <h6>สถานะ</h6>
-                        <p>
-                            <span class="status-badge status-${voucher.status}">
-                                ${getStatusText(voucher.status)}
-                            </span>
-                        </p>
-                    </div>
-                    <div class="mb-3">
-                        <h6>วันที่สร้าง</h6>
-                        <p>${formatDatetime(voucher.created_at)}</p>
-                    </div>
-                    <div class="mb-3">
-                        <h6>สร้างโดย</h6>
-                        <p>${voucher.creator_name}</p>
-                    </div>
-                    <div class="mb-3">
-                        <h6>วันหมดอายุ</h6>
-                        <p>${formatDate(voucher.expire_date)}</p>
-                    </div>
-                    <div class="mb-3">
-                        <h6>หมายเหตุ</h6>
-                        <p>${voucher.notes || '-'}</p>
+                    <div class="voucher-code">
+                        ${voucher.voucher_code}
                     </div>
 
-                    <div class="alert alert-info">
+                    <div class="voucher-amount ${voucher.discount_type === 'percent' ? 'percent' : ''}">
+                        <h4 class="mb-0">
+                            ${voucher.discount_type === 'percent' ? 
+                                `ส่วนลด ${voucher.amount}%` + 
+                                (voucher.max_discount ? `<br><small>(สูงสุด ${formatCurrency(voucher.max_discount)})</small>` : '')
+                                : 
+                                formatCurrency(voucher.amount)
+                            }
+                        </h4>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="voucher-info-card">
+                                <h6 class="voucher-info-title">สถานะ</h6>
+                                <p class="voucher-info-value">
+                                    <span class="status-badge status-${voucher.status}">
+                                        ${getStatusText(voucher.status)}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="voucher-info-card">
+                                <h6 class="voucher-info-title">วันหมดอายุ</h6>
+                                <p class="voucher-info-value">${formatDate(voucher.expire_date)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="voucher-info-card">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="voucher-info-title">ผู้สร้าง</h6>
+                                <p class="voucher-info-value">${voucher.creator_name}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="voucher-info-title">วันที่สร้าง</h6>
+                                <p class="voucher-info-value">${formatDatetime(voucher.created_at)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${voucher.notes ? `
+                        <div class="voucher-info-card">
+                            <h6 class="voucher-info-title">หมายเหตุ</h6>
+                            <p class="voucher-info-value">${voucher.notes}</p>
+                        </div>
+                    ` : ''}
+
+                    ${voucher.customer_id ? `
+                        <div class="alert-box warning">
+                            <h6 class="mb-2">ข้อมูลการใช้งาน</h6>
+                            ${voucher.customer_name ? 
+                                `<p class="mb-1">ผู้ใช้: ${voucher.customer_name}</p>` : 
+                                ''
+                            }
+                            ${voucher.first_actual_usage ? 
+                                `<p class="mb-1">เริ่มใช้เมื่อ: ${formatDatetime(voucher.first_actual_usage)}</p>` : 
+                                ''
+                            }
+                            ${voucher.discount_type === 'fixed' ? `
+                                <p class="mb-1">มูลค่าคงเหลือ: ${formatCurrency(
+                                    voucher.first_actual_usage ? 
+                                    (parseFloat(voucher.remaining_amount) || 0) : 
+                                    parseFloat(voucher.amount)
+                                )}</p>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+
+                    <div class="alert-box info">
                         <i class="ri-information-line me-2"></i>
                         บัตรกำนัลนี้สามารถใช้ได้กับทุกสาขาและทุกคอร์ส
                         ${voucher.discount_type === 'fixed' ? 
                             '<br>สามารถใช้ได้หลายครั้งจนกว่าจะหมดมูลค่าหรือหมดอายุ' : 
-                            '<br>สามารถใช้ได้ครั้งเดียวเท่านั้น'}
-                    </div>
+                            '<br>สามารถใช้ได้ครั้งเดียวเท่านั้น'
+                        }
+                    </div>`;
 
-                    ${voucher.customer_id ? `
-                        <div class="alert alert-warning">
-                            <h6 class="mb-2">ข้อมูลการใช้งาน</h6>
-                            <p class="mb-1">ลูกค้า: ${voucher.customer_name}</p>
-                            ${voucher.first_used_at ? 
-                                `<p class="mb-1">เริ่มใช้เมื่อ: ${formatDatetime(voucher.first_used_at)}</p>` : ''}
-                            ${voucher.discount_type === 'fixed' ? `
-                                <p class="mb-1">มูลค่าคงเหลือ: ${formatCurrency(voucher.remaining_amount)}</p>
-                            ` : ''}
-                            <p class="mb-1">ใช้ในบิลเลขที่: ORDER-${String(voucher.used_in_order).padStart(6, '0')}</p>
-                            ${voucher.used_at ? 
-                                `<p class="mb-0">วันที่ใช้ล่าสุด: ${formatDatetime(voucher.used_at)}</p>` : ''}
-                        </div>
-                    ` : ''}
-
-                    ${voucher.usage_history && voucher.usage_history.length > 0 ? `
-                        <div class="mt-4">
+                if (voucher.usage_history && voucher.usage_history.length > 0) {
+                    let totalUsed = 0;
+                    html += `
+                        <div class="usage-history">
                             <h6 class="mb-3">ประวัติการใช้งาน</h6>
                             <div class="table-responsive">
-                                <table class="table table-bordered table-hover table-striped">
-                                    <thead class="table-light">
+                                <table class="usage-history-table">
+                                    <thead>
                                         <tr>
                                             <th>วันที่</th>
-                                            <th>ลูกค้า</th>
-                                            <th>สาขาที่ใช้</th>
-                                            <th class="text-end">ยอดใช้</th>
+                                            <th>รายละเอียด</th>
+                                            <th class="text-end">จำนวนเงิน</th>
                                             ${voucher.discount_type === 'fixed' ? 
-                                                `<th class="text-end">คงเหลือ</th>` : ''}
+                                                `<th class="text-end">คงเหลือ</th>` : 
+                                                ''
+                                            }
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${voucher.usage_history.map(h => `
-                                            <tr>
-                                                <td>${formatDatetime(h.used_at)}</td>
-                                                <td>${h.customer_name}</td>
-                                                <td>${h.used_branch_name}</td>
-                                                <td class="text-end">${formatCurrency(h.amount_used)}</td>
-                                                ${voucher.discount_type === 'fixed' ? 
-                                                    `<td class="text-end">${formatCurrency(h.remaining_amount)}</td>` : ''}
-                                            </tr>
-                                        `).join('')}
+                                        ${voucher.usage_history.map(h => {
+                                            if (h.used_at) {
+                                                totalUsed += parseFloat(h.amount_used) || 0;
+                                                const remainingAmount = parseFloat(voucher.amount) - totalUsed;
+                                                return `
+                                                    <tr>
+                                                        <td>${formatDatetime(h.used_at)}</td>
+                                                        <td>
+                                                            <div>Order-${String(h.order_id).padStart(6, '0')}</div>
+                                                            <small class="text-muted">${h.branch_name || ''}</small>
+                                                        </td>
+                                                        <td class="text-end">${formatCurrency(parseFloat(h.amount_used) || 0)}</td>
+                                                        ${voucher.discount_type === 'fixed' ? 
+                                                            `<td class="text-end">${formatCurrency(remainingAmount)}</td>` : 
+                                                            ''
+                                                        }
+                                                    </tr>
+                                                `;
+                                            }
+                                            return '';
+                                        }).join('')}
                                     </tbody>
                                     ${voucher.discount_type === 'fixed' ? `
-                                        <tfoot class="table-light">
+                                        <tfoot>
                                             <tr>
-                                                <th colspan="3">รวมทั้งหมด</th>
-                                                <th class="text-end">${formatCurrency(voucher.usage_history.reduce((sum, h) => sum + parseFloat(h.amount_used), 0))}</th>
-                                                <th></th>
+                                                <td colspan="2" class="text-end"><strong>ยอดรวมที่ใช้ไป:</strong></td>
+                                                <td class="text-end"><strong>${formatCurrency(totalUsed)}</strong></td>
+                                                <td class="text-end"><strong>${formatCurrency(parseFloat(voucher.amount) - totalUsed)}</strong></td>
                                             </tr>
                                         </tfoot>
                                     ` : ''}
                                 </table>
                             </div>
                         </div>
-                    ` : ''}
-                `;
-                
+                    `;
+                }
+
                 $('#voucherDetails').html(html);
-                $('#viewVoucherModal').modal('show');
+                $('#viewVoucherModal').addClass('voucher-detail-modal').modal('show');
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: response.message || 'ไม่สามารถโหลดข้อมูลได้',
-                    footer: response.debug ? JSON.stringify(response.debug) : null
+                    text: response.message
                 });
             }
-        },
-        error: function() {
-            console.error('AJAX Error:', xhr.responseText);
-            Swal.fire({
-                icon: 'error',
-                title: 'เกิดข้อผิดพลาด',
-                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
-            });
         }
     });
 }
 
 function printVoucher(voucherId) {
+    console.log('Printing voucher ID:', voucherId); // Debug line
+
+    if (!voucherId) {
+        console.error('No voucher ID provided');
+        return;
+    }
     $.ajax({
         url: 'sql/get-voucher-print.php',
         type: 'GET',
-        data: { voucher_id: voucherId },
+        data: { 
+            voucher_id: voucherId
+        },
+        dataType: 'json',
+        beforeSend: function() {
+            console.log('Sending request with voucher ID:', voucherId); // Debug line
+        },
         success: function(response) {
+            console.log('Print voucher response:', response);
             if (response.success) {
                 const { voucher, branch } = response.data;
                  const printContent = `
@@ -1074,6 +1252,38 @@ function printVoucher(voucherId) {
                 setTimeout(() => {
                     printWindow.print();
                 }, 500);
+            }
+            else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถดึงข้อมูลบัตรกำนัลได้'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Print voucher error:', {
+                status: status,
+                error: error,
+                response: xhr.responseText,
+                voucherId: voucherId // Debug line
+            });
+            
+            try {
+                const errorResponse = JSON.parse(xhr.responseText);
+                console.log('Error debug info:', errorResponse.debug);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'ไม่สามารถพิมพ์บัตรกำนัลได้: ' + (errorResponse.message || error)
+                });
+            } catch (e) {
+                console.error('Error parsing response:', e);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'เกิดข้อผิดพลาดในการพิมพ์บัตรกำนัล'
+                });
             }
         }
     });

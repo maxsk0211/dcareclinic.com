@@ -3,10 +3,10 @@ session_start();
 require '../../dbcon.php';
 
 // ตรวจสอบสิทธิ์
-if ($_SESSION['position_id'] != 1 && $_SESSION['position_id'] != 2) {
-    echo json_encode(['success' => false, 'message' => 'คุณไม่มีสิทธิ์ในการยกเลิกค่ามัดจำ']);
-    exit;
-}
+// if ($_SESSION['position_id'] != 1 && $_SESSION['position_id'] != 2) {
+//     echo json_encode(['success' => false, 'message' => 'คุณไม่มีสิทธิ์ในการยกเลิกค่ามัดจำ']);
+//     exit;
+// }
 
 header('Content-Type: application/json');
 

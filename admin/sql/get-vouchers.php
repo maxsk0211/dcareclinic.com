@@ -29,12 +29,25 @@ try {
     );
 
     // Base query
-    $sql = "SELECT v.*,
-            CONCAT(u.users_fname, ' ', u.users_lname) as creator_name,
-                        CONCAT(c.cus_firstname, ' ', c.cus_lastname) as customer_name
-            FROM gift_vouchers v
-            LEFT JOIN users u ON v.created_by = u.users_id
-            LEFT JOIN customer c ON v.customer_id = c.cus_id";
+$sql = "SELECT 
+    v.*,
+    CONCAT(u.users_fname, ' ', u.users_lname) as creator_name,
+    CONCAT(c.cus_firstname, ' ', c.cus_lastname) as customer_name,
+    CASE 
+        WHEN v.remaining_amount IS NULL AND v.customer_id IS NOT NULL 
+            AND v.discount_type = 'fixed' 
+        THEN v.amount 
+        ELSE v.remaining_amount 
+    END as remaining_amount,
+    COALESCE(
+        (SELECT MIN(used_at) 
+         FROM voucher_usage_history 
+         WHERE voucher_id = v.voucher_id), 
+        v.first_used_at
+    ) as first_usage_date
+    FROM gift_vouchers v
+    LEFT JOIN users u ON v.created_by = u.users_id
+    LEFT JOIN customer c ON v.customer_id = c.cus_id";
     
     $conditions = [];
     $params = [];
@@ -109,18 +122,33 @@ try {
     $result = $stmt->get_result();
     $data = array();
     
+    // ในส่วนของการ fetch ข้อมูล
     while ($row = $result->fetch_assoc()) {
-        // ตรวจสอบสถานะหมดอายุ
-        if ($row['status'] == 'unused' && strtotime($row['expire_date']) < strtotime('today')) {
+        // คำนวณสถานะที่ถูกต้อง
+        $today = date('Y-m-d');
+        $expireDate = $row['expire_date'];
+        
+        // เริ่มต้นตรวจสอบสถานะ
+        if (strtotime($expireDate) < strtotime($today)) {
             $row['status'] = 'expired';
-            
-            // อัพเดทในฐานข้อมูล
-            $update_sql = "UPDATE gift_vouchers SET status = 'expired' WHERE voucher_id = ?";
-            $update_stmt = $conn->prepare($update_sql);
-            if ($update_stmt) {
-                $update_stmt->bind_param("i", $row['voucher_id']);
-                $update_stmt->execute();
-                $update_stmt->close();
+        } else {
+            if ($row['discount_type'] === 'percent') {
+                // สำหรับบัตรแบบเปอร์เซ็นต์
+                $row['status'] = $row['customer_id'] ? 'used' : 'unused';
+            } else {
+                // สำหรับบัตรแบบจำนวนเงิน
+                if (!$row['customer_id']) {
+                    $row['status'] = 'unused';
+                } else {
+                    // ถ้ามีการผูกกับลูกค้าแต่ยังไม่มีประวัติการใช้งาน
+                    if ($row['remaining_amount'] === $row['amount']) {
+                        $row['status'] = 'unused';
+                    } elseif ($row['remaining_amount'] > 0) {
+                        $row['status'] = 'partial';
+                    } else {
+                        $row['status'] = 'used';
+                    }
+                }
             }
         }
         

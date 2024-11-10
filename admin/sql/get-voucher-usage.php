@@ -49,7 +49,7 @@ try {
     LEFT JOIN customer c ON vh.customer_id = c.cus_id
     LEFT JOIN branch b ON vh.branch_id = b.branch_id
     WHERE vh.voucher_id = ?
-    ORDER BY vh.used_at DESC";
+    ORDER BY vh.used_at ASC";
 
     $history_stmt = $conn->prepare($history_sql);
     if (!$history_stmt) {

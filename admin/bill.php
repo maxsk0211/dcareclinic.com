@@ -2,7 +2,7 @@
 session_start();
 include 'chk-session.php';
 require '../dbcon.php';
-
+require_once 'check_permission.php';  // เพิ่มการเรียกใช้ไฟล์ check_permission.php
 // เพิ่ม error reporting เพื่อ debug
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -276,11 +276,45 @@ function canRecordUsage($payment_status) {
 
 // อัพเดทโค้ดส่วนที่เกี่ยวข้องกับการตรวจสอบสถานะ
 $isPaymentCompleted = ($order_data['order_payment'] !== 'ยังไม่จ่ายเงิน');
-$canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2);
+// $canCancelDeposit = ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2);
 $canRecordServiceUsage = canRecordUsage($order_data['order_payment']);
 
 // ในส่วนของการแสดงผลการใช้บริการ
 $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ result set
+
+
+// เพิ่มที่ด้านบนของไฟล์ หลัง require dbcon.php
+$deposit_add = hasSpecificPermission('deposit_add');
+$deposit_cancel = hasSpecificPermission('deposit_cancel');
+$payment_add = hasSpecificPermission('payment_add');
+$payment_cancel = hasSpecificPermission('payment_cancel');
+$service_history_add = hasSpecificPermission('service_history_add');
+$service_history_cancel = hasSpecificPermission('service_history_cancel');
+
+// Debug: แสดงค่าสิทธิ์
+error_log("Permissions for user " . $_SESSION['users_id'] . ":");
+error_log("deposit_add: " . var_export($deposit_add, true));
+error_log("deposit_cancel: " . var_export($deposit_cancel, true));
+error_log("payment_add: " . var_export($payment_add, true));
+error_log("payment_cancel: " . var_export($payment_cancel, true));
+error_log("service_history_add: " . var_export($service_history_add, true));
+error_log("service_history_cancel: " . var_export($service_history_cancel, true));
+
+// ตรวจสอบว่ามีการกำหนดค่าสิทธิ์ในฐานข้อมูลหรือไม่
+$checkPermissionsSql = "SELECT p.action, p.permission_name 
+                       FROM permissions p 
+                       WHERE p.action IN ('deposit_add', 'deposit_cancel', 
+                                        'payment_add', 'payment_cancel',
+                                        'service_history_add', 'service_history_cancel')";
+$permissionsResult = $conn->query($checkPermissionsSql);
+if ($permissionsResult) {
+    while ($row = $permissionsResult->fetch_assoc()) {
+        error_log("Found permission in DB: " . $row['action'] . " - " . $row['permission_name']);
+    }
+} else {
+    error_log("Error checking permissions in DB: " . $conn->error);
+}
+
 ?>
 <!DOCTYPE html>
 <html
@@ -1040,7 +1074,7 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                                                     <i class="ri-history-line me-1"></i>
                                                                     ประวัติการใช้บริการ
                                                                 </button>
-                                                                <?php if ($remaining_sessions > 0 ): ?>
+                                                                <?php if ($remaining_sessions > 0 && $service_history_add): ?>
                                                                 <button type="button" 
                                                                         class="btn btn-outline-success btn-sm flex-grow-1"
                                                                         onclick="recordUsage(<?php echo $item['course_id']; ?>)">
@@ -1094,14 +1128,13 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                         <form id="depositForm" enctype="multipart/form-data">
                                             <input type="hidden" name="order_id" value="<?php echo $oc_id; ?>">
                                             <div class="mb-3">
-                                                <?=$order_data['deposit_amount']; ?>
                                                 <label for="deposit_amount" class="form-label">จำนวนเงินมัดจำ (บาท)</label>
                                                 <input type="number" class="form-control" id="deposit_amount" name="deposit_amount" 
-                                                       value="<?php echo $order_data['deposit_amount']; ?>" step="0.01" min="0" required>
+                                                       value="<?php echo $order_data['deposit_amount']; ?>" step="0.01" min="0" required <?php if(!$deposit_add){echo "readonly";} ?> >
                                             </div>
                                             <div class="mb-3">
                                                 <label for="deposit_payment_type" class="form-label">ประเภทการชำระเงินมัดจำ</label>
-                                                <select class="form-select" id="deposit_payment_type" name="deposit_payment_type" required>
+                                                <select class="form-select" id="deposit_payment_type" name="deposit_payment_type" required <?php if(!$deposit_add){echo "readonly";} ?>>
                                                     <option value="">เลือกประเภท</option>
                                                     <option value="เงินสด" <?php echo $order_data['deposit_payment_type'] == 'เงินสด' ? 'selected' : ''; ?>>เงินสด</option>
                                                     <option value="บัตรเครดิต" <?php echo $order_data['deposit_payment_type'] == 'บัตรเครดิต' ? 'selected' : ''; ?>>บัตรเครดิต</option>
@@ -1131,12 +1164,15 @@ $items_result->data_seek(0); // รีเซ็ตตำแหน่งของ
                                             </div>
                                             <?php endif; ?>
                                             <?php if ($order_data['deposit_amount'] >= 0 && $order_data['order_payment'] == 'ยังไม่จ่ายเงิน'): ?>
-                                            <?php if ($order_data['deposit_amount'] == 0): ?>
+                                            <?php if ($order_data['deposit_amount'] == 0 && $deposit_add): ?>
+
                                             <button type="submit" class="btn btn-primary" id="saveDepositBtn">บันทึกข้อมูลมัดจำ</button>
-                                                
+
                                             <?php endif ?>
                                             
-                                                <?php if ($canCancelDeposit and $order_data['deposit_amount'] > 0): ?>
+                                                <?php 
+
+                                                if ($deposit_cancel && $order_data['deposit_amount'] > 0): ?>
                                                     <button type="button" class="btn btn-danger" id="cancelDepositBtn">ยกเลิกค่ามัดจำ</button>
                                                 <?php endif; ?>
                                             <?php endif; ?>
@@ -2684,7 +2720,7 @@ function showUsageDetails(courseId) {
                         <td>${usage.notes || '-'}</td>`;
                 
                 // เพิ่มปุ่มลบสำหรับผู้จัดการและแอดมินเท่านั้น
-                <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
+                <?php if ($service_history_cancel): ?>
                 row += `
                         <td>
                             <button type="button" 
@@ -3415,7 +3451,9 @@ function updatePaymentForm(remainingAmount) {
                     <input type="text" class="form-control" id="change_amount" readonly>
                 </div>
 
+
                 <button type="submit" class="btn btn-primary btn-lg w-100">บันทึกการชำระเงิน</button>
+
             </form>
         `;
 
@@ -3551,7 +3589,7 @@ function updatePaymentForm(remainingAmount) {
             
             <div class="d-flex justify-content-between mt-3">
                 <button id="printReceiptBtn" class="btn btn-primary">พิมพ์ใบเสร็จ</button>
-                <?php if ($_SESSION['position_id'] == 1 || $_SESSION['position_id'] == 2): ?>
+                <?php if ($order_data['order_payment'] !== 'ยังไม่จ่ายเงิน' && $payment_cancel): ?>
                     <button type="button" class="btn btn-danger btn-lg" 
                             onclick="cancelPayment(<?php echo $oc_id; ?>)">
                         ยกเลิกการชำระเงิน

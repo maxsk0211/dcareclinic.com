@@ -540,9 +540,13 @@ tr.status-in_progress .time-display {
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">รายการคิวการให้บริการ</h5>
+                                <div>
+                                                                    <a href="room-service-summary.php" class="btn btn-danger">สรุปการให้บริการรายห้อง</a>
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQueueModal">
                                     <i class="ri-add-line me-1"></i> เพิ่มคิวใหม่
                                 </button>
+                                </div>
+
                             </div>
                             <div class="card-body">
                                 <!-- Queue Table -->

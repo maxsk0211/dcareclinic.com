@@ -1,105 +1,98 @@
 <?php
 session_start();
 require_once '../../dbcon.php';
-
 header('Content-Type: application/json');
 
-$response = ['success' => false, 'message' => '', 'voucher' => null, 'history' => []];
-$stmt_voucher = null;
-$stmt_history = null;
+$response = ['success' => false, 'message' => '', 'history' => []];
+$stmt = null;
 
 try {
-    if (!isset($_GET['voucher_id'])) {
-        throw new Exception('ไม่พบรหัสบัตรกำนัล');
+    if (!isset($_GET['cus_id'])) {
+        throw new Exception('ไม่พบรหัสลูกค้า');
     }
 
-    $voucher_id = intval($_GET['voucher_id']);
-
-    if ($voucher_id <= 0) {
-        throw new Exception('รหัสบัตรกำนัลไม่ถูกต้อง');
+    $cus_id = intval($_GET['cus_id']);
+    if ($cus_id <= 0) {
+        throw new Exception('รหัสลูกค้าไม่ถูกต้อง');
     }
 
-    // ดึงข้อมูลบัตรกำนัล
-    $sql_voucher = "SELECT gv.*,
-                    COALESCE(SUM(vuh.amount_used), 0) as total_used
-                    FROM gift_vouchers gv
-                    LEFT JOIN voucher_usage_history vuh ON gv.voucher_id = vuh.voucher_id
-                    WHERE gv.voucher_id = ?
-                    GROUP BY gv.voucher_id";
+    // ดึงประวัติบัตรกำนัลทั้งหมดของลูกค้า
+    $sql = "SELECT 
+                gv.voucher_id,
+                gv.voucher_code,
+                gv.amount,
+                gv.max_discount,
+                gv.discount_type,
+                gv.expire_date,
+                gv.status,
+                gv.first_used_at,
+                gv.remaining_amount,
+                COALESCE(SUM(vuh.amount_used), 0) as total_used_amount
+            FROM gift_vouchers gv
+            LEFT JOIN voucher_usage_history vuh ON gv.voucher_id = vuh.voucher_id
+            WHERE gv.customer_id = ? OR gv.voucher_id IN (
+                SELECT DISTINCT voucher_id 
+                FROM voucher_usage_history 
+                WHERE customer_id = ?
+            )
+            GROUP BY gv.voucher_id
+            ORDER BY 
+                CASE 
+                    WHEN gv.status = 'unused' THEN 1
+                    WHEN gv.status = 'used' THEN 2
+                    ELSE 3
+                END,
+                gv.first_used_at DESC,
+                gv.expire_date DESC";
 
-    $stmt_voucher = $conn->prepare($sql_voucher);
-    if ($stmt_voucher === false) {
-        throw new Exception('เกิดข้อผิดพลาดในการเตรียมคำสั่ง SQL สำหรับบัตรกำนัล: ' . $conn->error);
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        throw new Exception('เกิดข้อผิดพลาดในการเตรียมคำสั่ง SQL: ' . $conn->error);
     }
 
-    if (!$stmt_voucher->bind_param("i", $voucher_id)) {
-        throw new Exception('เกิดข้อผิดพลาดในการผูกพารามิเตอร์: ' . $stmt_voucher->error);
+    if (!$stmt->bind_param("ii", $cus_id, $cus_id)) {
+        throw new Exception('เกิดข้อผิดพลาดในการผูกพารามิเตอร์: ' . $stmt->error);
     }
 
-    if (!$stmt_voucher->execute()) {
-        throw new Exception('เกิดข้อผิดพลาดในการดึงข้อมูลบัตรกำนัล: ' . $stmt_voucher->error);
+    if (!$stmt->execute()) {
+        throw new Exception('เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $stmt->error);
     }
 
-    $result_voucher = $stmt_voucher->get_result();
-    $voucher = $result_voucher->fetch_assoc();
-
-    if (!$voucher) {
-        throw new Exception('ไม่พบข้อมูลบัตรกำนัล');
-    }
-
-    // ดึงประวัติการใช้งาน
-    $sql_history = "SELECT vuh.used_at, vuh.amount_used, 
-                    oc.oc_id as order_id,
-                    CONCAT(c.cus_firstname, ' ', c.cus_lastname) as customer_name
-                    FROM voucher_usage_history vuh
-                    LEFT JOIN order_course oc ON vuh.order_id = oc.oc_id
-                    LEFT JOIN customer c ON oc.cus_id = c.cus_id
-                    WHERE vuh.voucher_id = ?
-                    ORDER BY vuh.used_at DESC";
-
-    $stmt_history = $conn->prepare($sql_history);
-    if ($stmt_history === false) {
-        throw new Exception('เกิดข้อผิดพลาดในการเตรียมคำสั่ง SQL สำหรับประวัติ: ' . $conn->error);
-    }
-
-    if (!$stmt_history->bind_param("i", $voucher_id)) {
-        throw new Exception('เกิดข้อผิดพลาดในการผูกพารามิเตอร์ประวัติ: ' . $stmt_history->error);
-    }
-
-    if (!$stmt_history->execute()) {
-        throw new Exception('เกิดข้อผิดพลาดในการดึงประวัติ: ' . $stmt_history->error);
-    }
-
-    $result_history = $stmt_history->get_result();
-
+    $result = $stmt->get_result();
     $history = [];
-    while ($row = $result_history->fetch_assoc()) {
-        $history[] = [
-            'used_at' => $row['used_at'],
-            'order_id' => $row['order_id'],
-            'customer_name' => $row['customer_name'],
-            'amount_used' => $row['amount_used']
-        ];
+    
+    while ($row = $result->fetch_assoc()) {
+        // คำนวณข้อมูลเพิ่มเติม
+        if ($row['discount_type'] === 'fixed') {
+            $row['remaining_amount'] = $row['amount'] - $row['total_used_amount'];
+        }
+        
+        // แปลงวันที่เป็นรูปแบบที่ต้องการ
+        if ($row['first_used_at']) {
+            $first_used = new DateTime($row['first_used_at']);
+            $row['first_used_at'] = $first_used->format('Y-m-d H:i:s');
+        }
+        
+        $expire = new DateTime($row['expire_date']);
+        $row['expire_date'] = $expire->format('Y-m-d');
+
+        // เพิ่มข้อมูลเข้า array
+        $history[] = $row;
     }
 
     $response['success'] = true;
-    $response['voucher'] = $voucher;
     $response['history'] = $history;
 
 } catch (Exception $e) {
     error_log("Voucher History Error: " . $e->getMessage());
     $response['message'] = $e->getMessage();
 } finally {
-    // ปิด statements
-    if ($stmt_voucher && $stmt_voucher instanceof mysqli_stmt) {
-        $stmt_voucher->close();
+    if ($stmt && $stmt instanceof mysqli_stmt) {
+        $stmt->close();
     }
-    if ($stmt_history && $stmt_history instanceof mysqli_stmt) {
-        $stmt_history->close();
+    if (isset($conn)) {
+        $conn->close();
     }
 }
 
 echo json_encode($response);
-if (isset($conn)) {
-    $conn->close();
-}

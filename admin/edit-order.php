@@ -2,6 +2,14 @@
 session_start();
 include 'chk-session.php';
 require '../dbcon.php';
+require_once 'check_permission.php';  // เพิ่มการเรียกใช้ไฟล์ check_permission.php
+
+// สิทธิ์แก้ไขราคา
+$edit_price = hasSpecificPermission('edit_price');
+
+if ($_SESSION['position_id'] == 1) {
+    $edit_price = true;
+}
 
 $order_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
@@ -476,7 +484,12 @@ function formatOrderId($orderId) {
                     <input type="number" class="form-control course-amount" value="1" min="1" onchange="updateTotalPrice()">
                 </div>
                 <div class="col-md-3">
-                    <input type="number" class="form-control course-price" readonly>
+                    <input type="number" class="form-control course-price" 
+                       
+                       onchange="handlePriceChange(this)" 
+                       <?php echo (!$edit_price || $isPaymentCompleted) ? 'readonly' : ''; ?>
+                       data-bs-toggle="<?php echo (!$edit_price) ? 'tooltip' : ''; ?>"
+                       title="<?php echo (!$edit_price) ? 'คุณไม่มีสิทธิ์แก้ไขราคา' : ''; ?>">
                 </div>
                 <div class="col-md-3">
                     <button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>
@@ -787,11 +800,10 @@ function loadExistingOrder() {
             $('#payment_method').val(orderDetails.payment_status);
             
             orderDetails.courses.forEach(course => {
-                // ตรวจสอบว่ามีข้อมูล detail หรือไม่
-                console.log('Course detail:', course.detail);
                 addCourseToList({
                     ...course,
-                    detail: course.detail || '' // เพิ่มการจัดการค่า null หรือ undefined
+                    detail: course.detail || '',
+                    od_id: course.od_id  // เพิ่มการส่ง od_id
                 });
                 checkAndLoadDefaultResources(course.id);
             });
@@ -837,6 +849,7 @@ function addCourseToList(course) {
     const courseItem = document.createElement('div');
     courseItem.className = 'course-item mb-3';
     courseItem.dataset.courseId = course.id;
+    courseItem.dataset.odId = course.od_id;  // เพิ่มบรรทัดนี้
     
     courseItem.innerHTML = `
         <div class="row">
@@ -863,7 +876,7 @@ function addCourseToList(course) {
                 </div>
             </div>
             <div class="col-md-3">
-                ${isPaymentCompleted ? '' : '<button type="button" class="btn btn-danger" onclick="removeCourse(this)">ลบคอร์ส</button>'}
+                ${isPaymentCompleted ? '' : '<button type="button" class="btn btn-danger" onclick="removeCourse(this)" data-od-id="' + course.od_id + '">ลบคอร์ส</button>'}
             </div>
             <div class="col-md-12 mt-2">
                 <div class="d-flex align-items-center">
@@ -964,14 +977,14 @@ function updateCourse(input) {
 
 function removeCourse(button) {
     const courseItem = button.closest('.course-item');
-    const courseId = courseItem.dataset.courseId;
+    const odId = courseItem.dataset.odId; // ใช้ od_id แทน course_id
     
     $.ajax({
         url: 'sql/remove-course.php',
         type: 'POST',
         data: {
             order_id: currentOrderId,
-            course_id: courseId
+            od_id: odId  // ส่ง od_id แทน course_id
         },
         success: function(response) {
             console.log('Course removed successfully');

@@ -3,6 +3,10 @@
   
   include 'chk-session.php';
   require '../dbcon.php';
+  // เพิ่มฟังก์ชันนี้ก่อนส่วนของ HTML
+function formatHN($id) {
+    return 'HN-' . str_pad($id, 5, '0', STR_PAD_LEFT);
+}
  ?>
 
 <!doctype html>
@@ -155,6 +159,18 @@
     box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
     border-color: #4e73df;
   }
+    /* เพิ่มต่อจาก CSS เดิม */
+    .clickable-row {
+        transition: background-color 0.3s;
+    }
+    
+    .clickable-row:hover {
+        background-color: rgba(78,115,223,0.1) !important;
+    }
+    
+    .clickable-row td:not(:first-child) {
+        cursor: pointer;
+    }
 </style>
 
   </head>
@@ -361,7 +377,7 @@
     <thead>
         <tr class="">
             <th class="text-center">คำสั่ง</th>
-            <th class="text-center">#</th>
+            <th class="text-center">HN</th>  <!-- เปลี่ยนจาก # เป็น HN -->
             <th>เลขบัตรประชาชน</th>
             <th>ชื่อ - นามสกุล</th>
             <th>วันเกิด</th>
@@ -373,17 +389,20 @@
     </thead>
     <tbody>
         <?php
-        $i = 1;
         $sql_show_customers = "SELECT * FROM `customer` ORDER BY `customer`.`cus_id` ASC";
         $result_show_customers = $conn->query($sql_show_customers);
         while ($row = $result_show_customers->fetch_object()) {
         ?>
-        <tr>
-            <td class="text-center">
-                <a href="#" class="text-warning" data-bs-toggle="modal" data-bs-target="#editCustomerModal<?= $row->cus_id ?>"><i class="ri-edit-box-line"></i></a>
-                    <a href="" class="text-danger" onClick="confirmDelete('sql/customer-delete.php?id=<?php echo $row->cus_id; ?>'); return false;"><i class="ri-delete-bin-6-line"></i></a>
+        <tr class="clickable-row" style="cursor: pointer;">
+            <td class="text-center" onclick="event.stopPropagation();">
+                <a href="#" class="text-warning" data-bs-toggle="modal" data-bs-target="#editCustomerModal<?= $row->cus_id ?>">
+                    <i class="ri-edit-box-line"></i>
+                </a>
+                <a href="" class="text-danger" onClick="confirmDelete('sql/customer-delete.php?id=<?php echo $row->cus_id; ?>'); return false;">
+                    <i class="ri-delete-bin-6-line"></i>
+                </a>
             </td>
-            <td class="text-center"><?= $i++ ?></td>
+            <td class="text-center fw-bold text-primary"><?= formatHN($row->cus_id) ?></td>
             <td><?= $row->cus_id_card_number ?></td>
             <td><?= $row->cus_title.$row->cus_firstname." ".$row->cus_lastname ?></td>
             <td><?= $row->cus_birthday ?></td>
@@ -656,7 +675,23 @@
           datePattern: ["d", "m", "Y"]
         });
 
+    // คงการตั้งค่า DataTable เดิม
+    $('#customersTable').DataTable({ 
+        "pageLength": 25,
+        "order": [[1, "asc"]], // เรียงตาม HN
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
+        }
+    });
 
+        // เพิ่ม event handler สำหรับการคลิกแถว
+    $('#customersTable tbody').on('click', 'tr', function(e) {
+        // ถ้าคลิกที่ปุ่มในคอลัมน์แรก จะไม่นำทางไปหน้า detail
+        if (!$(e.target).closest('td:first-child').length) {
+            var customerId = $(this).find('td:nth-child(2)').text().replace('HN-', '');
+            window.location.href = 'customer-detail.php?id=' + parseInt(customerId);
+        }
+    });
 
       // ลบข้อมูล
           function confirmDelete(url) {
@@ -730,23 +765,7 @@
     <?php unset($_SESSION['msg_ok']); } ?>
     </script>
 
-    <script>
-$(document).ready(function() {
-    $('#customersTable').DataTable({ 
-            "pageLength": 25,
-            "order": [[1, "desc"]], // เรียงลำดับคอลัมน์ที่ 1 (วันที่สั่งซื้อ) จากมากไปน้อย
-            "columnDefs": [
-                { "type": "date", "targets": 1 } // กำหนดให้คอลัมน์ที่ 1 เป็นประเภทวันที่
-            ],
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
-            }
-        });
-});
 
-
-
-    </script>
 
     <!-- ล้าง session -->
     <?php 

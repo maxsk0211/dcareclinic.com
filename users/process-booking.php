@@ -1,148 +1,132 @@
 <?php
 session_start();
 require_once '../dbcon.php';
-
-// Function to log errors
-function logError($message) {
-    error_log(date('[Y-m-d H:i:s] ') . $message . "\n", 3, '../error.log');
-}
-
-// Function to generate new file name
-function generateNewFileName($originalFileName) {
-    $extension = pathinfo($originalFileName, PATHINFO_EXTENSION);
-    $dateTime = date('Ymd-His');
-    $randomString = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 10);
-    return $dateTime . '-' . $randomString . '.' . $extension;
-}
+header('Content-Type: application/json');
 
 if (!isset($_SESSION['users_id'])) {
-    echo json_encode(['success' => false, 'message' => 'User not logged in']);
+    echo json_encode(['success' => false, 'message' => 'กรุณาเข้าสู่ระบบ']);
     exit;
 }
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-    exit;
-}
-
-$user_id = $_SESSION['users_id'];
-$course_id = $_POST['courseId'];
-$booking_date = $_POST['booking_date'];
-$booking_time = $_POST['booking_time'];
-$payment_method = $_POST['paymentMethod'];
-
-// Validate inputs
-if (empty($course_id) || empty($booking_date) || empty($booking_time) || empty($payment_method)) {
-    echo json_encode(['success' => false, 'message' => 'All fields are required']);
-    exit;
-}
-
-// แปลงวันที่จาก พ.ศ. เป็น ค.ศ.
-$date_parts = explode('/', $booking_date);
-$thai_year = intval($date_parts[2]);
-$western_year = $thai_year - 543;
-$booking_date = sprintf('%04d-%02d-%02d', $western_year, $date_parts[1], $date_parts[0]);
-
-// Combine date and time
-$booking_datetime = $booking_date . ' ' . $booking_time . ':00';
-
-// Start transaction
-mysqli_begin_transaction($conn);
 
 try {
-    // Check if the selected date is a clinic closure day
-    $closure_check = mysqli_query($conn, "SELECT 1 FROM clinic_closures WHERE closure_date = '$booking_date'");
-    if (mysqli_num_rows($closure_check) > 0) {
-        throw new Exception('Selected date is a clinic closure day');
+    // Begin transaction
+    $conn->begin_transaction();
+
+    // Get POST data
+    $customer_id = $_SESSION['users_id'];
+    $course_id = isset($_POST['course_id']) ? intval($_POST['course_id']) : 0;
+    $branch_id = isset($_POST['branch_id']) ? intval($_POST['branch_id']) : 0;
+    $booking_date = $_POST['booking_date'] ?? '';
+    $booking_time = $_POST['booking_time'] ?? '';
+    $room_id = isset($_POST['room_id']) ? intval($_POST['room_id']) : 0;
+
+    // Convert date format from Thai to ISO
+    $date_parts = explode(' ', $booking_date);
+    if (count($date_parts) === 4) {
+        $day = $date_parts[0];
+        $month = array_search($date_parts[1], [
+            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+        ]) + 1;
+        $year = intval($date_parts[3]) - 543;
+        $booking_date = sprintf('%04d-%02d-%02d', $year, $month, $day);
     }
 
-    // Check if the selected day is a closed day in clinic_hours
-    $day_of_week = date('l', strtotime($booking_date));
-    $hours_check = mysqli_query($conn, "SELECT 1 FROM clinic_hours WHERE day_of_week = '$day_of_week' AND is_closed = 1");
-    if (mysqli_num_rows($hours_check) > 0) {
-        throw new Exception('Selected day is a clinic closed day');
+    $booking_datetime = $booking_date . ' ' . $booking_time . ':00';
+
+    // Validate input
+    if (!$course_id || !$branch_id || !$booking_datetime || !$room_id) {
+        throw new Exception('กรุณากรอกข้อมูลให้ครบถ้วน');
     }
 
-    // Check for existing bookings
-    $existing_booking_check = mysqli_query($conn, "SELECT 1 FROM course_bookings WHERE booking_datetime = '$booking_datetime' AND status IN ('pending', 'confirmed')");
-    if (mysqli_num_rows($existing_booking_check) > 0) {
-        throw new Exception('Selected time slot is already booked');
+    // Check if slot is still available
+    $check_query = "
+        SELECT COUNT(*) as booking_count 
+        FROM course_bookings 
+        WHERE booking_datetime = ? 
+        AND room_id = ? 
+        AND status IN ('pending', 'confirmed')
+    ";
+    $stmt = $conn->prepare($check_query);
+    $stmt->bind_param('si', $booking_datetime, $room_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_object();
+
+    if ($row->booking_count > 0) {
+        throw new Exception('ช่วงเวลานี้ถูกจองไปแล้ว');
     }
 
-    // Get course details including branch_id and price
-    $course_query = "SELECT branch_id, course_price FROM course WHERE course_id = ?";
-    $stmt = mysqli_prepare($conn, $course_query);
-    mysqli_stmt_bind_param($stmt, "i", $course_id);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $course = mysqli_fetch_assoc($result);
+    // Get course details
+    $course_query = "SELECT course_price FROM course WHERE course_id = ?";
+    $stmt = $conn->prepare($course_query);
+    $stmt->bind_param('i', $course_id);
+    $stmt->execute();
+    $course = $stmt->get_result()->fetch_object();
 
     if (!$course) {
-        throw new Exception('Course not found');
+        throw new Exception('ไม่พบข้อมูลคอร์ส');
     }
 
-    $branch_id = $course['branch_id'];
-    $course_price = $course['course_price'];
-
-    // Insert into course_bookings
-    $booking_query = "INSERT INTO course_bookings (branch_id, cus_id, booking_datetime, created_at, status) 
-                      VALUES (?, ?, ?, NOW(),  'pending')";
-    $stmt = mysqli_prepare($conn, $booking_query);
-    mysqli_stmt_bind_param($stmt, "iis", $branch_id, $user_id, $booking_datetime);
-    if (!mysqli_stmt_execute($stmt)) {
-        throw new Exception("Error inserting into course_bookings: " . mysqli_stmt_error($stmt));
+    // Insert booking
+    $booking_query = "
+        INSERT INTO course_bookings (
+            branch_id, cus_id, booking_datetime, room_id, 
+            created_at, status, is_follow_up
+        ) VALUES (?, ?, ?, ?, NOW(), 'pending', 0)
+    ";
+    $stmt = $conn->prepare($booking_query);
+    $stmt->bind_param('iiss', $branch_id, $customer_id, $booking_datetime, $room_id);
+    if (!$stmt->execute()) {
+        throw new Exception('ไม่สามารถบันทึกการจองได้');
     }
-    $booking_id = mysqli_insert_id($conn);
+    $booking_id = $stmt->insert_id;
 
-    // Insert into order_course
-    $order_query = "INSERT INTO order_course (cus_id, users_id, course_bookings_id, order_datetime, order_payment, order_net_total, order_status) 
-                    VALUES (?, ?, ?, NOW(), ?, ?, 1)";
-    $stmt = mysqli_prepare($conn, $order_query);
-    mysqli_stmt_bind_param($stmt, "iiisi", $user_id, $user_id, $booking_id, $payment_method, $course_price);
-    if (!mysqli_stmt_execute($stmt)) {
-        throw new Exception("Error inserting into order_course: " . mysqli_stmt_error($stmt));
+    // Create order
+    $order_query = "
+        INSERT INTO order_course (
+            cus_id, users_id, course_bookings_id, order_datetime,
+            order_payment, order_net_total, branch_id
+        ) VALUES (?, ?, ?, NOW(), 'ยังไม่จ่ายเงิน', ?, ?)
+    ";
+    $stmt = $conn->prepare($order_query);
+    $zero = 0; // สำหรับ users_id ที่ยังไม่ได้ชำระเงิน
+    $stmt->bind_param('iiidi', $customer_id, $zero, $booking_id, $course->course_price, $branch_id);
+    if (!$stmt->execute()) {
+        throw new Exception('ไม่สามารถสร้างรายการสั่งซื้อได้');
     }
-    $order_id = mysqli_insert_id($conn);
+    $order_id = $stmt->insert_id;
 
-    // Insert into order_detail
-    $detail_query = "INSERT INTO order_detail (oc_id, course_id, od_amount, od_price) 
-                     VALUES (?, ?, 1, ?)";
-    $stmt = mysqli_prepare($conn, $detail_query);
-    mysqli_stmt_bind_param($stmt, "iid", $order_id, $course_id, $course_price);
-    if (!mysqli_stmt_execute($stmt)) {
-        throw new Exception("Error inserting into order_detail: " . mysqli_stmt_error($stmt));
-    }
-
-    // Handle file upload if payment method is transfer
-    if ($payment_method === 'transfer' && isset($_FILES['paymentProof'])) {
-        $original_file_name = $_FILES['paymentProof']['name'];
-        $file_tmp = $_FILES['paymentProof']['tmp_name'];
-        
-        // Generate new file name
-        $new_file_name = generateNewFileName($original_file_name);
-        
-        $file_destination = "../img/payment-proofs/" . $new_file_name;
-
-        if (move_uploaded_file($file_tmp, $file_destination)) {
-            // Update order with payment proof
-            $update_query = "UPDATE order_course SET payment_proofs = ? WHERE oc_id = ?";
-            $stmt = mysqli_prepare($conn, $update_query);
-            mysqli_stmt_bind_param($stmt, "si", $new_file_name, $order_id);
-            if (!mysqli_stmt_execute($stmt)) {
-                throw new Exception("Error updating payment proof: " . mysqli_stmt_error($stmt));
-            }
-        } else {
-            throw new Exception("Failed to upload payment proof");
-        }
+    // Create order detail
+    $detail_query = "
+        INSERT INTO order_detail (
+            oc_id, course_id, od_amount, od_price
+        ) VALUES (?, ?, 1, ?)
+    ";
+    $stmt = $conn->prepare($detail_query);
+    $stmt->bind_param('iid', $order_id, $course_id, $course->course_price);
+    if (!$stmt->execute()) {
+        throw new Exception('ไม่สามารถบันทึกรายละเอียดการสั่งซื้อได้');
     }
 
-    mysqli_commit($conn);
-    echo json_encode(['success' => true, 'message' => 'Booking successfully processed']);
+    // Commit transaction
+    $conn->commit();
+
+    echo json_encode([
+        'success' => true,
+        'message' => 'บันทึกการจองเรียบร้อยแล้ว',
+        'booking_id' => $booking_id,
+        'order_id' => $order_id
+    ]);
+
 } catch (Exception $e) {
-    mysqli_rollback($conn);
-    logError('Booking error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    // Rollback transaction
+    $conn->rollback();
+    
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }
 
-mysqli_close($conn);
-?>
+$conn->close();

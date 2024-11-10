@@ -9,8 +9,22 @@ if (!isset($_SESSION['users_id'])) {
 
 $current_date = date('Y-m-d');
 $search_term = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
+$selected_branch = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : 0;
 
-// Fetch available courses
+// Fetch branches - แก้ไขโดยไม่ใช้ branch_status
+$branches_query = "SELECT branch_id, branch_name FROM branch WHERE branch_id > 0";
+$branches_result = mysqli_query($conn, $branches_query);
+
+if (!$branches_result) {
+    die("Error fetching branches: " . mysqli_error($conn));
+}
+
+$branches = [];
+while ($row = mysqli_fetch_assoc($branches_result)) {
+    $branches[] = $row;
+}
+
+// Fetch available courses based on selected branch
 $available_query = "
     SELECT c.*, 
            COUNT(od.course_id) AS booking_count
@@ -24,14 +38,24 @@ $available_query = "
     WHERE c.course_status = 1 
     AND c.course_start <= '$current_date' 
     AND c.course_end >= '$current_date'
-    AND (c.course_name LIKE '%$search_term%' OR c.course_detail LIKE '%$search_term%')
-    GROUP BY c.course_id
-    ORDER BY c.course_start ASC
 ";
+
+if ($selected_branch > 0) {
+    $available_query .= " AND c.branch_id = $selected_branch";
+}
+
+if (!empty($search_term)) {
+    $available_query .= " AND (c.course_name LIKE '%$search_term%' OR c.course_detail LIKE '%$search_term%')";
+}
+
+$available_query .= " GROUP BY c.course_id ORDER BY c.course_start ASC";
 $available_result = mysqli_query($conn, $available_query);
 
 // Fetch clinic closure dates
 $sql_closures = "SELECT closure_date FROM clinic_closures";
+if ($selected_branch > 0) {
+    $sql_closures .= " WHERE branch_id = $selected_branch";
+}
 $result_closures = $conn->query($sql_closures);
 $closed_dates = [];
 while ($row = $result_closures->fetch_object()) {
@@ -41,10 +65,12 @@ while ($row = $result_closures->fetch_object()) {
         $closed_dates[] = $thaiYear . '-' . $date->format('m-d');
     }
 }
-error_log("Closed dates in Thai year: " . json_encode($closed_dates));
 
 // Fetch clinic hours
 $sql_hours = "SELECT * FROM clinic_hours";
+if ($selected_branch > 0) {
+    $sql_hours .= " WHERE branch_id = $selected_branch";
+}
 $result_hours = $conn->query($sql_hours);
 $clinic_hours = [];
 $closed_days = [];
@@ -61,6 +87,9 @@ while ($row = $result_hours->fetch_object()) {
 
 // Fetch existing bookings
 $sql_bookings = "SELECT booking_datetime FROM course_bookings WHERE status IN ('pending', 'confirmed')";
+if ($selected_branch > 0) {
+    $sql_bookings .= " AND branch_id = $selected_branch";
+}
 $result_bookings = $conn->query($sql_bookings);
 $booked_slots = [];
 while ($row = $result_bookings->fetch_object()) {
@@ -68,7 +97,6 @@ while ($row = $result_bookings->fetch_object()) {
         $booked_slots[] = $row->booking_datetime;
     }
 }
-
 
 function thaiDate($date) {
     $thai_months = [
@@ -81,8 +109,6 @@ function thaiDate($date) {
     $day = intval($date_parts[2]);
     return $day . ' ' . $thai_months[$month] . ' พ.ศ. ' . $year;
 }
-
-
 ?>
 
 <!doctype html>
@@ -139,151 +165,105 @@ function thaiDate($date) {
     <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
 
-            <style>
-    /* Global Styles */
-    body {
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* Course Card Styles */
-    .course-card {
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-        height: 100%;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-        border-radius: 15px;
-        border: none;
-    }
-    .course-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    }
-    .course-image {
-        height: 200px;
-        object-fit: cover;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-    }
-    .course-title {
-        font-size: 1.3rem;
-        font-weight: bold;
-        margin-bottom: 0.7rem;
-        color: #333;
-    }
-    .course-detail {
-        font-size: 0.95rem;
-        color: #6c757d;
-        margin-bottom: 1rem;
-    }
-    .course-meta {
-        font-size: 0.85rem;
-        color: #6c757d;
-    }
-    .course-price {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #28a745;
-        background-color: #e9f7ef;
-        border-radius: 5px;
-        padding: 5px 10px;
-        display: inline-block;
-        margin-bottom: 15px;
-    }
-    .card-body {
-        padding: 1.5rem;
-    }
-    .card-click-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 1;
-    }
-
-    /* Button Styles */
-    .btn-enroll, .btn-primary {
-        position: relative;
-        z-index: 2;
-        width: 100%;
-        padding: 10px 20px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-    }
-    .btn-enroll:hover, .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Search Form Styles */
-    .search-form {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 15px;
-        margin-bottom: 2rem;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    }
-    .search-form .form-control {
-        border-radius: 25px;
-        padding-left: 20px;
-    }
-    .search-form .btn {
-        border-radius: 25px;
-    }
-
-    /* Modal Styles */
-    .modal-content {
-        border-radius: 15px;
-        overflow: hidden;
-    }
-    .modal-header {
-        background-color: #f8f9fa;
-        border-bottom: none;
-    }
-    .modal-title {
-        font-weight: bold;
-        color: #333;
-    }
-    .modal-body {
-        padding: 2rem;
-    }
-
-    /* Time Slot Styles */
-    .time-slot {
-        transition: all 0.3s ease;
-    }
-    .time-slot:hover:not(.disabled) {
-        transform: scale(1.05);
-    }
-    .time-slot.selected {
-        background-color: #28a745;
-        color: white;
-        border-color: #28a745;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .course-card {
-            margin-bottom: 20px;
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Inter', sans-serif;
         }
-    }
 
-    /* Additional Styles */
-    .section-title {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 1.5rem;
-        color: #333;
-        border-left: 5px solid #696cff;
-        padding-left: 15px;
-    }
-    .text-muted {
-        font-style: italic;
-    }
-</style>
+        /* Course Card Styles */
+        .course-card {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            height: 100%;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            border: none;
+        }
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .course-image {
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+        .course-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.7rem;
+            color: #333;
+        }
+        .course-detail {
+            font-size: 0.95rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .course-meta {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .course-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+            background-color: #e9f7ef;
+            border-radius: 5px;
+            padding: 5px 10px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        /* Branch Selection Styles */
+        .branch-select {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* Time Slot Styles */
+        .time-slot {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .time-slot:hover:not(.disabled) {
+            background-color: #e9ecef;
+        }
+        .time-slot.selected {
+            background-color: #28a745;
+            color: white;
+        }
+        .time-slot.disabled {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Modal Styles */
+        .booking-modal .modal-content {
+            border-radius: 15px;
+        }
+        .booking-modal .modal-header {
+            background-color: #f8f9fa;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+        .booking-modal .modal-body {
+            padding: 20px;
+        }
+        .booking-modal .modal-footer {
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+    </style>
   </head>
 
   <body>
@@ -295,52 +275,90 @@ function thaiDate($date) {
                 <?php include 'navbar.php'; ?>
                 <div class="content-wrapper">
                     <div class="container-xxl flex-grow-1 container-p-y">
-                        <h4 class="fw-bold py-3 mb-4">Available Courses</h4>
+                        <div class="branch-select">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h4 class="fw-bold py-3 mb-4">เลือกสาขา</h4>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" id="branchSelect" name="branch_id">
+                                        <option value="">กรุณาเลือกสาขา</option>
+                                        <?php foreach ($branches as $branch): ?>
+                                            <option value="<?php echo $branch['branch_id']; ?>" 
+                                                    <?php echo ($selected_branch == $branch['branch_id']) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($branch['branch_name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Search Form -->
-                        <div class="card mb-4">
+                        <div class="card mb-4" <?php echo $selected_branch ? '' : 'style="display: none;"'; ?>>
                             <div class="card-body">
                                 <form action="" method="GET" class="row g-3">
+                                    <input type="hidden" name="branch_id" value="<?php echo $selected_branch; ?>">
                                     <div class="col-md-10">
-                                        <input type="text" class="form-control" id="search" name="search" placeholder="Search for courses" value="<?php echo htmlspecialchars($search_term); ?>">
+                                        <input type="text" class="form-control" id="search" name="search" 
+                                               placeholder="ค้นหาคอร์ส" value="<?php echo htmlspecialchars($search_term); ?>">
                                     </div>
                                     <div class="col-md-2">
-                                        <button type="submit" class="btn btn-primary w-100">Search</button>
+                                        <button type="submit" class="btn btn-primary w-100">ค้นหา</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
 
                         <!-- Available Courses -->
-                        <div class="row">
+                        <div class="row course-container" <?php echo $selected_branch ? '' : 'style="display: none;"'; ?>>
                             <?php
                             $available_count = 0;
-                            while ($course = mysqli_fetch_object($available_result)):
-                                $available_count++;
+                            if ($selected_branch && $available_result):
+                                while ($course = mysqli_fetch_object($available_result)):
+                                    $available_count++;
                             ?>
                                 <div class="col-md-6 col-lg-4 mb-4">
                                     <div class="card h-100 course-card">
-                                        <a href="course-details.php?id=<?php echo $course->course_id; ?>" class="card-click-overlay"></a>
-                                        <img class="card-img-top course-image" src="../img/course/<?php echo htmlspecialchars($course->course_pic); ?>" alt="<?php echo htmlspecialchars($course->course_name); ?>">
+                                        <img class="card-img-top course-image" 
+                                             src="../img/course/<?php echo htmlspecialchars($course->course_pic); ?>" 
+                                             alt="<?php echo htmlspecialchars($course->course_name); ?>">
                                         <div class="card-body">
                                             <h5 class="course-title"><?php echo htmlspecialchars($course->course_name); ?></h5>
                                             <p class="course-price"><?php echo number_format($course->course_price, 2); ?> บาท</p>
                                             <p class="card-text"><?php echo htmlspecialchars(substr($course->course_detail, 0, 100)) . '...'; ?></p>
                                             <p class="course-meta">
-                                                <i class="mdi mdi-calendar"></i> เริ่ม: <?php echo thaiDate($course->course_start); ?><br>
-                                                <i class="mdi mdi-calendar-clock"></i> สิ้นสุด: <?php echo thaiDate($course->course_end); ?>
+                                                <i class="ri-calendar-line"></i> เริ่ม: <?php echo thaiDate($course->course_start); ?><br>
+                                                <i class="ri-calendar-check-line"></i> สิ้นสุด: <?php echo thaiDate($course->course_end); ?>
                                             </p>
                                             <?php if ($course->booking_count > 0): ?>
                                                 <p class="text-info">คุณได้จองคอร์สนี้แล้ว <?php echo $course->booking_count; ?> ครั้ง</p>
                                             <?php endif; ?>
-                                            <button class="btn btn-primary book-course btn-enroll" data-course-id="<?php echo $course->course_id; ?>">จองตอนนี้</button>
+                                            <button class="btn btn-primary book-course" 
+                                                    data-course-id="<?php echo $course->course_id; ?>"
+                                                    data-branch-id="<?php echo $course->branch_id; ?>"
+                                                    data-duration="<?php echo $course->duration; ?>">
+                                                จองตอนนี้
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                            <?php endwhile; ?>
-                            <?php if ($available_count == 0): ?>
+                            <?php 
+                                endwhile;
+                            endif;
+                            
+                            if ($selected_branch && $available_count == 0): 
+                            ?>
                                 <div class="col-12">
-                                    <p class="text-muted">ไม่พบคอร์สที่ตรงกับการค้นหาของคุณ</p>
+                                    <div class="alert alert-info">
+                                        ไม่พบคอร์สที่ตรงกับการค้นหาของคุณ
+                                    </div>
+                                </div>
+                            <?php elseif (!$selected_branch): ?>
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        กรุณาเลือกสาขาเพื่อดูคอร์สที่มีให้บริการ
+                                    </div>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -354,47 +372,36 @@ function thaiDate($date) {
         <div class="drag-target"></div>
     </div>
 
-    <!-- Booking Modal -->
-    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+  <div class="modal fade booking-modal" id="bookingModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="bookingModalLabel">จองคอร์ส</h5>
+                    <h5 class="modal-title">จองคอร์ส</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="bookingForm" method="POST">
                         <input type="hidden" id="courseId" name="courseId">
+                        <input type="hidden" id="branchId" name="branchId">
                         <div class="mb-3">
                             <label for="booking_date" class="form-label">เลือกวันที่</label>
-                            <input type="text" class="form-control" id="booking_date" name="booking_date" required>
+                            <input type="text" class="form-control" id="booking_date" name="booking_date" required readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">เลือกเวลา</label>
                             <div id="timeSlots" class="row text-center"></div>
                         </div>
                         <input type="hidden" id="booking_time" name="booking_time">
-                        <div class="mb-3">
-                            <label for="paymentMethod" class="form-label">การชำระเงิน</label>
-                            <select class="form-select" id="paymentMethod" name="paymentMethod" required>
-                                <option value="">โปรดเลือกการชำระเงิน</option>
-                                <!-- <option value="cash">Cash</option> -->
-                                <option value="ยังไม่จ่ายเงิน">ยังไม่จ่ายเงิน(จ่ายภายหลัง)</option>
-                                <option value="โอนเงิน">โอนผ่านธนาคาร</option>
-
-                                <!-- <option value="credit_card">Credit Card</option> -->
-                            </select>
-                        </div>
-                        <div id="paymentProofUpload" class="mb-3" style="display: none;">
-                            <label for="paymentProof" class="form-label">Upload Payment Proof</label>
-                            <input type="file" class="form-control" id="paymentProof" name="paymentProof">
-                        </div>
-                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>ยืนยันการจอง </button>
+                        <input type="hidden" id="selected_room_id" name="selected_room_id">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                            ยืนยันการจอง
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
@@ -406,206 +413,312 @@ function thaiDate($date) {
     <script src="../assets/vendor/js/menu.js"></script>
     <script src="../assets/js/main.js"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+        <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const clinicHours = <?php echo json_encode($clinic_hours); ?>;
+        const closedDates = <?php echo json_encode($closed_dates); ?>;
+        const bookedSlots = <?php echo json_encode($booked_slots); ?>;
+        const closedDays = <?php echo json_encode($closed_days); ?>;
+        let timeSelected = false;
 
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const clinicHours = <?php echo json_encode($clinic_hours); ?>;
-    const closedDates = <?php echo json_encode($closed_dates); ?>;
-    const bookedSlots = <?php echo json_encode($booked_slots); ?>;
-    const closedDays = <?php echo json_encode($closed_days); ?>;
-
-
-
-    let timeSelected = false;
-
-    function checkSubmitButton() {
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = !timeSelected;
-    }
-
-    // แปลงวันที่ปิดทำการให้อยู่ในรูปแบบ YYYY-MM-DD
-    const formattedClosedDates = closedDates.map(date => {
-        const [year, month, day] = date.split('-');
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    });
-
-    // Initialize Flatpickr for date selection
-    flatpickr.localize(flatpickr.l10ns.th);
-    flatpickr("#booking_date", {
-        minDate: "today",
-        maxDate: new Date().fp_incr(30),
-        disable: [
-            function(date) {
-                // แปลงวันที่ที่กำลังตรวจสอบให้อยู่ในรูปแบบ YYYY-MM-DD
-                const thaiYear = date.getFullYear() + 543;
-                const checkDate = `${thaiYear}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-                // console.log("Checking Thai date:", checkDate);
-                
-                // ตรวจสอบว่าวันที่อยู่ในรายการวันที่ปิดทำการหรือไม่
-                if (closedDates.includes(checkDate)) {
-                    // console.log("Date is closed:", checkDate);
-                    return true;
-                }
-                
-                // ตรวจสอบวันในสัปดาห์
-                const dayOfWeek = date.toLocaleString('en-us', {weekday: 'long'});
-                return closedDays.includes(dayOfWeek);
-            }
-        ],
-        dateFormat: "d/m/Y",
-        locale: {
-            ...flatpickr.l10ns.th,
-            firstDayOfWeek: 1
-            
-        },
-        onReady: function(selectedDates, dateStr, instance) {
-            instance.currentYearElement.textContent = parseInt(instance.currentYearElement.textContent) + 543;
-        },
-        onChange: function(selectedDates, dateStr, instance) {
-            if (selectedDates.length > 0) {
-                const thaiDate = formatThaiDate(selectedDates[0]);
-                instance.input.value = thaiDate;
-                updateTimeSlots(thaiDate);
-                timeSelected = false;
-                checkSubmitButton();
-            }
-        },
-        onYearChange: function(selectedDates, dateStr, instance) {
-            setTimeout(function() {
-                let yearElem = instance.currentYearElement;
-                yearElem.textContent = parseInt(yearElem.textContent) + 543;
-            }, 0);
-        },
-        formatDate: function(date, format) {
-            return formatThaiDate(date);
-        },
-        parseDate: function(datestr, format) {
-            if (!datestr) return undefined;
-            const parts = datestr.split('/');
-            if (parts.length !== 3) return undefined;
-            const thaiYear = parseInt(parts[2], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const day = parseInt(parts[0], 10);
-            return new Date(thaiYear - 543, month, day);
-        }
-    });
-
-    function updateTimeSlots(dateStr) {
-        const [day, month, year] = dateStr.split('/');
-        const selectedDate = new Date(year - 543, month - 1, day);
-        const dayOfWeek = selectedDate.toLocaleString('en-us', {weekday:'long'});
-
-        const hours = clinicHours[dayOfWeek];
-        const timeSlotsContainer = document.getElementById('timeSlots');
-        timeSlotsContainer.innerHTML = '';
-
-        if (hours && hours.is_closed != 1) {
-            const startTime = new Date(`2000-01-01T${hours.start_time}`);
-            const endTime = new Date(`2000-01-01T${hours.end_time}`);
-
-            const now = new Date();
-            const isToday = selectedDate.toDateString() === now.toDateString();
-
-            while (startTime < endTime) {
-                const timeStr = startTime.toTimeString().slice(0, 5);
-                const fullDateStr = `${year - 543}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                const fullDateTimeStr = `${fullDateStr} ${timeStr}:00`;
-                const isBooked = bookedSlots.includes(fullDateTimeStr);
-                
-                const slotDateTime = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), startTime.getHours(), startTime.getMinutes());
-                const isPastTime = isToday && slotDateTime < now;
-
-                const slot = document.createElement('div');
-                slot.className = `col-4 col-sm-3 mb-2`;
-                
-                if (isPastTime) {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-secondary disabled" data-time="${timeStr}">${timeStr}</div>`;
-                } else if (isBooked) {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-danger disabled" data-time="${timeStr}">${timeStr}</div>`;
-                } else {
-                    slot.innerHTML = `<div class="time-slot btn btn-outline-primary" data-time="${timeStr}">${timeStr}</div>`;
-                }
-                
-                timeSlotsContainer.appendChild(slot);
-                startTime.setMinutes(startTime.getMinutes() + 15);
-            }
-
-            document.querySelectorAll('.time-slot:not(.disabled)').forEach(slot => {
-                slot.addEventListener('click', function() {
-                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-                    this.classList.add('selected');
-                    document.getElementById('booking_time').value = this.dataset.time;
-                    timeSelected = true;
-                    checkSubmitButton();
-                });
-            });
-        } else {
-            timeSlotsContainer.innerHTML = '<p>ไม่มีเวลาทำการในวันที่เลือก</p>';
-        }
-    }
-
-    function formatThaiDate(date) {
-        const thaiYear = date.getFullYear() + 543;
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        return `${day}/${month}/${thaiYear}`;
-    }
-
-    document.getElementById('bookingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        
-        fetch('process-booking.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('การจองสำเร็จ!');
-                $('#bookingModal').modal('hide');
-                location.reload();
+        // Branch Selection Handler
+        $('#branchSelect').change(function() {
+            const branchId = $(this).val();
+            if (branchId) {
+                window.location.href = `user-courses.php?branch_id=${branchId}`;
             } else {
-                alert('เกิดข้อผิดพลาด: ' + result.message);
+                window.location.href = 'user-courses.php';
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('เกิดข้อผิดพลาดในการประมวลผลการจอง');
         });
-    });
 
-    document.getElementById('paymentMethod').addEventListener('change', function() {
-        const paymentProofUpload = document.getElementById('paymentProofUpload');
-        if (this.value === 'transfer') {
-            paymentProofUpload.style.display = 'block';
-        } else {
-            paymentProofUpload.style.display = 'none';
+        // Booking Button Click Handler
+        $('.book-course').click(function(e) {
+            e.preventDefault();
+            const courseId = $(this).data('course-id');
+            const branchId = $(this).data('branch-id');
+            const duration = $(this).data('duration');
+
+            $('#courseId').val(courseId);
+            $('#branchId').val(branchId);
+
+            // Fetch available slots from the server
+            $.ajax({
+                url: 'sql/get-available-slots.php',
+                method: 'POST',
+                data: { 
+                    course_id: courseId,
+                    branch_id: branchId,
+                    selected_date: new Date().toISOString().split('T')[0]
+                },
+                dataType: 'json', // เพิ่มบรรทัดนี้
+                success: function(response) {
+                    try {
+                        if (response.error) {
+                            Swal.fire('เกิดข้อผิดพลาด', response.error, 'error');
+                            return;
+                        }
+
+                        const availableDates = response.available_dates;
+                        const availableSlots = response.available_slots;
+
+                        if (!availableDates || !availableSlots) {
+                            Swal.fire('เกิดข้อผิดพลาด', 'ไม่พบข้อมูลตารางเวลา', 'error');
+                            return;
+                        }
+
+                        initializeDatePicker(response);
+                        $('#bookingModal').modal('show');
+
+                    } catch (e) {
+                        console.error('Error processing response:', e, response);
+                        Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถประมวลผลข้อมูลได้', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    console.log('Response:', xhr.responseText);
+                    Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์', 'error');
+                }
+            });
+        });
+
+        // Initialize Datepicker
+        function initializeDatePicker(response) {
+            if (!response || !response.available_dates) {
+                console.error('Invalid response:', response);
+                Swal.fire('เกิดข้อผิดพลาด', 'ข้อมูลวันที่ไม่ถูกต้อง', 'error');
+                return;
+            }
+
+            flatpickr("#booking_date", {
+                locale: 'th',
+                minDate: "today",
+                maxDate: new Date().fp_incr(30),
+                enable: response.available_dates, // เปลี่ยนจาก disable เป็น enable
+                onChange: function(selectedDates, dateStr) {
+                    if (selectedDates.length > 0) {
+                        fetchAvailableSlots(selectedDates[0]);
+                    }
+                },
+                onReady: function(selectedDates, dateStr, instance) {
+                    const yearInput = instance.currentYearElement;
+                    yearInput.value = parseInt(yearInput.value) + 543;
+                }
+            });
         }
-    });
 
-    // จัดการการคลิกปุ่มจองคอร์ส
-    document.querySelectorAll('.book-course').forEach(button => {
-        button.addEventListener('click', function(e) {
+        // Fetch Available Time Slots
+        function fetchAvailableSlots(selectedDate, duration) {
+            const formattedDate = formatDate(selectedDate);
+            const courseId = $('#courseId').val();
+            const branchId = $('#branchId').val();
+
+            $.ajax({
+                url: 'sql/get-available-slots.php',
+                method: 'POST',
+                data: {
+                    selected_date: formattedDate,
+                    course_id: courseId,
+                    branch_id: branchId,
+                    duration: duration
+                },
+                dataType: 'json', // เพิ่มบรรทัดนี้
+                success: function(response) {
+                    if (response.error) {
+                        Swal.fire('เกิดข้อผิดพลาด', response.error, 'error');
+                        return;
+                    }
+
+                    if (response.available_slots) {
+                        renderTimeSlots(response.available_slots);
+                    } else {
+                        console.error('No available slots in response:', response);
+                        Swal.fire('เกิดข้อผิดพลาด', 'ไม่พบช่วงเวลาที่ว่าง', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    console.log('Response:', xhr.responseText);
+                    Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์', 'error');
+                }
+            });
+        }
+
+        // Render Time Slots
+        function renderTimeSlots(slots) {
+            const container = $('#timeSlots');
+            container.empty();
+
+            if (!Array.isArray(slots)) {
+                console.error('Invalid slots data:', slots);
+                return;
+            }
+
+            if (slots.length === 0) {
+                container.html('<div class="col-12"><div class="alert alert-info">ไม่มีช่วงเวลาว่างในวันที่เลือก</div></div>');
+                return;
+            }
+
+            slots.forEach(slot => {
+                const slotElement = $('<div>', {
+                    class: 'col-md-3 mb-2'
+                });
+
+                const buttonClass = getSlotButtonClass(slot.status);
+                const isDisabled = slot.status === 'fully_booked';
+
+                const button = $('<button>', {
+                    type: 'button',
+                    class: `btn ${buttonClass} time-slot w-100`,
+                    text: formatTimeDisplay(slot.time),
+                    disabled: isDisabled
+                });
+
+                if (!isDisabled) {
+                    button.data({
+                        time: slot.time,
+                        roomId: slot.available_rooms[0]?.room_id
+                    });
+                }
+
+                const roomInfo = $('<small>', {
+                    class: 'd-block',
+                    text: getSlotAvailabilityText(slot)
+                });
+
+                slotElement.append(button).append(roomInfo);
+                container.append(slotElement);
+            });
+
+            // Add click handler for time slots
+            $('.time-slot:not(:disabled)').click(function() {
+                $('.time-slot').removeClass('selected');
+                $(this).addClass('selected');
+                
+                $('#booking_time').val($(this).data('time'));
+                $('#selected_room_id').val($(this).data('roomId'));
+                $('#submitBtn').prop('disabled', false);
+            });
+        }
+        
+        // เพิ่มฟังก์ชัน helper
+        function getSlotButtonClass(status) {
+            switch(status) {
+                case 'fully_booked':
+                    return 'btn-secondary';
+                case 'partially_booked':
+                    return 'btn-warning';
+                default:
+                    return 'btn-outline-primary';
+            }
+        }
+
+        // Format time for display
+        function formatTimeDisplay(time) {
+            return time.substring(0, 5);
+        }
+
+        // Get button class based on slot status
+        function getSlotButtonClass(slot) {
+            switch(slot.status) {
+                case 'fully_booked':
+                    return 'btn-secondary';
+                case 'partially_booked':
+                    return 'btn-warning';
+                default:
+                    return 'btn-outline-primary';
+            }
+        }
+
+        // Get availability text
+        function getSlotAvailabilityText(slot) {
+            if (slot.status === 'fully_booked') {
+                return 'ไม่ว่าง';
+            }
+            return `ว่าง ${slot.available_rooms.length} ห้อง`;
+        }
+
+        // Format date
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Booking Form Submit Handler
+        $('#bookingForm').submit(function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            const courseId = this.getAttribute('data-course-id');
-            document.getElementById('courseId').value = courseId;
-            var bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
-            bookingModal.show();
+            
+            const formData = {
+                course_id: $('#courseId').val(),
+                branch_id: $('#branchId').val(),
+                booking_date: $('#booking_date').val(),
+                booking_time: $('#booking_time').val(),
+                room_id: $('#selected_room_id').val()
+            };
+
+            // แสดง loading
+            Swal.fire({
+                title: 'กำลังดำเนินการ',
+                text: 'กรุณารอสักครู่...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: 'process-booking.php',
+                method: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(result) {
+                    if (result && result.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'จองสำเร็จ',
+                            html: `
+                                <p>การจองคอร์สของคุณเสร็จสมบูรณ์</p>
+                                <p>รหัสการจอง: ${result.booking_id}</p>
+                            `,
+                            showConfirmButton: true
+                        }).then((swalResult) => {
+                            if (swalResult.isConfirmed) {
+                                window.location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: result.message || 'ไม่สามารถทำการจองได้'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // ปิด loading
+                    Swal.close();
+
+                    console.error('AJAX Error:', status, error);
+                    if (xhr.responseText) {
+                        try {
+                            const errorResult = JSON.parse(xhr.responseText);
+                            Swal.fire('เกิดข้อผิดพลาด', errorResult.message || 'ไม่สามารถทำการจองได้', 'error');
+                        } catch (e) {
+                            console.error('Error parsing error response:', e);
+                            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์', 'error');
+                        }
+                    } else {
+                        Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์', 'error');
+                    }
+                }
+            });
         });
     });
-
-    // จัดการการคลิกที่การ์ดคอร์ส
-    document.querySelectorAll('.card-click-overlay').forEach(overlay => {
-        overlay.addEventListener('click', function(e) {
-            e.preventDefault();
-            const courseId = this.closest('.course-card').querySelector('.book-course').getAttribute('data-course-id');
-            window.location.href = 'course-details.php?id=' + courseId;
-        });
-    });
-});
-</script>
-  </body>
+    </script>
+</body>
 </html>

@@ -23,7 +23,7 @@ $result = $conn->query($sql);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>รายการคำสั่งซื้อ - D Care Clinic</title>
+    <title>รายการบิล - D Care Clinic</title>
 
     <meta name="description" content="" />
 
@@ -83,7 +83,7 @@ $result = $conn->query($sql);
 
                     <!-- Content -->
                     <div class="container flex-grow-1 container-p-y">
-                        <h4 class="py-3 mb-4"><span class="text-muted fw-light">คำสั่งซื้อ /</span> รายการคำสั่งซื้อ</h4>
+                        <h4 class="py-3 mb-4"><span class="text-muted fw-light"></span> รายการบิล</h4>
                         
                         <div class="card">
                             <div class="card-header">
@@ -93,8 +93,8 @@ $result = $conn->query($sql);
                                 <table class="table table-striped" id="orderTable">
                                     <thead>
                                         <tr>
-                                            <th>เลขที่คำสั่งซื้อ</th>
-                                            <th>วันที่สั่งซื้อ</th>
+                                            <th>เลขที่บิล</th>
+                                            <th>วันที่สร้างบิล</th>
                                             <th>ชื่อลูกค้า</th>
                                             <th>วันที่นัดรับบริการ</th>
                                             <th>สถานะการชำระเงิน</th>
