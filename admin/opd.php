@@ -54,34 +54,7 @@ $food_allergy = $opd_data['food_allergy'] ?? '';
 
 $background_images = glob("../img/drawing/default/*");
 
-// ดึงข้อมูลวันที่ปิดทำการ
-$sql_closures = "SELECT closure_date FROM clinic_closures";
-$result_closures = $conn->query($sql_closures);
-$closed_dates = [];
-while ($row = $result_closures->fetch_object()) {
-    if ($row->closure_date) {
-        $closed_date = date('Y-m-d', strtotime($row->closure_date));
-        if ($closed_date) {
-            $closed_dates[] = $closed_date;
-        }
-    }
-}
 
-// ดึงข้อมูลเวลาทำการ
-$sql_hours = "SELECT * FROM clinic_hours";
-$result_hours = $conn->query($sql_hours);
-$clinic_hours = [];
-$closed_days = [];
-while ($row = $result_hours->fetch_object()) {
-    $clinic_hours[$row->day_of_week] = [
-        'start_time' => $row->start_time,
-        'end_time' => $row->end_time,
-        'is_closed' => $row->is_closed
-    ];
-    if ($row->is_closed == 1) {
-        $closed_days[] = $row->day_of_week;
-    }
-}
 
 // ดึงข้อมูลการจองที่มีอยู่
 $sql_bookings = "SELECT booking_datetime FROM course_bookings WHERE status IN ('pending', 'confirmed')";
@@ -292,25 +265,46 @@ while ($row = $result->fetch_assoc()) {
 
 /* เพิ่ม responsive design */
 @media (max-width: 768px) {
-    .opd-header {
-        padding: 1rem;
-    }
-
-    .opd-info {
-        grid-template-columns: 1fr;
-    }
-
-    .opd-header .btn {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
-
-    #voucherStatusDisplay {
+    .drawing-container {
         flex-direction: column;
-        align-items: stretch;
-        text-align: center;
+    }
+    
+    #backgroundSelector {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+    }
+    
+    .background-images-container {
+        height: auto;
+        max-height: 150px;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 10px;
+    }
+    
+    #backgroundSelector img {
+        width: 120px;
+        height: 120px;
+        flex-shrink: 0;
+        margin-bottom: 0;
     }
 }
+
+@media (pointer: coarse) {
+    .color-btn, 
+    .action-btn {
+        min-height: 52px;
+        padding: 15px 25px;
+    }
+    
+    .drawing-tools {
+        gap: 15px;
+    }
+}
+
 
 /* เพิ่ม animation สำหรับการโหลดและการเปลี่ยนสถานะ */
 @keyframes fadeIn {
@@ -393,30 +387,40 @@ while ($row = $result->fetch_assoc()) {
         height: 100%;
         background-color: rgba(0,0,0,0.9);
     }
-    .drawing-container {
-        display: flex;
-        height: 100%;
-        max-width: 1600px;
-        margin: 0 auto;
-    }
+.drawing-container {
+    display: flex;
+    height: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    gap: 15px;
+}
     .drawing-tools {
-        width: 200px;
-        background-color: #f0f0f0;
-        padding: 20px;
+        width: 250px;
+        padding: 15px;
         display: flex;
         flex-direction: column;
+        gap: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .drawing-tools h4, #backgroundSelector h4 {
         margin-bottom: 15px;
         color: #333;
     }
-    .color-btn, .action-btn {
-        margin-bottom: 10px;
-        padding: 10px;
+    .color-btn, 
+    .action-btn {
+        min-height: 44px;
+        padding: 12px 20px;
+        font-size: 16px;
+        border-radius: 8px;
         border: none;
-        border-radius: 5px;
-        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         transition: all 0.3s ease;
+        touch-action: manipulation;
     }
     .color-btn:hover, .action-btn:hover {
         transform: translateY(-2px);
@@ -440,30 +444,82 @@ while ($row = $result->fetch_assoc()) {
         border: 1px solid #ddd;
     }
     #backgroundSelector {
-        width: 200px;
-        background-color: #f0f0f0;
-        padding: 20px;
+        width: 250px;
+        height: 100%;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
     }
     .background-images-container {
         flex-grow: 1;
+        height: calc(100vh - 200px);
         overflow-y: auto;
-        margin-bottom: 20px;
+        padding-right: 8px;
+        margin-bottom: 15px;
     }
     #backgroundSelector img {
         width: 100%;
-        margin-bottom: 10px;
-        cursor: pointer;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 15px;
         border: 2px solid transparent;
         transition: all 0.3s ease;
+        cursor: pointer;
     }
     #backgroundSelector img:hover {
-        transform: scale(1.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     #backgroundSelector img.selected {
-        border-color: #0074d9;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.3);
+    }
+    .background-selector-header {
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .background-selector-header h4 {
+        margin: 0;
+        color: #333;
+        font-size: 1.1rem;
+    }
+    .upload-section {
+        margin-top: auto;
+        padding-top: 15px;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .upload-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .upload-btn:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+    }
+
+    .upload-btn i {
+        font-size: 18px;
     }
     .drawing-gallery {
         display: flex;
@@ -616,8 +672,8 @@ while ($row = $result->fetch_assoc()) {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     .color-btn.active {
-        border: 2px solid #fff;
-        box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.5);
+        transform: translateY(-2px);
     }
     .time-slot {
         cursor: pointer;
@@ -745,9 +801,28 @@ while ($row = $result->fetch_assoc()) {
     opacity: 0.7;
 }
 
+.color-btn:active, 
+.action-btn:active {
+    transform: scale(0.95);
+}
 
+.background-images-container::-webkit-scrollbar {
+    width: 8px;
+}
 
+.background-images-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
 
+.background-images-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.background-images-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
 
     </style>
 </head>
@@ -1209,6 +1284,10 @@ let isDrawing = false;
 let currentColor = 'black'; // กำหนดสีเริ่มต้นเป็นสีดำ
 let backgroundImage = new Image();
 
+let lastX = 0;
+let lastY = 0;
+let currentScale = 1;
+
 // เพิ่มตัวแปรสำหรับเก็บสถานะสิทธิ์
 const canEditPart1 = <?php echo json_encode($canEditPart1); ?>;
 const canEditPart2 = <?php echo json_encode($canEditPart2); ?>;
@@ -1507,7 +1586,7 @@ function loadSavedDrawings(opdId) {
                         deleteBtn.className = 'delete-btn';
                         deleteBtn.onclick = (e) => {
                             e.stopPropagation();
-                            deleteImage(drawing.id, imgContainer);
+                            deleteDrawingImage(drawing.id, imgContainer); // เปลี่ยนเป็นใช้ฟังก์ชันใหม่
                         };
                         imgContainer.appendChild(deleteBtn);
                     }
@@ -1677,104 +1756,116 @@ function openDrawingModal() {
         msg_error('คุณไม่มีสิทธิ์ในการวาดภาพ');
         return;
     }
-    document.getElementById('drawingModal').style.display = 'block';
-    canvas = document.getElementById('drawingCanvas');
-    ctx = canvas.getContext('2d');
+
+    const modal = document.getElementById('drawingModal');
+    modal.style.display = 'block';
     
-    // ปรับขนาด canvas ให้พอดีกับ container
-    const container = document.querySelector('.canvas-container');
-    canvas.width = container.clientWidth - 40; // ลบ padding
-    canvas.height = container.clientHeight - 40; // ลบ padding
-
-    // กำหนดสีเริ่มต้นเป็นสีดำ
-    ctx.strokeStyle = currentColor;
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
-
-    // เพิ่ม event listener สำหรับการปรับขนาดหน้าต่าง
-    window.addEventListener('resize', resizeCanvas);
-
-    // ตั้งค่าสีเริ่มต้นเป็นสีดำ
-    changeColor('black');
+    // ให้รอ modal แสดงผลก่อนแล้วค่อย initialize canvas
+    setTimeout(() => {
+        initializeCanvas();
+        // บังคับให้มีการ reflow
+        canvas.style.display = 'none';
+        canvas.offsetHeight;
+        canvas.style.display = 'block';
+    }, 100);
 }
+
 
 function resizeCanvas() {
     const container = document.querySelector('.canvas-container');
-    canvas.width = container.clientWidth - 40;
-    canvas.height = container.clientHeight - 40;
-    // วาดภาพพื้นหลังใหม่ (ถ้ามี)
-    if (backgroundImage.src) {
-        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-    }
+    const dpr = window.devicePixelRatio || 1;
+    
+    // บันทึกข้อมูลภาพปัจจุบัน
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    // ตั้งค่าขนาดใหม่
+    canvas.width = (container.clientWidth - 40) * dpr;
+    canvas.height = (container.clientHeight - 40) * dpr;
+    
+    // กำหนดขนาด CSS
+    canvas.style.width = `${container.clientWidth - 40}px`;
+    canvas.style.height = `${container.clientHeight - 40}px`;
+    
+    // ตั้งค่า scale และ context ใหม่
+    ctx.scale(dpr, dpr);
+    setupContext();
+    
+    // วาดภาพเดิมกลับมา
+    ctx.putImageData(imageData, 0, 0);
 }
 
 function selectBackground(imageSrc, element) {
     if (element) {
-        // Remove 'selected' class from all images
-        document.querySelectorAll('#backgroundSelector img').forEach(img => img.classList.remove('selected'));
-        // Add 'selected' class to clicked image
+        document.querySelectorAll('#backgroundSelector img').forEach(img => {
+            img.classList.remove('selected');
+        });
         element.classList.add('selected');
     }
 
     backgroundImage = new Image();
     backgroundImage.onload = function() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+        drawBackground();
     };
     backgroundImage.src = imageSrc;
 }
 
 function startDrawing(e) {
+    e.preventDefault();
     isDrawing = true;
-    draw(e);
+    const coords = getCoordinates(e);
+    lastX = coords.x;
+    lastY = coords.y;
 }
 
 function draw(e) {
-    if (!isDrawing || !isDrawingModalOpen()) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    if (!isDrawing) return;
+    e.preventDefault();
 
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    const coords = getCoordinates(e);
+    
+    // วาดเส้นตรงๆ แทนการใช้ curve
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(coords.x, coords.y);
+    ctx.stroke();
+
+    lastX = coords.x;
+    lastY = coords.y;
 }
 
 function stopDrawing() {
     isDrawing = false;
-    ctx.beginPath();
+    ctx.beginPath(); // Reset path
 }
 
 function changeColor(color) {
     currentColor = color;
-    if (canvas && ctx) {
-        ctx.strokeStyle = currentColor;
-    }
+    ctx.strokeStyle = color;
     
-    // อัปเดตสถานะปุ่มสี
+    // Reset active state ของปุ่มทั้งหมด
     document.querySelectorAll('.color-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    const activeButton = document.querySelector(`.${color}-btn`);
-    if (activeButton) {
-        activeButton.classList.add('active');
-    }
+    
+    // เพิ่ม active state ให้ปุ่มที่เลือก
+    document.querySelector(`.${color}-btn`).classList.add('active');
 }
 
 function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, canvas.width * dpr, canvas.height * dpr);
+    
     if (backgroundImage.src) {
-        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+        drawBackground();
     }
-    ctx.beginPath();
 }
+
+
+function drawBackground() {
+    const dpr = window.devicePixelRatio || 1;
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width / dpr, canvas.height / dpr);
+}
+
 
 function closeDrawingModal() {
     document.getElementById('drawingModal').style.display = 'none';
@@ -1856,10 +1947,7 @@ function updateUIBasedOnPermissions() {
     $('#showPartTwo').show();
 }
 
-var clinicHours = <?php echo json_encode($clinic_hours); ?>;
-var closedDays = <?php echo json_encode($closed_days); ?>;
-var closedDates = <?php echo json_encode($closed_dates); ?>;
-var bookedSlots = <?php echo json_encode($booked_slots); ?>;
+
 
 // console.log('Clinic Hours:', clinicHours);
 // console.log('Closed Days:', closedDays);
@@ -1869,10 +1957,7 @@ var bookedSlots = <?php echo json_encode($booked_slots); ?>;
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Flatpickr for date selection
     flatpickr.localize(flatpickr.l10ns.th);
-    // const clinicHours = <?php echo json_encode($clinic_hours); ?>;
-    // const closedDays = <?php echo json_encode($closed_days); ?>;
-    // const closedDates = <?php echo json_encode($closed_dates); ?>;
-    // const bookedSlots = <?php echo json_encode($booked_slots); ?>;
+
 
 
     console.log('DOM fully loaded');
@@ -1887,15 +1972,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 function(date) {
                     // Disable closed dates
                     const dateString = date.toISOString().split('T')[0];
-                    if (closedDates.includes(dateString)) {
-                        return true;
-                    }
+                    // if (closedDates.includes(dateString)) {
+                    //     return true;
+                    // }
                     
                     // Disable closed days of the week
-                    const dayOfWeek = date.toLocaleString('en-us', {weekday: 'long'});
-                    if (closedDays.includes(dayOfWeek)) {
-                        return true;
-                    }
+                    // const dayOfWeek = date.toLocaleString('en-us', {weekday: 'long'});
+                    // if (closedDays.includes(dayOfWeek)) {
+                    //     return true;
+                    // }
 
                     // Disable dates not in room_status
                     const formattedDate = formatDateForDatabase(date);
@@ -3180,6 +3265,256 @@ function displayVoucherInfo(voucher) {
 
     // แสดงปุ่มใช้บัตรกำนัล
     document.getElementById('useVoucherBtn').style.display = 'block';
+}
+
+// เพิ่มฟังก์ชันใหม่สำหรับลบรูปวาดการตรวจร่างกายโดยเฉพาะ
+function deleteDrawingImage(imageId, imgContainer) {
+    event.stopPropagation(); // ป้องกันการเปิด modal
+    
+    Swal.fire({
+        title: 'คุณแน่ใจหรือไม่?',
+        text: "คุณต้องการลบรูปภาพนี้ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+            confirmButton: 'btn btn-primary waves-effect waves-light me-1',
+            cancelButton: 'btn btn-danger waves-effect waves-light'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('sql/delete-drawing.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'id=' + imageId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    imgContainer.remove();
+                    // Update hidden input
+                    const savedDrawingsInput = document.getElementById('saved_drawings');
+                    let savedDrawings = JSON.parse(savedDrawingsInput.value || '[]');
+                    savedDrawings = savedDrawings.filter(path => !path.includes(data.deleted_file));
+                    savedDrawingsInput.value = JSON.stringify(savedDrawings);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ลบสำเร็จ!',
+                        text: 'รูปภาพถูกลบเรียบร้อยแล้ว',
+                        customClass: {
+                            confirmButton: 'btn btn-success waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'ไม่สามารถลบรูปภาพได้: ' + data.message,
+                        customClass: {
+                            confirmButton: 'btn btn-danger waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด!',
+                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์',
+                    customClass: {
+                        confirmButton: 'btn btn-danger waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                });
+            });
+        }
+    });
+}
+
+function initializeCanvas() {
+    canvas = document.getElementById('drawingCanvas');
+    ctx = canvas.getContext('2d');
+    
+    function setCanvasSize() {
+        const container = document.querySelector('.canvas-container');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = container.getBoundingClientRect();
+        
+        // กำหนดขนาด canvas
+        canvas.width = (rect.width - 40) * dpr;
+        canvas.height = (rect.height - 40) * dpr;
+        
+        // กำหนดขนาดแสดงผล CSS
+        canvas.style.width = `${rect.width - 40}px`;
+        canvas.style.height = `${rect.height - 40}px`;
+        
+        // ตั้งค่า scale
+        ctx.scale(dpr, dpr);
+        
+        // ตั้งค่า context
+        setupContext();
+        
+        // วาดภาพพื้นหลังใหม่ถ้ามี
+        if (backgroundImage.src) {
+            drawBackground();
+        }
+    }
+
+    // เริ่มต้นตั้งค่า canvas
+    setCanvasSize();
+
+    // จัดการ orientation change
+    window.addEventListener('orientationchange', () => {
+        // รอให้การเปลี่ยน orientation เสร็จสมบูรณ์
+        setTimeout(() => {
+            setCanvasSize();
+            // บังคับให้มีการ reflow
+            canvas.style.display = 'none';
+            canvas.offsetHeight; // trigger reflow
+            canvas.style.display = 'block';
+        }, 300);
+    });
+
+    window.addEventListener('resize', debounce(setCanvasSize, 250));
+
+    addEventListeners();
+}
+
+function setupContext() {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = 2;
+    // เพิ่ม line dash เป็น 0 เพื่อป้องกันเส้นประ
+    ctx.setLineDash([]);
+}
+
+function addEventListeners() {
+    // ป้องกันการ scroll และ zoom
+    canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+    }, { passive: false });
+    
+    canvas.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, { passive: false });
+    
+    // เพิ่ม event listeners สำหรับการวาด
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
+}
+
+function preventDefault(e) {
+    e.preventDefault();
+}
+
+function getCoordinates(e) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    let clientX, clientY;
+
+    if (e.type.includes('touch')) {
+        const touch = e.touches[0] || e.changedTouches[0];
+        clientX = touch.clientX;
+        clientY = touch.clientY;
+    } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+    }
+
+    // คำนวณพิกัดแบบตรงไปตรงมา
+    return {
+        x: ((clientX - rect.left) * canvas.width) / rect.width / dpr,
+        y: ((clientY - rect.top) * canvas.height) / rect.height / dpr
+    };
+}
+
+function startDrawingTouch(e) {
+    isDrawing = true;
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    lastX = (touch.clientX - rect.left) / currentScale;
+    lastY = (touch.clientY - rect.top) / currentScale;
+}
+
+function startDrawingMouse(e) {
+    isDrawing = true;
+    const rect = canvas.getBoundingClientRect();
+    lastX = (e.clientX - rect.left) / currentScale;
+    lastY = (e.clientY - rect.top) / currentScale;
+}
+
+function drawTouch(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / currentScale;
+    const y = (touch.clientY - rect.top) / currentScale;
+    
+    drawLine(lastX, lastY, x, y);
+    
+    lastX = x;
+    lastY = y;
+}
+
+function drawMouse(e) {
+    if (!isDrawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / currentScale;
+    const y = (e.clientY - rect.top) / currentScale;
+    
+    drawLine(lastX, lastY, x, y);
+    
+    lastX = x;
+    lastY = y;
+}
+
+function drawLine(fromX, fromY, toX, toY) {
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+}
+
+function stopDrawing() {
+    isDrawing = false;
+}
+
+function changeColor(color) {
+    currentColor = color;
+    ctx.strokeStyle = color;
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 </script>
 </body>

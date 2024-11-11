@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../chk-session.php';
+// include '../chk-session.php';
 require '../../dbcon.php';
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';

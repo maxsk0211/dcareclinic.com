@@ -59,6 +59,60 @@
     <!-- sweet Alerts 2 -->
     <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
+<style>
+.image-card {
+  position: relative;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.image-card:hover {
+  transform: translateY(-2px);
+}
+
+.image-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.image-card .overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.7);
+  padding: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.image-card .filename {
+  color: white;
+  font-size: 0.875rem;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-card .delete-btn {
+  background: none;
+  border: none;
+  color: #ff4d4f;
+  padding: 0.25rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.image-card .delete-btn:hover {
+  color: #ff7875;
+}
+</style>
   </head>
 
   <body>
@@ -91,9 +145,15 @@
               <div class="card">
               <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">ข้อมูลสาขาในระบบทั้งหมด</h5>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBranchModal">
-                  <i class="ri-add-line me-1"></i> เพิ่มสาขา
-                </button>
+                <div>
+                  <button type="button" class="btn btn-secondary me-2" data-bs-toggle="modal" data-bs-target="#imageManagementModal">
+                    <i class="ri-image-line me-1"></i> จัดการรูปภาพ
+                  </button>
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBranchModal">
+                    <i class="ri-add-line me-1"></i> เพิ่มสาขา
+                  </button>
+                </div>
+
               </div>
 
               <div class="card-datatable table-responsive">
@@ -284,24 +344,51 @@
       </form>
     </div>
   </div>
+
+  <!-- Image Management Modal -->
+  <div class="modal fade" id="imageManagementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">จัดการรูปภาพ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Upload Form -->
+          <form id="uploadImageForm" class="mb-4" enctype="multipart/form-data">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <div class="form-group">
+                  <label class="form-label">เพิ่มรูปภาพใหม่</label>
+                  <input type="file" class="form-control" name="new_image" accept="image/*" required>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <button type="submit" class="btn btn-primary mt-4">
+                  <i class="ri-upload-2-line me-1"></i> อัพโหลด
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Image Gallery -->
+          <div class="row" id="imageGallery">
+            <!-- Images will be loaded here dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
-    <!-- build:js assets/vendor/js/core.js -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
     <script src="../assets/vendor/js/bootstrap.js"></script>
-    <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="../assets/vendor/libs/hammer/hammer.js"></script>
-
     <script src="../assets/vendor/js/menu.js"></script>
-
-    <!-- endbuild -->
-
-    <!-- Vendors JS -->
-
-    <!-- Main JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../assets/js/main.js"></script>
 
     <!-- Page JS -->
@@ -387,7 +474,127 @@
     }
 
 
+$(document).ready(function() {
+  // Load images when modal is opened
+  $('#imageManagementModal').on('show.bs.modal', loadImages);
 
+  // Handle image upload
+  $('#uploadImageForm').on('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    $.ajax({
+      url: 'sql/upload_image.php',
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        if (response.success) {
+          loadImages();
+          $('#uploadImageForm')[0].reset();
+          Swal.fire({
+            icon: 'success',
+            title: 'อัพโหลดสำเร็จ',
+            text: 'อัพโหลดรูปภาพเรียบร้อยแล้ว',
+            showConfirmButton: false,
+            timer: 1500
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: response.message
+          });
+        }
+      },
+      error: function() {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: 'ไม่สามารถอัพโหลดรูปภาพได้'
+        });
+      }
+    });
+  });
+});
+
+// Load images function
+function loadImages() {
+  $.ajax({
+    url: 'sql/get_images.php',
+    type: 'GET',
+    dataType: 'json', // ระบุว่าต้องการข้อมูลแบบ JSON
+    success: function(response) {
+      const gallery = $('#imageGallery');
+      gallery.empty();
+      
+      if (response.success && response.images) {
+        response.images.forEach(function(image) {
+          gallery.append(`
+            <div class="col-md-4">
+              <div class="image-card">
+                <img src="../img/drawing/default/${image}" alt="${image}">
+                <div class="overlay">
+                  <p class="filename">${image}</p>
+                  <button class="delete-btn" onclick="deleteImage('${image}')">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `);
+        });
+      } else {
+        gallery.append('<div class="col-12 text-center">ไม่พบรูปภาพ</div>');
+      }
+    },
+    error: function(xhr, status, error) {
+      console.error('Error:', error);
+      const gallery = $('#imageGallery');
+      gallery.empty().append('<div class="col-12 text-center text-danger">เกิดข้อผิดพลาดในการโหลดรูปภาพ</div>');
+    }
+  });
+}
+
+// Delete image function
+function deleteImage(filename) {
+  Swal.fire({
+    title: 'คุณแน่ใจหรือไม่?',
+    text: "การลบรูปภาพไม่สามารถกู้คืนได้!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ใช่, ลบเลย!',
+    cancelButtonText: 'ยกเลิก',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $.ajax({
+        url: 'sql/delete_image.php',
+        type: 'POST',
+        data: { filename: filename },
+        success: function(response) {
+          if (response.success) {
+            loadImages();
+            Swal.fire({
+              icon: 'success',
+              title: 'ลบสำเร็จ',
+              text: 'ลบรูปภาพเรียบร้อยแล้ว',
+              showConfirmButton: false,
+              timer: 1500
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: response.message
+            });
+          }
+        }
+      });
+    }
+  });
+}
 
 
 
