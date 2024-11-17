@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-include '../chk-session.php';
+// include '../chk-session.php';
 require '../../dbcon.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -17,8 +17,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $cus_email = mysqli_real_escape_string($conn, $_POST['cus_email']);
     $cus_blood = mysqli_real_escape_string($conn, $_POST['cus_blood']);
     $cus_tel = mysqli_real_escape_string($conn, $_POST['cus_tel']);
-    // $cus_drugallergy = mysqli_real_escape_string($conn, $_POST['cus_drugallergy']);
-    // $cus_congenital = mysqli_real_escape_string($conn, $_POST['cus_congenital']);
+    $cus_drugallergy = mysqli_real_escape_string($conn, $_POST['cus_drugallergy']);
+    $cus_congenital = mysqli_real_escape_string($conn, $_POST['cus_congenital']);
+
+    $occupation = mysqli_real_escape_string($conn, $_POST['occupation']);
+    $height = mysqli_real_escape_string($conn, $_POST['height']);
+    $weight = mysqli_real_escape_string($conn, $_POST['weight']);
+    $emergency_name = mysqli_real_escape_string($conn, $_POST['emergency_name']);
+    $emergency_tel = mysqli_real_escape_string($conn, $_POST['emergency_tel']);
+    $emergency_note = mysqli_real_escape_string($conn, $_POST['emergency_note']);
+
     // $cus_remark = mysqli_real_escape_string($conn, $_POST['cus_remark']);
     $cus_address = mysqli_real_escape_string($conn, $_POST['cus_address']);
     $cus_district = mysqli_real_escape_string($conn, $_POST['cus_district']);
@@ -80,8 +88,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         cus_email, 
         cus_blood, 
         cus_tel, 
-        -- cus_drugallergy, 
-        -- cus_congenital, 
+        cus_drugallergy, 
+        cus_congenital, 
+
+        occupation,
+        height,
+        weight,
+        emergency_name,
+        emergency_tel,
+        emergency_note,
         -- cus_remark, 
         cus_address, 
         cus_district, 
@@ -101,8 +116,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         '$cus_email', 
         '$cus_blood', 
         '$cus_tel', 
-        -- '$cus_drugallergy', 
-        -- '$cus_congenital', 
+        '$cus_drugallergy', 
+        '$cus_congenital', 
+
+        '$occupation',
+        '$height',
+        '$weight',
+        '$emergency_name',
+        '$emergency_tel',
+        '$emergency_note',
         -- '$cus_remark', 
         '$cus_address', 
         '$cus_district', 

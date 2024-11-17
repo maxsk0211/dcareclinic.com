@@ -287,14 +287,20 @@ function formatHN($id) {
                                 <label for="cus_blood" class="form-label">กรุ๊ปเลือด:</label>
                                 <select class="form-select border-primary" id="cus_blood" name="cus_blood" required>
                                     <option value="" selected disabled>โปรดเลือก</option>
-                                    <option value="A+">A+</option>
+<!--                                     <option value="A+">A+</option>
                                     <option value="A-">A-</option>
                                     <option value="B+">B+</option>
                                     <option value="B-">B-</option>
                                     <option value="O+">O+</option>
                                     <option value="O-">O-</option>
                                     <option value="AB+">AB+</option>
-                                    <option value="AB-">AB-</option>
+                                    <option value="AB-">AB-</option> -->
+
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="O">O</option>
+                                    <option value="AB">AB</option>
+                                    <option value="N/A">N/A</option>
                                 </select>
                             </div>
                         </div>
@@ -304,7 +310,7 @@ function formatHN($id) {
                                 <input type="tel" class="form-control border-primary" id="cus_tel" name="cus_tel" required>
                             </div>
                         </div>
-<!--                         <div class="col-md-6">
+                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="cus_drugallergy" class="form-label">ประวัติการแพ้ยา:</label>
                                 <input type="text" class="form-control border-primary" id="cus_drugallergy" name="cus_drugallergy">
@@ -316,7 +322,27 @@ function formatHN($id) {
                                 <textarea class="form-control border-primary" id="cus_congenital" name="cus_congenital"></textarea>
                             </div>
                         </div>
-                        <div class="col-12">
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="occupation" class="form-label">อาชีพ:</label>
+                                <input type="text" name="occupation" id="occupation" class="form-control border-primary">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="height" class="form-label">ส่วนสูง:</label>
+                                <input type="text" name="height" id="height" class="form-control border-primary">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="weight" class="form-label">น้ำหนัก:</label>
+                                <input type="text" name="weight" id="weight" class="form-control border-primary">
+                            </div>
+                        </div>
+
+<!--                    <div class="col-12">
                             <div class="mb-3">
                                 <label for="cus_remark" class="form-label">หมายเหตุ:</label>
                                 <textarea class="form-control border-primary" id="cus_remark" name="cus_remark"></textarea>
@@ -350,6 +376,25 @@ function formatHN($id) {
                             <div class="mb-3">
                                 <label for="cus_postal_code" class="form-label">รหัสไปรษณีย์:</label>
                                 <input type="text" class="form-control border-primary" id="cus_postal_code" name="cus_postal_code">
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="emergency_name" class="form-label">ชื่อผู้ติดต่อฉุกเฉิน:</label>
+                                <input type="text" class="form-control border-primary" id="emergency_name" name="emergency_name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="emergency_tel" class="form-label">เบอร์โทรศัพท์:</label>
+                                <input type="text" class="form-control border-primary" id="emergency_tel" name="emergency_tel">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="emergency_note" class="form-label">หมายเหตุ:</label>
+                                <textarea class="form-control border-primary" id="emergency_note" name="emergency_note"></textarea>
                             </div>
                         </div>
 <!--                         <div class="col-md-6">
@@ -426,14 +471,14 @@ function formatHN($id) {
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_id_card_number" class="form-label">เลขบัตรประจำตัวประชาชน:</label>
-                                        <input type="text" class="form-control" id="cus_id_card_number" name="cus_id_card_number" value="<?= $row->cus_id_card_number ?>" required>
+                                        <input type="text" class="form-control border-primary" id="cus_id_card_number" name="cus_id_card_number" value="<?= $row->cus_id_card_number ?>" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="cus_birthday" class="form-label">วัน/เดือน/ปี เกิด (พ.ศ.):</label>
+                                        <label for="cus_birthday" class="form-label border-primary">วัน/เดือน/ปี เกิด (พ.ศ.):</label>
                                         <div class="input-group date" id="cus_birthday_datepicker<?= $row->cus_id ?>" data-provide="datepicker" data-date-language="th" data-date-format="dd/mm/yyyy">
-                                            <input type="text" class="form-control date-mask" id="cus_birthday" name="cus_birthday" 
+                                            <input type="text" class="form-control date-mask border-primary" id="cus_birthday" name="cus_birthday" 
                                                    value="<?php 
                                                         // แปลงวันที่จากฐานข้อมูล (YYYY-MM-DD) เป็น DateTime object
                                                         $date = new DateTime($row->cus_birthday); 
@@ -451,19 +496,19 @@ function formatHN($id) {
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_firstname" class="form-label">ชื่อ:</label>
-                                        <input type="text" class="form-control" id="cus_firstname" name="cus_firstname" value="<?= $row->cus_firstname ?>" required>
+                                        <input type="text" class="form-control border-primary" id="cus_firstname" name="cus_firstname" value="<?= $row->cus_firstname ?>" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_lastname" class="form-label">นามสกุล:</label>
-                                        <input type="text" class="form-control" id="cus_lastname" name="cus_lastname" value="<?= $row->cus_lastname ?>" required>
+                                        <input type="text" class="form-control border-primary" id="cus_lastname" name="cus_lastname" value="<?= $row->cus_lastname ?>" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_title" class="form-label">คำนำหน้าชื่อ:</label>
-                                        <select class="form-select" id="cus_title" name="cus_title" required>
+                                        <select class="form-select border-primary" id="cus_title" name="cus_title" required>
                                             <option value="นาย" <?= ($row->cus_title == 'นาย') ? 'selected' : '' ?>>นาย</option>
                                             <option value="นาง" <?= ($row->cus_title == 'นาง') ? 'selected' : '' ?>>นาง</option>
                                             <option value="นางสาว" <?= ($row->cus_title == 'นางสาว') ? 'selected' : '' ?>>นางสาว</option>
@@ -473,7 +518,7 @@ function formatHN($id) {
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_gender" class="form-label">เพศ:</label>
-                                        <select class="form-select" id="cus_gender" name="cus_gender" required>
+                                        <select class="form-select border-primary" id="cus_gender" name="cus_gender" required>
                                             <option value="ชาย" <?= ($row->cus_gender == 'ชาย') ? 'selected' : '' ?>>ชาย</option>
                                             <option value="หญิง" <?= ($row->cus_gender == 'หญิง') ? 'selected' : '' ?>>หญิง</option>
                                         </select>
@@ -482,7 +527,7 @@ function formatHN($id) {
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_nickname" class="form-label">ชื่อเล่น:</label>
-                                        <input type="text" class="form-control" id="cus_nickname" name="cus_nickname" value="<?= $row->cus_nickname ?>">
+                                        <input type="text" class="form-control border-primary" id="cus_nickname" name="cus_nickname" value="<?= $row->cus_nickname ?>">
                                     </div>
                                 </div>
 <!--                                 <div class="col-md-6">
@@ -494,44 +539,62 @@ function formatHN($id) {
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_email" class="form-label">อีเมล:</label>
-                                        <input type="email" class="form-control" id="cus_email" name="cus_email" value="<?= $row->cus_email ?>">
+                                        <input type="email" class="form-control border-primary" id="cus_email" name="cus_email" value="<?= $row->cus_email ?>">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_blood" class="form-label">กรุ๊ปเลือด:</label>
-                                        <select class="form-select" id="cus_blood" name="cus_blood">
-                                            <option value="" disabled>โปรดเลือก</option>
-                                            <option value="A+" <?= ($row->cus_blood == 'A+') ? 'selected' : '' ?>>A+</option>
-                                            <option value="A-" <?= ($row->cus_blood == 'A-') ? 'selected' : '' ?>>A-</option>
-                                            <option value="B+" <?= ($row->cus_blood == 'B+') ? 'selected' : '' ?>>B+</option>
-                                            <option value="B-" <?= ($row->cus_blood == 'B-') ? 'selected' : '' ?>>B-</option>
-                                            <option value="O+" <?= ($row->cus_blood == 'O+') ? 'selected' : '' ?>>O+</option>
-                                            <option value="O-" <?= ($row->cus_blood == 'O-') ? 'selected' : '' ?>>O-</option>
-                                            <option value="AB+" <?= ($row->cus_blood == 'AB+') ? 'selected' : '' ?>>AB+</option>
-                                            <option value="AB-" <?= ($row->cus_blood == 'AB-') ? 'selected' : '' ?>>AB-</option>
+                                        <select class="form-select border-primary" id="cus_blood" name="cus_blood">
+                                            <option value="" disabled selected>โปรดเลือก</option>
+
+
+                                            <option value="A" <?= ($row->cus_blood == 'A') ? 'selected' : '' ?>>A</option>
+                                            <option value="B" <?= ($row->cus_blood == 'B') ? 'selected' : '' ?>>B</option>
+                                            <option value="O" <?= ($row->cus_blood == 'O') ? 'selected' : '' ?>>O</option>
+                                            <option value="AB" <?= ($row->cus_blood == 'AB') ? 'selected' : '' ?>>AB</option>
+                                            <option value="N/A" <?= ($row->cus_blood == 'N/A') ? 'selected' : '' ?>>N/A</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_tel" class="form-label">หมายเลขโทรศัพท์:</label>
-                                        <input type="tel" class="form-control" id="cus_tel" name="cus_tel" value="<?= $row->cus_tel ?>" required>
+                                        <input type="tel" class="form-control border-primary" id="cus_tel" name="cus_tel" value="<?= $row->cus_tel ?>" required>
                                     </div>
                                 </div>
-<!--                                 <div class="col-md-6">
+                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_drugallergy" class="form-label">ประวัติการแพ้ยา:</label>
-                                        <input type="text" class="form-control" id="cus_drugallergy" name="cus_drugallergy" value="<?= $row->cus_drugallergy ?>">
+                                        <input type="text" class="form-control border-primary" id="cus_drugallergy" name="cus_drugallergy" value="<?= $row->cus_drugallergy ?>">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_congenital" class="form-label">โรคประจำตัว:</label>
-                                        <textarea class="form-control" id="cus_congenital" name="cus_congenital"><?= $row->cus_congenital ?></textarea>
+                                        <textarea class="form-control border-primary" id="cus_congenital" name="cus_congenital"><?= $row->cus_congenital ?></textarea>
                                     </div>
                                 </div>
-                                <div class="col-12">
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="occupation" class="form-label">อาชีพ:</label>
+                                        <input type="text" name="occupation" id="occupation" class="form-control border-primary" value="<?= $row->occupation ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="height" class="form-label">ส่วนสูง:</label>
+                                        <input type="text" name="height" id="height" class="form-control border-primary" value="<?= $row->height ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="weight" class="form-label">น้ำหนัก:</label>
+                                        <input type="text" name="weight" id="weight" class="form-control border-primary" value="<?= $row->weight ?>">
+                                    </div>
+                                </div>
+<!--                            <div class="col-12">
                                     <div class="mb-3">
                                         <label for="cus_remark" class="form-label">หมายเหตุ:</label>
                                         <textarea class="form-control" id="cus_remark" name="cus_remark"><?= $row->cus_remark ?></textarea>
@@ -540,40 +603,50 @@ function formatHN($id) {
                                 <div class="col-12">
                                     <div class="mb-3">
                                         <label for="cus_address" class="form-label">ที่อยู่:</label>
-                                        <textarea class="form-control" id="cus_address" name="cus_address" ><?= $row->cus_address ?></textarea>
+                                        <textarea class="form-control border-primary" id="cus_address" name="cus_address" ><?= $row->cus_address ?></textarea>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="cus_district" class="form-label">ตำบล:</label>
-                                        <input type="text" class="form-control" id="cus_district" name="cus_district" value="<?= $row->cus_district ?>" >
+                                        <input type="text" class="form-control border-primary" id="cus_district" name="cus_district" value="<?= $row->cus_district ?>" >
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="cus_city" class="form-label">อำเภอ:</label>
-                                        <input type="text" class="form-control" id="cus_city" name="cus_city" value="<?= $row->cus_city ?>" >
+                                        <input type="text" class="form-control border-primary" id="cus_city" name="cus_city" value="<?= $row->cus_city ?>" >
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="cus_province" class="form-label">จังหวัด:</label>
-                                        <input type="text" class="form-control" id="cus_province" name="cus_province" value="<?= $row->cus_province ?>" >
+                                        <input type="text" class="form-control border-primary" id="cus_province" name="cus_province" value="<?= $row->cus_province ?>" >
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="cus_postal_code" class="form-label">รหัสไปรษณีย์:</label>
-                                        <input type="text" class="form-control" id="cus_postal_code" name="cus_postal_code" value="<?= $row->cus_postal_code ?>" >
+                                        <input type="text" class="form-control border-primary" id="cus_postal_code" name="cus_postal_code" value="<?= $row->cus_postal_code ?>" >
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_name" class="form-label">ชื่อผู้ติดต่อฉุกเฉิน:</label>
+                                        <input type="text" class="form-control border-primary" id="emergency_name" name="emergency_name" value="<?= $row->emergency_name ?>">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="cus_image" class="form-label">รูปภาพ:</label>
-                                        <!-- <input type="file" class="form-control" id="line_picture_url" name="line_picture_url"> -->
-                                        <?php if (!empty($row->line_picture_url)): ?>
-                                            <img src="<?= $row->line_picture_url ?>" alt="รูปภาพลูกค้า" width="100">
-                                        <?php endif; ?>
+                                        <label for="emergency_tel" class="form-label">เบอร์โทรศัพท์:</label>
+                                        <input type="text" class="form-control border-primary" id="emergency_tel" name="emergency_tel" value="<?= $row->emergency_tel ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_note" class="form-label">หมายเหตุ:</label>
+                                        <textarea class="form-control border-primary" id="emergency_note" name="emergency_note"><?= $row->emergency_note ?></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -581,8 +654,7 @@ function formatHN($id) {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                        <button type="submit"   
- class="btn btn-primary" form="editCustomerForm<?= $row->cus_id ?>">บันทึก</button>
+                        <button type="submit" class="btn btn-primary" form="editCustomerForm<?= $row->cus_id ?>">บันทึก</button>
                     </div>
                 </div>
             </div>

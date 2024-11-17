@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../chk-session.php';
+// include '../chk-session.php';
 require '../../dbcon.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id'])) {

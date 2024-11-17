@@ -1,6 +1,6 @@
 <?php 
   session_start();
-  require '../chk-session.php';
+  // require '../chk-session.php';
   require '../../dbcon.php';
 
 
