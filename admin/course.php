@@ -3,6 +3,35 @@
   
   include 'chk-session.php';
   require '../dbcon.php';
+
+  // ดึงข้อมูลประวัติการแก้ไข
+$sql_logs = "SELECT al.*, u.users_fname, u.users_lname 
+             FROM activity_logs al
+             LEFT JOIN users u ON al.user_id = u.users_id 
+             WHERE al.entity_type = 'course'
+             ORDER BY al.created_at DESC";
+$result_logs = $conn->query($sql_logs);
+
+if (!$result_logs) {
+    die("Error fetching logs: " . $conn->error);
+}
+// เพิ่มฟังก์ชันนี้ไว้ด้านบนของไฟล์ course.php
+function convertToThaiDate($date) {
+    $thai_months = [
+        1 => 'ม.ค.', 2 => 'ก.พ.', 3 => 'มี.ค.', 4 => 'เม.ย.', 5 => 'พ.ค.', 6 => 'มิ.ย.',
+        7 => 'ก.ค.', 8 => 'ส.ค.', 9 => 'ก.ย.', 10 => 'ต.ค.', 11 => 'พ.ย.', 12 => 'ธ.ค.'
+    ];
+
+    $date_parts = explode(' ', $date);
+    $time = isset($date_parts[1]) ? $date_parts[1] : '';
+    $date_parts = explode('-', $date_parts[0]);
+    
+    $day = intval($date_parts[2]);
+    $month = $thai_months[intval($date_parts[1])];
+    $year = intval($date_parts[0]) + 543;
+
+    return "$day $month $year" . ($time ? " $time" : "");
+}
  ?>
 
 <!doctype html>
@@ -151,6 +180,21 @@
   .text-warning:hover, .text-danger:hover {
     opacity: 0.7;
   }
+      #historyTable thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    #historyTable tbody tr:hover {
+        background-color: rgba(0,0,0,.02);
+        cursor: pointer;
+    }
+    #historyModal .modal-body {
+        padding: 1.5rem;
+    }
+    #historyTable .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.8em;
+    }
 </style>
   </head>
 
@@ -308,6 +352,11 @@
                 
 
   <div class="card-body">
+    <div class="text-end my-2">
+      <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#historyModal">
+          <i class="ri-history-line me-2"></i> ประวัติการแก้ไข
+      </button>
+    </div>
     <div class="table-responsive">
       <table id="coursesTable" class="table table-hover">
           <thead>
@@ -376,7 +425,7 @@
             </td>
             <td class="text-center">
                 <a href="#" class="text-warning" data-bs-toggle="modal" data-bs-target="#editCourseModal<?= $row->course_id ?>"><i class="ri-edit-box-line"></i></a>
-                <a href="" class="text-danger" onClick="confirmDelete('sql/course-delete.php?id=<?php echo $row->course_id; ?>'); return false;"><i class="ri-delete-bin-6-line"></i></a>
+                <a href="#" class="text-danger" onClick="confirmDelete(<?php echo $row->course_id; ?>); return false;"><i class="ri-delete-bin-6-line"></i></a>
             </td>
         </tr>
         <!-- update -->
@@ -555,10 +604,84 @@
     <div class="drag-target"></div>
 
     <!--/ Layout wrapper -->
-
+<!-- Modal แสดงประวัติ -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">ประวัติการแก้ไขข้อมูลคอร์ส</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่-เวลา</th>
+                                <th>การดำเนินการ</th>
+                                <th>ผู้ดำเนินการ</th>
+                                <th>รายละเอียด</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while($log = $result_logs->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo convertToThaiDate($log['created_at']); ?></td>
+                                    <td>
+                                        <?php
+                                        $action_class = '';
+                                        $action_text = '';
+                                        switch($log['action']) {
+                                            case 'update':
+                                                $action_class = 'warning';
+                                                $action_text = 'แก้ไขข้อมูล';
+                                                break;
+                                            case 'delete':
+                                                $action_class = 'danger';
+                                                $action_text = 'ลบข้อมูล';
+                                                break;
+                                            default:
+                                                $action_class = 'primary';
+                                                $action_text = $log['action'];
+                                        }
+                                        ?>
+                                        <span class="badge bg-<?php echo $action_class; ?>"><?php echo $action_text; ?></span>
+                                    </td>
+                                    <td><?php echo $log['users_fname'] . ' ' . $log['users_lname']; ?></td>
+                                    <td>
+                                        <?php
+                                        $details = json_decode($log['details'], true);
+                                        if ($details && is_array($details)) {
+                                            if (isset($details['reason'])) {
+                                                echo "รหัสคอร์ส: " . htmlspecialchars($details['deleted_data']['course_id']) . "<br>";
+                                                echo "เหตุผล: " . htmlspecialchars($details['reason']) . "<br>";
+                                                echo "คอร์สที่ลบ: " . htmlspecialchars($details['deleted_data']['course_name']);
+                                            }
+                                            if (isset($details['changes'])) {
+                                                echo "รหัสคอร์ส: " . htmlspecialchars($details['course_code']) . "<br>";
+                                                echo "คอร์ส: " . htmlspecialchars($details['course_name']) . "<br>";
+                                                foreach($details['changes'] as $field => $change) {
+                                                    echo htmlspecialchars($field) . ": " . 
+                                                         htmlspecialchars($change['from']) . " → " . 
+                                                         htmlspecialchars($change['to']) . "<br>";
+                                                }
+                                            }
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
+    <!-- <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" /> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- build:js assets/vendor/js/core.js -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -604,6 +727,23 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
+              // Initialize history table
+    $('#historyTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
+        },
+        "order": [[0, "desc"]], // เรียงตามวันที่ล่าสุด
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"]],
+    });
+
+    // เพิ่ม event listener สำหรับ historyModal
+    $('#historyModal').on('shown.bs.modal', function () {
+        $($.fn.dataTable.tables(true)).DataTable()
+            .columns.adjust()
+            .responsive.recalc();
+    });
+
  
     // ตรวจสอบวันที่เมื่อมีการเปลี่ยนแปลงค่าใน input
     $('#course_start, #course_end').on('input', function() {
@@ -672,27 +812,80 @@
 
 
 
-      // ลบข้อมูล
-          function confirmDelete(url) {
-           Swal.fire({
-              title: 'คุณแน่ใจหรือไม่ที่จะลบข้อมูล?',
-              text: "การลบจะทำให้ข้อมูลหาย ไม่สามารถกู้คืนมาได้!",
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
-              customClass: {
-                confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
-                cancelButton: 'btn btn-outline-secondary waves-effect'
-              },
-              buttonsStyling: false
-            }).then((result) => {
-              if (result.isConfirmed) {
-                top.location = url;
-              }
+    // ลบข้อมูล
+function confirmDelete(courseId) {
+    Swal.fire({
+        title: 'ยืนยันการลบข้อมูล',
+        html: `
+            <form id="deleteForm">
+                <div class="mb-3">
+                    <label for="password" class="form-label">กรุณายืนยันรหัสผ่าน:</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reason" class="form-label">เหตุผลในการลบ:</label>
+                    <textarea class="form-control" id="reason" rows="3" 
+                             placeholder="กรุณาระบุเหตุผลในการลบ" required></textarea>
+                </div>
+            </form>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ยืนยันการลบ',
+        cancelButtonText: 'ยกเลิก',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            const password = document.getElementById('password').value;
+            const reason = document.getElementById('reason').value;
+            
+            if (!password || !reason) {
+                Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return false;
+            }
+
+            const formData = new FormData();
+            formData.append('course_id', courseId); // ส่ง course_id โดยตรง
+            formData.append('password', password);
+            formData.append('reason', reason);
+
+            return fetch('sql/course-delete.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
+                }
+                return data;
+            })
+            .catch(error => {
+                throw new Error(error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
             });
-          };
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                icon: 'success',
+                title: 'ลบข้อมูลสำเร็จ',
+                text: 'ข้อมูลคอร์สถูกลบเรียบร้อยแล้ว',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                location.reload();
+            });
+        }
+    }).catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: error.message
+        });
+    });
+}
 
     // modal insert error
 

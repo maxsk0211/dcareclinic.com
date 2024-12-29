@@ -278,15 +278,18 @@
               <div class="card border-2 border-primary">
                 <div class="card mb-4">
                   <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 text-white">ข้อมูลยาในระบบทั้งหมด</h5>
-                    <div>
-                      <button type="button" class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#addDrugModal">
-                        <i class="ri-medicine-bottle-line me-1"></i> เพิ่มยา
-                      </button>
-                      <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addUnitModal">
-                        <i class="ri-scales-line me-1"></i> จัดการหน่วยนับ
-                      </button>
-                    </div>
+                      <h5 class="card-title mb-0 text-white">ข้อมูลยาในระบบทั้งหมด</h5>
+                      <div>
+                          <button type="button" class="btn btn-danger me-2" onclick="showDrugHistory()">
+                              <i class="ri-history-line me-1"></i> ประวัติการเปลี่ยนแปลง
+                          </button>
+                          <button type="button" class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#addDrugModal">
+                              <i class="ri-medicine-bottle-line me-1"></i> เพิ่มยา
+                          </button>
+                          <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                              <i class="ri-scales-line me-1"></i> จัดการหน่วยนับ
+                          </button>
+                      </div>
                   </div>
                 </div>
 
@@ -521,8 +524,10 @@ function formatId($id) {
                       <a href="#" class="text-primary me-2" data-bs-toggle="modal" data-bs-target="#editDrugModal<?php echo $row->drug_id; ?>">
                         <i class="ri-edit-line"></i>
                       </a>
-                      <a href="#" class="text-danger" onClick="confirmDelete('sql/drug-delete.php?id=<?php echo $row->drug_id; ?>'); return false;">
-                        <i class="ri-delete-bin-6-line"></i>
+                      <a href="#" class="text-danger" 
+                         onClick="confirmDelete(<?php echo $row->drug_id; ?>); return false;"
+                         data-id="<?php echo $row->drug_id; ?>">
+                          <i class="ri-delete-bin-6-line"></i>
                       </a>
                     </td>
                 </tr>
@@ -665,6 +670,45 @@ function formatId($id) {
     <!-- Drag Target Area To SlideIn Menu On Small Screens -->
     <div class="drag-target"></div>
 
+
+<!-- เพิ่มที่ส่วนท้ายของหน้า ก่อนปิด body -->
+<div class="modal fade" id="drugHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ประวัติการเปลี่ยนแปลงข้อมูลยา</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <select id="actionFilter" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        <option value="create">เพิ่มข้อมูล</option>
+                        <option value="update">แก้ไขข้อมูล</option>
+                        <option value="delete">ลบข้อมูล</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>การกระทำ</th>
+                                <th>ชื่อยา</th>
+                                <th>รายละเอียด</th>
+                                <th>ผู้ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drugHistoryTableBody">
+                            <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!--/ Layout wrapper -->
 
     <!-- Core JS -->
@@ -709,33 +753,194 @@ function formatId($id) {
 
 
     <script type="text/javascript">
+function showDrugHistory() {
+    // แสดง loading
+    const tableBody = $('#drugHistoryTableBody');
+    tableBody.html('<tr><td colspan="5" class="text-center"><div class="spinner-border text-primary"></div></td></tr>');
+    
+    $('#drugHistoryModal').modal('show');
 
+    // ดึงข้อมูลประวัติ
+    loadDrugHistory();
+}
+
+function loadDrugHistory(action = '') {
+    $.ajax({
+        url: 'sql/get-drug-history.php',
+        type: 'GET',
+        data: { action: action },
+        success: function(response) {
+            if (response.success) {
+                updateDrugHistoryTable(response.data);
+            } else {
+                $('#drugHistoryTableBody').html(`
+                    <tr>
+                        <td colspan="5" class="text-center text-danger">
+                            ${response.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล'}
+                        </td>
+                    </tr>
+                `);
+            }
+        },
+        error: function() {
+            $('#drugHistoryTableBody').html(`
+                <tr>
+                    <td colspan="5" class="text-center text-danger">
+                        ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้
+                    </td>
+                </tr>
+            `);
+        }
+    });
+}
+
+function updateDrugHistoryTable(data) {
+    const tableBody = $('#drugHistoryTableBody');
+    tableBody.empty();
+
+    if (!data || data.length === 0) {
+        tableBody.html(`
+            <tr>
+                <td colspan="5" class="text-center">ไม่พบประวัติการเปลี่ยนแปลง</td>
+            </tr>
+        `);
+        return;
+    }
+
+    // ฟังก์ชันช่วยจัดรูปแบบรหัสยา
+    const formatDrugId = (id) => {
+        return id ? `D-${String(id).padStart(6, '0')}` : '';
+    };
+
+    data.forEach(item => {
+        const actionMap = {
+            'create': '<span class="badge bg-success">เพิ่มข้อมูล</span>',
+            'update': '<span class="badge bg-warning">แก้ไขข้อมูล</span>',
+            'delete': '<span class="badge bg-danger">ลบข้อมูล</span>'
+        };
+
+        let detailsHtml = '';
+        let drugInfo = '';
+
+        // จัดการแสดงข้อมูลตามประเภทการกระทำ
+        if (item.action === 'update' && item.details.changes) {
+            detailsHtml = '<ul class="mb-0">';
+            Object.entries(item.details.changes).forEach(([field, change]) => {
+                detailsHtml += `<li><strong>${field}:</strong> ${change.from} ➜ ${change.to}</li>`;
+            });
+            detailsHtml += '</ul>';
+            drugInfo = `${formatDrugId(item.entity_id)} ${item.details.drug_name || ''}`;
+
+        } else if (item.action === 'delete') {
+            detailsHtml = `<strong>เหตุผล:</strong> ${item.details.reason || ''}`;
+            if (item.details.deleted_data) {
+                drugInfo = `${formatDrugId(item.entity_id)} ${item.details.deleted_data.drug_name || ''}`;
+            }
+
+        } else if (item.action === 'create') {
+            drugInfo = `${formatDrugId(item.entity_id)} ${item.details.drug_name || ''}`;
+            detailsHtml = '<strong>เพิ่มยาใหม่</strong>';
+            if (item.details.properties) {
+                detailsHtml += `<br>คุณสมบัติ: ${item.details.properties}`;
+            }
+            if (item.details.advice) {
+                detailsHtml += `<br>คำแนะนำ: ${item.details.advice}`;
+            }
+        }
+
+        tableBody.append(`
+            <tr>
+                <td>${item.created_at}</td>
+                <td>${actionMap[item.action]}</td>
+                <td>${drugInfo}</td>
+                <td>${detailsHtml}</td>
+                <td>${item.users_fname} ${item.users_lname}</td>
+            </tr>
+        `);
+    });
+}
+
+// Event listener สำหรับ filter
+$('#actionFilter').change(function() {
+    loadDrugHistory($(this).val());
+});
  
 
 
 
 
       // ลบข้อมูล
-          function confirmDelete(url) {
-           Swal.fire({
-              title: 'คุณแน่ใจหรือไม่ที่จะลบข้อมูล?',
-              text: "การลบจะทำให้ข้อมูลหาย ไม่สามารถกู้คืนมาได้!",
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
-              customClass: {
-                confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
-                cancelButton: 'btn btn-outline-secondary waves-effect'
-              },
-              buttonsStyling: false
-            }).then((result) => {
-              if (result.isConfirmed) {
-                top.location = url;
-              }
+function confirmDelete(drugId) {
+    Swal.fire({
+        title: 'ยืนยันการลบข้อมูล',
+        html: `
+            <form id="deleteForm">
+                <div class="mb-3">
+                    <label for="password" class="form-label">กรุณายืนยันรหัสผ่าน:</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reason" class="form-label">เหตุผลในการลบ:</label>
+                    <textarea class="form-control" id="reason" rows="3" 
+                             placeholder="กรุณาระบุเหตุผลในการลบ" required></textarea>
+                </div>
+            </form>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ยืนยันการลบ',
+        cancelButtonText: 'ยกเลิก',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            const password = document.getElementById('password').value;
+            const reason = document.getElementById('reason').value;
+            
+            if (!password || !reason) {
+                Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return false;
+            }
+
+            // ส่งข้อมูลแบบ FormData
+            const formData = new FormData();
+            formData.append('drug_id', drugId);
+            formData.append('password', password);
+            formData.append('reason', reason);
+
+            return fetch('sql/drug-delete.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .catch(error => {
+                console.error('Error:', error);
+                throw new Error('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
             });
-          };
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (result.value.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'ลบข้อมูลยาเรียบร้อยแล้ว',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: result.value.message || 'ไม่สามารถลบข้อมูลได้'
+                });
+            }
+        }
+    });
+}
 
 
     // msg error

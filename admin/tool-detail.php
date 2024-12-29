@@ -413,8 +413,7 @@ $stock_sql = "SELECT st.*, u.users_fname, u.users_lname
               ORDER BY st.transaction_date DESC";
 $stock_result = mysqli_query($conn, $stock_sql);
 
-// ตรวจสอบว่ามีข้อมูลสต็อกหรือไม่
-if (mysqli_num_rows($stock_result) > 0) {
+
     ?>
 <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -424,6 +423,11 @@ if (mysqli_num_rows($stock_result) > 0) {
         </button>
     </div>
     <div class="card-body">
+        <?php 
+
+// ตรวจสอบว่ามีข้อมูลสต็อกหรือไม่
+if (mysqli_num_rows($stock_result) > 0) {
+         ?>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -450,15 +454,16 @@ if (mysqli_num_rows($stock_result) > 0) {
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
-    <?php
+            <?php
 } else {
     echo "<p>ไม่พบข้อมูลการทำรายการสต็อก</p>";
 }
 
 // ... (โค้ดอื่นๆ ที่มีอยู่แล้ว) ...
 ?>
+    </div>
+</div>
+
             </div>
         </div>
     </div>

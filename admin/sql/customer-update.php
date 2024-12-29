@@ -35,39 +35,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $cus_province = mysqli_real_escape_string($conn, $_POST['cus_province']);
     $cus_postal_code = mysqli_real_escape_string($conn, $_POST['cus_postal_code']);
 
-    // ตรวจสอบความถูกต้องของข้อมูล (ถ้าจำเป็น)
-    // ... (เพิ่มโค้ดตรวจสอบข้อมูลในส่วนนี้)
 
-    // อัปโหลดรูปภาพ (ถ้ามีการอัปโหลดรูปภาพใหม่)
+
+    // จัดการรูปภาพ
+    $current_image_query = "SELECT cus_image FROM customer WHERE cus_id = ?";
+    $stmt = $conn->prepare($current_image_query);
+    $stmt->bind_param("i", $cus_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $current_image = $result->fetch_assoc()['cus_image'];
+    $cus_image = $current_image; // ใช้รูปเดิมเป็นค่าเริ่มต้น
+
     if (isset($_FILES['cus_image']) && $_FILES['cus_image']['error'] === UPLOAD_ERR_OK) {
-        $targetDir = "../../img/customer/"; 
-        $originalFileName = basename($_FILES["cus_image"]["name"]);
-        $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+        $upload_dir = "../../img/customer/";
+        
+        // ตรวจสอบและสร้างโฟลเดอร์
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
 
-        // สร้างชื่อไฟล์แบบสุ่ม
-        $randomFileName = uniqid() . '.' . $fileExtension; 
-        $targetFilePath = $targetDir . $randomFileName;
-
-        $allowTypes = array('jpg', 'jpeg', 'png', 'gif');
-        if (in_array($fileExtension, $allowTypes)) {
-            if (move_uploaded_file($_FILES["cus_image"]["tmp_name"], $targetFilePath)) {
-                $cus_image = $randomFileName; 
-            } else {
-                $_SESSION['msg_error'] = "ขออภัย เกิดข้อผิดพลาดในการอัปโหลดรูปภาพของคุณ";
-                header("Location: ../customer.php");
-                exit();
-            }
-        } else {
-            $_SESSION['msg_error'] = 'ขออภัย อนุญาตให้อัปโหลดเฉพาะไฟล์ JPG, JPEG, PNG และ GIF เท่านั้น';
+        // ตรวจสอบประเภทไฟล์
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+        $file_type = $_FILES['cus_image']['type'];
+        if (!in_array($file_type, $allowed_types)) {
+            $_SESSION['msg_error'] = "อนุญาตเฉพาะไฟล์รูปภาพประเภท JPEG, PNG และ GIF เท่านั้น";
             header("Location: ../customer.php");
             exit();
         }
-    } else {
-        // ถ้าไม่มีการอัปโหลดรูปภาพใหม่ ให้ใช้รูปภาพเดิม
-        $sql_get_image = "SELECT cus_image FROM customer WHERE cus_id = '$cus_id'";
-        $result_get_image = mysqli_query($conn, $sql_get_image);
-        $row_get_image = mysqli_fetch_object($result_get_image);
-        $cus_image = $row_get_image->cus_image;
+
+        // ตรวจสอบขนาดไฟล์
+        if ($_FILES['cus_image']['size'] > 5 * 1024 * 1024) {
+            $_SESSION['msg_error'] = "ไฟล์มีขนาดใหญ่เกินไป (จำกัดที่ 5MB)";
+            header("Location: ../customer.php");
+            exit();
+        }
+
+        // สร้างชื่อไฟล์ใหม่
+        $file_extension = pathinfo($_FILES['cus_image']['name'], PATHINFO_EXTENSION);
+        $new_filename = uniqid() . '.' . $file_extension;
+        $upload_path = $upload_dir . $new_filename;
+
+        // อัปโหลดไฟล์
+        if (move_uploaded_file($_FILES['cus_image']['tmp_name'], $upload_path)) {
+            // ลบรูปเก่าถ้าไม่ใช่รูป default
+            if ($current_image != 'customer.png' && file_exists($upload_dir . $current_image)) {
+                unlink($upload_dir . $current_image);
+            }
+            $cus_image = $new_filename;
+        } else {
+            $_SESSION['msg_error'] = "เกิดข้อผิดพลาดในการอัปโหลดไฟล์";
+            header("Location: ../customer.php");
+            exit();
+        }
     }
 
 
@@ -83,43 +102,72 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // สร้างคำสั่ง SQL UPDATE
+      // SQL สำหรับอัปเดตข้อมูล
     $sql = "UPDATE customer SET 
-        cus_id_card_number = '$cus_id_card_number', 
-        cus_birthday = '$cus_birthday', 
-        cus_firstname = '$cus_firstname', 
-        cus_lastname = '$cus_lastname', 
-        cus_title = '$cus_title', 
-        cus_gender = '$cus_gender', 
-        cus_nickname = '$cus_nickname', 
-        
-        cus_email = '$cus_email', 
-        cus_blood = '$cus_blood', 
-        cus_tel = '$cus_tel', 
-        cus_drugallergy = '$cus_drugallergy', 
-        cus_congenital = '$cus_congenital', 
-        occupation='$occupation',
-        height='$height',
-        weight='$weight',
-        emergency_name='$emergency_name',
-        emergency_tel='$emergency_tel',
-        emergency_note='$emergency_note',
-        
-        cus_address = '$cus_address', 
-        cus_district = '$cus_district', 
-        cus_city = '$cus_city', 
-        cus_province = '$cus_province', 
-        cus_postal_code = '$cus_postal_code'
-        
-    WHERE cus_id = '$cus_id'";
+        cus_id_card_number = ?,
+        cus_birthday = ?,
+        cus_firstname = ?,
+        cus_lastname = ?,
+        cus_title = ?,
+        cus_gender = ?,
+        cus_nickname = ?,
+        cus_email = ?,
+        cus_blood = ?,
+        cus_tel = ?,
+        cus_drugallergy = ?,
+        cus_congenital = ?,
+        occupation = ?,
+        height = ?,
+        weight = ?,
+        emergency_name = ?,
+        emergency_tel = ?,
+        emergency_note = ?,
+        cus_address = ?,
+        cus_district = ?,
+        cus_city = ?,
+        cus_province = ?,
+        cus_postal_code = ?,
+        cus_image = ?
+    WHERE cus_id = ?";
 
-    $result = mysqli_query($conn, $sql);
+    // ใช้ Prepared Statement
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssssssssssddssssssssssi",
+        $cus_id_card_number,
+        $cus_birthday,
+        $cus_firstname,
+        $cus_lastname,
+        $cus_title,
+        $cus_gender,
+        $cus_nickname,
+        $cus_email,
+        $cus_blood,
+        $cus_tel,
+        $cus_drugallergy,
+        $cus_congenital,
+        $occupation,
+        $height,
+        $weight,
+        $emergency_name,
+        $emergency_tel,
+        $emergency_note,
+        $cus_address,
+        $cus_district,
+        $cus_city,
+        $cus_province,
+        $cus_postal_code,
+        $cus_image,
+        $cus_id
+    );
 
-    if ($result) {
+    if ($stmt->execute()) {
         $_SESSION['msg_ok'] = "แก้ไขข้อมูลลูกค้าเรียบร้อยแล้ว";
     } else {
-        $_SESSION['msg_error'] = "เกิดข้อผิดพลาดในการแก้ไขข้อมูล: " . mysqli_error($conn);
+        $_SESSION['msg_error'] = "เกิดข้อผิดพลาดในการแก้ไขข้อมูล: " . $stmt->error;
     }
+
+    $stmt->close();
+    $conn->close();
 }
 
 header("Location: ../customer.php"); 

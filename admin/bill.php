@@ -953,6 +953,45 @@ if ($permissionsResult) {
 .table td {
     vertical-align: middle;
 }
+
+    .custom-swal-container {
+        z-index: 1060 !important;
+    }
+    
+      .custom-swal-popup {
+        max-width: 95% !important;
+        width: 900px !important;
+    }
+    
+    .custom-swal-content {
+        padding: 1.5rem;
+    }
+    
+    .custom-swal-content .table {
+        margin-bottom: 0;
+    }
+    
+    .custom-swal-content .table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        padding: 12px;
+        white-space: nowrap;
+    }
+    
+    .custom-swal-content .table td {
+        vertical-align: middle;
+        padding: 10px;
+    }
+    
+    .custom-swal-content .table tbody tr:hover {
+        background-color: rgba(0,0,0,.02);
+    }
+
+    .custom-swal-content .table td.text-end {
+        font-family: monospace;
+        font-size: 1.1em;
+    }
 </style>
 </head>
 <body>
@@ -1250,7 +1289,16 @@ if ($permissionsResult) {
                                 </div>
                             <?php endif; ?>
                                 <div class="card payment-summary mt-4 border-2 border-primary">
-                                    <h5 class="card-header">สรุปการชำระเงิน</h5>
+                                   <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0 text-white">สรุปการชำระเงิน</h5>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-danger" onclick="showPaymentCancellationHistory()">
+                                                <i class="ri-history-line me-1"></i> ประวัติการยกเลิกชำระเงิน
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+
                                     <div class="card-body">
                                         <!-- Loading indicator -->
                                         <div id="paymentSummaryLoading" class="text-center d-none">
@@ -1969,71 +2017,68 @@ function updateFormState() {
 function cancelPayment(orderId) {
     Swal.fire({
         title: 'ยืนยันการยกเลิกการชำระเงิน',
-        text: "คุณแน่ใจหรือไม่ที่จะยกเลิกการชำระเงินนี้?",
+        html: `
+            <form id="cancelPaymentForm">
+                <div class="mb-3">
+                    <label for="password" class="form-label">กรุณายืนยันรหัสผ่าน:</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="cancellation_reason" class="form-label">เหตุผลในการยกเลิก:</label>
+                    <textarea id="cancellation_reason" class="form-control" rows="3" 
+                             placeholder="กรุณาระบุเหตุผลในการยกเลิกการชำระเงิน" required></textarea>
+                </div>
+            </form>
+        `,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        confirmButtonText: 'ใช่, ยกเลิก',
-        cancelButtonText: 'ไม่, ยกเลิกการดำเนินการ'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // เพิ่มการคืนสต๊อกก่อนยกเลิกการชำระเงิน
-            $.ajax({
-                url: 'sql/return-stock.php',
+        confirmButtonText: 'ยืนยันการยกเลิก',
+        cancelButtonText: 'ยกเลิก',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            const password = document.getElementById('password').value;
+            const reason = document.getElementById('cancellation_reason').value;
+            
+            if (!password || !reason) {
+                Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return false;
+            }
+
+            return $.ajax({
+                url: 'sql/cancel-payment.php',
                 type: 'POST',
-                data: { order_id: orderId },
-                dataType: 'json',
-                success: function(stockResponse) {
-                    if (stockResponse.success) {
-                        // หลังจากคืนสต๊อกสำเร็จ ทำการยกเลิกการชำระเงิน
-                        $.ajax({
-                            url: 'sql/cancel-payment.php',
-                            type: 'POST',
-                            data: { order_id: orderId },
-                            dataType: 'json',
-                            success: function(response) {
-                                if (response.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'สำเร็จ',
-                                        text: 'ยกเลิกการชำระเงินและคืนสต๊อกเรียบร้อยแล้ว',
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    }).then(() => {
-                                        location.reload();
-                                    });
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'เกิดข้อผิดพลาด',
-                                        text: response.message || 'ไม่สามารถยกเลิกการชำระเงินได้'
-                                    });
-                                }
-                            },
-                            error: function() {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'เกิดข้อผิดพลาด',
-                                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
-                                });
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'เกิดข้อผิดพลาด',
-                            text: 'ไม่สามารถคืนสต๊อกได้: ' + stockResponse.error
-                        });
-                    }
+                data: {
+                    order_id: orderId,
+                    password: password,
+                    reason: reason
                 },
-                error: function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'เกิดข้อผิดพลาด',
-                        text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
-                    });
-                }
+                dataType: 'json'
+            }).catch(error => {
+                console.error('Error:', error);
+                Swal.showValidationMessage(
+                    `เกิดข้อผิดพลาด: ${error.responseJSON?.message || 'ไม่สามารถดำเนินการได้'}`
+                );
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed && result.value.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ',
+                text: 'ยกเลิกการชำระเงินเรียบร้อยแล้ว',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                location.reload();
+            });
+        } else if (result.value && !result.value.success) {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: result.value.message || 'ไม่สามารถยกเลิกการชำระเงินได้'
             });
         }
     });
@@ -3792,6 +3837,95 @@ function formatThaiDateTime(dateString) {
         timeZone: 'Asia/Bangkok'
     };
     return date.toLocaleDateString('th-TH', options);
+}
+
+function showPaymentCancellationHistory() {
+    $.ajax({
+        url: 'sql/get-payment-cancellation-history.php',
+        type: 'GET',
+        data: { order_id: <?php echo $oc_id; ?> },
+        success: function(response) {
+            if (response.success) {
+                if (!response.data || response.data.length === 0) {
+                    Swal.fire({
+                        title: 'ประวัติการยกเลิกการชำระเงิน',
+                        text: 'ไม่พบประวัติการยกเลิกการชำระเงิน',
+                        icon: 'info',
+                        confirmButtonText: 'ปิด'
+                    });
+                    return;
+                }
+
+                let historyHtml = `
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>วันที่ยกเลิก</th>
+                                    <th>ผู้ยกเลิก</th>
+                                    <th>ลูกค้า</th>
+                                    <th>จำนวนเงิน</th>
+                                    <th>วิธีชำระเงินเดิม</th>
+                                    <th>เหตุผล</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                response.data.forEach(item => {
+                    historyHtml += `
+                        <tr>
+                            <td>${item.created_at}</td>
+                            <td>${item.users_fname} ${item.users_lname}</td>
+                            <td>${item.details.customer_info.name}</td>
+                            <td class="text-end">${parseFloat(item.details.payment_info.amount).toLocaleString('th-TH', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })} บาท</td>
+                            <td>${item.details.payment_info.payment_type}</td>
+                            <td>${item.details.reason}</td>
+                        </tr>
+                    `;
+                });
+
+                historyHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                Swal.fire({
+                    title: 'ประวัติการยกเลิกการชำระเงิน',
+                    html: historyHtml,
+                    width: '900px',
+                    customClass: {
+                        container: 'custom-swal-container',
+                        popup: 'custom-swal-popup',
+                        content: 'custom-swal-content'
+                    },
+                    confirmButtonText: 'ปิด',
+                    confirmButtonColor: '#3085d6'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถดึงข้อมูลประวัติได้',
+                    confirmButtonText: 'ปิด'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Ajax error:', error);
+            console.log('Response:', xhr.responseText);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์',
+                confirmButtonText: 'ปิด'
+            });
+        }
+    });
 }
 </script>
 

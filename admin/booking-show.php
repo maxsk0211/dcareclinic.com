@@ -64,6 +64,20 @@ ORDER BY cb.created_at DESC";
 
 $result_booking = $conn->query($sql);
 
+
+// ดึงข้อมูลประวัติการแก้ไข
+$sql_logs = "SELECT al.*, u.users_fname, u.users_lname, b.id as booking_id 
+             FROM activity_logs al
+             LEFT JOIN users u ON al.user_id = u.users_id 
+             LEFT JOIN course_bookings b ON al.entity_id = b.id
+             WHERE al.entity_type = 'booking'
+             ORDER BY al.created_at DESC";
+$result_logs = $conn->query($sql_logs);
+
+if (!$result_logs) {
+    die("Error fetching logs: " . $conn->error);
+}
+
 if (!$result_booking) {
     die("Error fetching bookings: " . $conn->error);
 }
@@ -307,6 +321,47 @@ function convertToThaiDate($date) {
     .modal.show .modal-dialog {
         transform: scale(1);
     }
+    #historyTable thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    #historyTable tbody tr:hover {
+        background-color: rgba(0,0,0,.02);
+        cursor: pointer;
+    }
+    #historyModal .modal-body {
+        padding: 1.5rem;
+    }
+    #historyTable .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.8em;
+    }
+
+        /* ปรับ z-index ของ Modal */
+    .modal {
+        z-index: 1060 !important;
+    }
+    
+    /* ปรับ z-index ของ Dropdown */
+    .dropdown-menu {
+        z-index: 1050 !important;
+    }
+    
+    /* ปรับ z-index ของ Modal Backdrop */
+    .modal-backdrop {
+        z-index: 1050 !important;
+    }
+    
+    /* ทำให้ปุ่ม dropdown อยู่ด้านบนเสมอ */
+    .dropdown .dropdown-toggle {
+        position: relative;
+        z-index: 1051 !important;
+    }
+    
+    /* ทำให้ dropdown menu อยู่ด้านบน modal */
+    .dropdown-menu.show {
+        z-index: 1052 !important;
+    }
     </style>
 </head>
 
@@ -328,6 +383,11 @@ function convertToThaiDate($date) {
                                 <a href="booking.php" class="btn btn-primary">
                                     <i class="ri-add-line me-1"></i> จองคอร์สใหม่
                                 </a>
+                            </div>
+                            <div class="text-end my-2">
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#historyModal">
+                                    <i class="ri-history-line me-2"></i> ประวัติการแก้ไข
+                                </button>
                             </div>
                             <div class="card-datatable table-responsive">
                                 <div class="card-datatable table-responsive">
@@ -406,10 +466,12 @@ function convertToThaiDate($date) {
                                                 <td><?php echo htmlspecialchars($booking->users_fname . ' ' . $booking->users_lname); ?></td>
                                                 <td>
                                                     <div class="dropdown">
-                                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow" 
+                                                                data-bs-toggle="dropdown" 
+                                                                style="position: relative; z-index: 1051;">
                                                             <i class="ri-more-fill"></i>
                                                         </button>
-                                                        <div class="dropdown-menu">
+                                                        <div class="dropdown-menu" style="z-index: 1052;">
                                                             <a class="dropdown-item" href="javascript:void(0);" 
                                                                onclick="showBookingDetails(<?php echo $booking->id; ?>)">
                                                                 <i class="ri-eye-line me-1"></i> รายละเอียด
@@ -509,6 +571,78 @@ function convertToThaiDate($date) {
     </div>
 </div>
 
+<!-- Modal แสดงประวัติ -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">ประวัติการแก้ไขข้อมูลการจอง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่-เวลา</th>
+                                <th>การดำเนินการ</th>
+                                <th>ผู้ดำเนินการ</th>
+                                <th>รายละเอียด</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while($log = $result_logs->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo convertToThaiDate($log['created_at']); ?></td>
+                                    <td>
+                                        <?php
+                                        $action_class = '';
+                                        $action_text = '';
+                                        switch($log['action']) {
+                                            case 'approve':
+                                                $action_class = 'success';
+                                                $action_text = 'อนุมัติการจอง';
+                                                break;
+                                            case 'cancel':
+                                                $action_class = 'danger';
+                                                $action_text = 'ยกเลิกการจอง';
+                                                break;
+                                            default:
+                                                $action_class = 'primary';
+                                                $action_text = $log['action'];
+                                        }
+                                        ?>
+                                        <span class="badge bg-<?php echo $action_class; ?>"><?php echo $action_text; ?></span>
+                                    </td>
+                                    <td><?php echo $log['users_fname'] . ' ' . $log['users_lname']; ?></td>
+                                    <td>
+                                        <?php
+                                        // แปลงข้อมูล details เป็น array (ถ้าอยู่ในรูป JSON)
+                                        $details = json_decode($log['details'], true);
+if ($details && is_array($details)) {
+    if (isset($details['reason'])) {
+        echo "เหตุผล: " . htmlspecialchars($details['reason']) . "<br>";
+    }
+    if (isset($details['booking_info'])) {
+        echo "วันที่จอง: " . date('d/m/Y H:i', strtotime($details['booking_info']['date'])) . "<br>";
+        echo "ลูกค้า: " . htmlspecialchars($details['booking_info']['customer']) . "<br>";
+    }
+} else {
+                                            // ถ้าไม่ใช่ JSON หรือไม่สามารถ decode ได้ ให้แสดงข้อมูลดิบ
+                                            echo htmlspecialchars($log['details'] ?: '-');
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
     <script src="../assets/vendor/js/bootstrap.js"></script>
@@ -524,12 +658,31 @@ function convertToThaiDate($date) {
     <script src="../assets/js/main.js"></script>
 
     <!-- Page JS -->
-    <!-- <script src="../assets/js/tables-datatables-basic.js"></script> -->
+    <script src="../assets/js/tables-datatables-basic.js"></script>
     <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
 
 
     <script>
+
+
 $(document).ready(function() {
+    // Initialize history table
+    $('#historyTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
+        },
+        "order": [[0, "desc"]], // เรียงตามวันที่ล่าสุด
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"]],
+    });
+
+    // เพิ่ม event listener สำหรับ historyModal
+    $('#historyModal').on('shown.bs.modal', function () {
+        $($.fn.dataTable.tables(true)).DataTable()
+            .columns.adjust()
+            .responsive.recalc();
+    });
+
     const bookingTable = $('.datatables-bookings').DataTable({
         dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
              '<"row"<"col-sm-12"tr>>' +

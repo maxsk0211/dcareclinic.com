@@ -111,23 +111,54 @@ try {
             }
             $cancel_stmt->close();
 
-            // บันทึกประวัติการดำเนินการ
-            $cancel_log_sql = "INSERT INTO activity_logs 
-                             (user_id, action, entity_type, entity_id, details, branch_id) 
-                             VALUES (?, 'cancel', 'booking', ?, '0', ?)";
-            $cancel_log_stmt = $conn->prepare($cancel_log_sql);
-            if (!$cancel_log_stmt) {
-                throw new Exception('Prepare cancel log failed: ' . $conn->error);
-            }
-            
-            $cancel_log_stmt->bind_param('iii', $_SESSION['users_id'], $booking_id, $_SESSION['branch_id']);
-            if (!$cancel_log_stmt->execute()) {
-                throw new Exception('Cancel log insert failed: ' . $cancel_log_stmt->error);
-            }
-            $cancel_log_stmt->close();
+            // สร้างข้อมูล details
+            $booking_sql = "SELECT cb.*, c.cus_firstname, c.cus_lastname 
+                           FROM course_bookings cb
+                           LEFT JOIN customer c ON cb.cus_id = c.cus_id
+                           WHERE cb.id = ?";
+            $booking_stmt = $conn->prepare($booking_sql);
+            $booking_stmt->bind_param('i', $booking_id);
+            $booking_stmt->execute();
+            $booking_result = $booking_stmt->get_result();
+            $booking_data = $booking_result->fetch_assoc();
+            $booking_stmt->close();
+
+            // สร้างข้อมูล details
+            $details = json_encode([
+                'reason' => $reason,
+                'booking_info' => [
+                    'date' => date('Y-m-d H:i:s', strtotime($booking_data['booking_datetime'])),
+                    'customer' => $booking_data['cus_firstname'] . ' ' . $booking_data['cus_lastname']
+                ],
+                'changes' => [
+                    'status' => [
+                        'from' => $booking_data['status'],
+                        'to' => 'cancelled'
+                    ]
+                ]
+            ], JSON_UNESCAPED_UNICODE);
+
+            // บันทึกประวัติการดำเนินการ - แก้ไขส่วนนี้
+            $user_id = $_SESSION['users_id'];  // กำหนดตัวแปรก่อน
+            $branch_id = $_SESSION['branch_id']; // กำหนดตัวแปรก่อน
+            $action_type = 'cancel'; // กำหนดตัวแปรก่อน
+
+            $log_sql = "INSERT INTO activity_logs 
+                        (user_id, action, entity_type, entity_id, details, branch_id) 
+                        VALUES (?, ?, 'booking', ?, ?, ?)";
+            $log_stmt = $conn->prepare($log_sql);
+            $log_stmt->bind_param('isiss', 
+                $user_id,     // ใช้ตัวแปรที่กำหนดไว้
+                $action_type, // ใช้ตัวแปรที่กำหนดไว้
+                $booking_id,
+                $details,
+                $branch_id    // ใช้ตัวแปรที่กำหนดไว้
+            );
+            $log_stmt->execute();
+            $log_stmt->close();
 
             $message = 'ยกเลิกการจองเรียบร้อยแล้ว';
-            break;
+        break;
 
         default:
             throw new Exception('ไม่พบการดำเนินการที่ระบุ');

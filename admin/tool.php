@@ -225,6 +225,9 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 text-white">ข้อมูลเครื่องมือแพทย์ในระบบทั้งหมด</h5>
                     <div>
+                        <button type="button" class="btn btn-danger me-2" onclick="showToolHistory()">
+                            <i class="ri-history-line me-1"></i> ประวัติการเปลี่ยนแปลง
+                        </button>
                         <button type="button" class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#addToolModal">
                             <i class="ri-add-line me-1"></i> เพิ่มเครื่องมือ
                         </button>
@@ -407,7 +410,7 @@
                             <a href="#" class="text-primary me-2" data-bs-toggle="modal" data-bs-target="#editToolModal<?php echo $row->tool_id; ?>">
                                 <i class="ri-edit-line"></i>
                             </a>
-                            <a href="#" class="text-danger" onClick="confirmDelete('sql/tool-delete.php?id=<?php echo $row->tool_id; ?>'); return false;">
+                            <a href="#" class="text-danger" onclick="confirmDelete(<?php echo $row->tool_id; ?>); return false;">
                                 <i class="ri-delete-bin-6-line"></i>
                             </a>
                         </td>
@@ -521,6 +524,46 @@
 
     <!--/ Layout wrapper -->
 
+
+<!-- Modal สำหรับแสดง Activity Logs -->
+<!-- Modal สำหรับแสดง Activity Logs -->
+<div class="modal fade" id="activityLogsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ประวัติการเปลี่ยนแปลงข้อมูลเครื่องมือแพทย์</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <select id="actionFilter" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        <option value="create">เพิ่มข้อมูล</option>
+                        <option value="update">แก้ไขข้อมูล</option>
+                        <option value="delete">ลบข้อมูล</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>วันที่และเวลา</th>
+                                <th>การกระทำ</th>
+                                <th>รหัสเครื่องมือ/ชื่อ</th>
+                                <th>รายละเอียด</th>
+                                <th>ผู้ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="toolHistoryTableBody">
+                            <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Core JS -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -547,6 +590,105 @@
 
 
     <script>
+        function showToolHistory() {
+    const tableBody = $('#toolHistoryTableBody');
+    tableBody.html('<tr><td colspan="5" class="text-center"><div class="spinner-border text-primary"></div></td></tr>');
+    
+    $('#activityLogsModal').modal('show');
+    loadToolHistory();
+}
+
+function loadToolHistory(action = '') {
+    $.ajax({
+        url: 'sql/get-tool-history.php',
+        type: 'GET',
+        data: { action: action },
+        success: function(response) {
+            if (response.success) {
+                updateToolHistoryTable(response.data);
+            } else {
+                $('#toolHistoryTableBody').html(`
+                    <tr>
+                        <td colspan="5" class="text-center text-danger">
+                            ${response.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล'}
+                        </td>
+                    </tr>
+                `);
+            }
+        },
+        error: function() {
+            $('#toolHistoryTableBody').html(`
+                <tr>
+                    <td colspan="5" class="text-center text-danger">
+                        ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้
+                    </td>
+                </tr>
+            `);
+        }
+    });
+}
+
+function updateToolHistoryTable(data) {
+    const tableBody = $('#toolHistoryTableBody');
+    tableBody.empty();
+
+    if (!data || data.length === 0) {
+        tableBody.html(`
+            <tr>
+                <td colspan="5" class="text-center">ไม่พบประวัติการเปลี่ยนแปลง</td>
+            </tr>
+        `);
+        return;
+    }
+
+    data.forEach(item => {
+        const actionMap = {
+            'create': '<span class="badge bg-success">เพิ่มข้อมูล</span>',
+            'update': '<span class="badge bg-warning">แก้ไขข้อมูล</span>',
+            'delete': '<span class="badge bg-danger">ลบข้อมูล</span>'
+        };
+
+        let detailsHtml = '';
+        let toolInfo = '';
+        
+        if (item.action === 'update' && item.details.changes) {
+            detailsHtml = '<ul class="mb-0">';
+            Object.entries(item.details.changes).forEach(([field, change]) => {
+                detailsHtml += `<li><strong>${field}:</strong> ${change.from} ➜ ${change.to}</li>`;
+            });
+            detailsHtml += '</ul>';
+            // กรณี update ใช้ชื่อจาก details
+            toolInfo = item.details.tool_name || '';
+        } else if (item.action === 'delete') {
+            detailsHtml = `<strong>เหตุผล:</strong> ${item.details.reason}`;
+            // กรณีลบ ใช้ข้อมูลจาก deleted_data
+            if (item.details.deleted_data) {
+                toolInfo = `TOOL-${String(item.details.deleted_data.tool_id).padStart(6, '0')} ${item.details.deleted_data.tool_name}`;
+            }
+        } else if (item.action === 'create') {
+            // กรณีสร้างใหม่
+            toolInfo = item.details.tool_name;
+            detailsHtml = `<strong>เพิ่มเครื่องมือใหม่:</strong> ${item.details.tool_name}`;
+        }
+
+        tableBody.append(`
+            <tr>
+                <td>${item.created_at}</td>
+                <td>${actionMap[item.action]}</td>
+                <td>${toolInfo}</td>
+                <td>${detailsHtml}</td>
+                <td>${item.users_fname} ${item.users_lname}</td>
+            </tr>
+        `);
+    });
+}
+
+// Event listener สำหรับ filter
+$('#actionFilter').change(function() {
+    loadToolHistory($(this).val());
+});
+
+
       // DataTable initialization
       $(document).ready(function() {
         $('#toolTable').DataTable({
@@ -568,29 +710,102 @@
           pagingType: 'full_numbers',
            responsive: true
         });
-      });
+
+
+    $('#activityLogsTable').DataTable({
+        language: {
+            "lengthMenu": "แสดง _MENU_ แถวต่อหน้า",
+            "zeroRecords": "ไม่พบข้อมูล",
+            "info": "แสดงหน้า _PAGE_ จาก _PAGES_",
+            "infoEmpty": "ไม่มีข้อมูล",
+            "search": "ค้นหา:",
+            "paginate": {
+                "first": "หน้าแรก",
+                "last": "หน้าสุดท้าย",
+                "next": "ถัดไป",
+                "previous": "ก่อนหน้า"
+            }
+        },
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"]],
+    });
+
+    // กรองข้อมูลตามประเภทการกระทำ
+    $('#actionFilter').on('change', function() {
+        var action = $(this).val().toLowerCase();
+        $('#activityLogsTable').DataTable().column(2).search(action).draw();
+    });
+});
 
       // Delete confirmation
-      function confirmDelete(url) {
-        Swal.fire({
-          title: 'คุณแน่ใจหรือไม่ที่จะลบข้อมูล?',
-          text: "การลบจะทำให้ข้อมูลหาย ไม่สามารถกู้คืนมาได้!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
-          customClass: {
-            confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
-            cancelButton: 'btn btn-outline-secondary waves-effect'
-          },
-          buttonsStyling: false
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = url;
-          }
-        });
-      }
+function confirmDelete(toolId) {
+    Swal.fire({
+        title: 'ยืนยันการลบข้อมูล',
+        html: `
+            <form id="deleteForm">
+                <div class="mb-3">
+                    <label for="password" class="form-label">กรุณายืนยันรหัสผ่าน:</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reason" class="form-label">เหตุผลในการลบ:</label>
+                    <textarea class="form-control" id="reason" rows="3" 
+                             placeholder="กรุณาระบุเหตุผลในการลบ" required></textarea>
+                </div>
+            </form>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ยืนยันการลบ',
+        cancelButtonText: 'ยกเลิก',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            const password = document.getElementById('password').value;
+            const reason = document.getElementById('reason').value;
+            
+            if (!password || !reason) {
+                Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return false;
+            }
+
+            const formData = new FormData();
+            formData.append('tool_id', toolId);
+            formData.append('password', password);
+            formData.append('reason', reason);
+
+            return fetch('sql/tool-delete.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .catch(error => {
+                throw new Error('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (result.value.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'ลบข้อมูลเครื่องมือเรียบร้อยแล้ว',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: result.value.message || 'ไม่สามารถลบข้อมูลได้'
+                });
+            }
+        }
+    });
+}
 
       // Display success message
       <?php if(isset($_SESSION['msg_ok'])){ ?>

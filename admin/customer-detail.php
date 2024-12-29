@@ -120,6 +120,18 @@ $stmt->bind_param("i", $customer_id);
 $stmt->execute();
 $bookings_result = $stmt->get_result();
 
+// ดึงข้อมูลประวัติ OPD
+$sql_opd = "SELECT o.*, sq.queue_id 
+            FROM opd o
+            JOIN service_queue sq ON o.queue_id = sq.queue_id
+            WHERE o.cus_id = ?
+            ORDER BY o.created_at DESC";
+
+$stmt = $conn->prepare($sql_opd);
+$stmt->bind_param("i", $customer_id);
+$stmt->execute();
+$opd_result = $stmt->get_result();
+
 function formatCustomerId($cusId) {
     $paddedId = str_pad($cusId, 6, '0', STR_PAD_LEFT);
     return "HN-" . $paddedId;
@@ -761,7 +773,11 @@ function formatOrderId($orderId) {
                                 <div class="card customer-card mb-4">
                                 <div class="customer-header">
                                     <div class="customer-image-container">
-                                        <img src="<?php echo $customer['line_picture_url']; ?>" alt="รูปลูกค้า" class="customer-image">
+                                        <img src="<?php if($customer['cus_image'] != "customer.png"){
+                                            echo "../../img/customer/".$customer['cus_image'];
+                                        }else{
+                                            echo $customer['line_picture_url'];
+                                        }  ?>" alt="รูปลูกค้า" class="customer-image">
                                     </div>
                                     <div class="customer-header-info">
                                         <h2 class="customer-name text-white"><?php echo $customer['cus_firstname'] . ' ' . $customer['cus_lastname']; ?></h2>
@@ -968,64 +984,120 @@ function formatOrderId($orderId) {
                                 </table>
                             </div>
                         </div>
-                        <div class="card mt-4">
-                            <h5 class="card-header bg-primary text-white">ประวัติการนัดหมาย</h5>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>วันที่นัด</th>
-                                                <th>เวลา</th>
-                                                <th>ห้อง</th>
-                                                <th>คอร์สที่นัด</th>
-                                                <th>สถานะ</th>
-                                                <th>หมายเหตุ</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php while($booking = $bookings_result->fetch_assoc()): ?>
-                                                <tr>
-                                                    <td><?php echo convertToThaiDate(date('Y-m-d', strtotime($booking['booking_datetime']))); ?></td>
-                                                    <td><?php echo date('H:i', strtotime($booking['booking_datetime'])); ?></td>
-                                                    <td><?php echo htmlspecialchars($booking['room_name'] ?? '-'); ?></td>
-                                                    <td><?php 
-                                                        $booked_courses = $booking['booked_courses'] ? 
-                                                            explode('|', $booking['booked_courses']) : [];
-                                                        echo implode('<br>', array_map('htmlspecialchars', $booked_courses));
-                                                    ?></td>
-                                                    <td>
-                                                        <?php
-                                                        $status_class = 'warning';
-                                                        $status_text = 'รอยืนยัน';
-                                                        
-                                                        if(isset($booking['status'])) {
-                                                            switch($booking['status']) {
-                                                                case 'confirmed':
-                                                                    $status_class = 'success';
-                                                                    $status_text = 'ยืนยันแล้ว';
-                                                                    break;
-                                                                case 'cancelled':
-                                                                    $status_class = 'danger';
-                                                                    $status_text = 'ยกเลิก';
-                                                                    break;
-                                                            }
-                                                        }
-                                                        ?>
-                                                        <span class="badge bg-<?php echo $status_class; ?>"><?php echo $status_text; ?></span>
-                                                    </td>
-                                                    <td>
-                                                        <?php if(isset($booking['is_follow_up']) && $booking['is_follow_up']): ?>
-                                                            <span class="badge bg-info">นัดติดตามผล</span>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endwhile; ?>
-                                        </tbody>
-                                    </table>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mt-4">
+                                    <h5 class="card-header bg-primary text-white">ประวัติการนัดหมาย</h5>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>วันที่นัด</th>
+                                                        <th>เวลา</th>
+                                                        <th>ห้อง</th>
+                                                        <th>คอร์สที่นัด</th>
+                                                        <th>สถานะ</th>
+                                                        <th>หมายเหตุ</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php while($booking = $bookings_result->fetch_assoc()): ?>
+                                                        <tr>
+                                                            <td><?php echo convertToThaiDate(date('Y-m-d', strtotime($booking['booking_datetime']))); ?></td>
+                                                            <td><?php echo date('H:i', strtotime($booking['booking_datetime'])); ?></td>
+                                                            <td><?php echo htmlspecialchars($booking['room_name'] ?? '-'); ?></td>
+                                                            <td><?php 
+                                                                $booked_courses = $booking['booked_courses'] ? 
+                                                                    explode('|', $booking['booked_courses']) : [];
+                                                                echo implode('<br>', array_map('htmlspecialchars', $booked_courses));
+                                                            ?></td>
+                                                            <td>
+                                                                <?php
+                                                                $status_class = 'warning';
+                                                                $status_text = 'รอยืนยัน';
+                                                                
+                                                                if(isset($booking['status'])) {
+                                                                    switch($booking['status']) {
+                                                                        case 'confirmed':
+                                                                            $status_class = 'success';
+                                                                            $status_text = 'ยืนยันแล้ว';
+                                                                            break;
+                                                                        case 'cancelled':
+                                                                            $status_class = 'danger';
+                                                                            $status_text = 'ยกเลิก';
+                                                                            break;
+                                                                    }
+                                                                }
+                                                                ?>
+                                                                <span class="badge bg-<?php echo $status_class; ?>"><?php echo $status_text; ?></span>
+                                                            </td>
+                                                            <td>
+                                                                <?php if(isset($booking['is_follow_up']) && $booking['is_follow_up']): ?>
+                                                                    <span class="badge bg-info">นัดติดตามผล</span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endwhile; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mt-4">
+                                    <h5 class="card-header bg-info text-white">ประวัติการรักษา</h5>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>วันที่รักษา</th>
+                                                        <th>ผลวินิจฉัย</th>
+                                                        <th>การดำเนินการ</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php if($opd_result->num_rows > 0): ?>
+                                                        <?php while($opd = $opd_result->fetch_assoc()): ?>
+                                                            <tr>
+                                                                <td><?php echo convertToThaiDate($opd['created_at']); ?></td>
+                                                                <td>
+                                                                    <?php 
+                                                                    if($opd['opd_diagnose']) {
+                                                                        // ตัดข้อความให้แสดงแค่ 100 ตัวอักษร
+                                                                        echo strlen($opd['opd_diagnose']) > 100 ? 
+                                                                             substr($opd['opd_diagnose'], 0, 100) . '...' : 
+                                                                             $opd['opd_diagnose'];
+                                                                    } else {
+                                                                        echo '<span class="text-muted">ไม่มีบันทึก</span>';
+                                                                    }
+                                                                    ?>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="opd.php?queue_id=<?php echo $opd['queue_id']; ?>" 
+                                                                       class="btn btn-info btn-sm text-white">
+                                                                        <i class="ri-file-list-3-line"></i> รายละเอียด
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endwhile; ?>
+                                                    <?php else: ?>
+                                                        <tr>
+                                                            <td colspan="3" class="text-center">
+                                                                <p class="text-muted my-3">ไม่พบประวัติการรักษา</p>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endif; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        
                     <!-- / Content -->
 
                     <!-- Footer -->

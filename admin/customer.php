@@ -171,6 +171,37 @@ function formatHN($id) {
     .clickable-row td:not(:first-child) {
         cursor: pointer;
     }
+    /* เพิ่มต่อจาก style เดิม */
+.img-upload-preview {
+    max-width: 150px;
+    height: auto;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.img-upload-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.img-upload-container .remove-image {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
 </style>
 
   </head>
@@ -208,6 +239,9 @@ function formatHN($id) {
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                       <i class="ri-user-add-line me-1"></i> เพิ่มผู้ใช้งาน
                     </button>
+                </div>
+                <div class="text-end my-2">
+                    <a href="customer-logs.php" class="btn btn-danger">ประวัติการแก้ไข</a>
                 </div>
                 <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -397,12 +431,14 @@ function formatHN($id) {
                                 <textarea class="form-control border-primary" id="emergency_note" name="emergency_note"></textarea>
                             </div>
                         </div>
-<!--                         <div class="col-md-6">
+                        <!-- เพิ่มช่องอัปโหลดรูป -->
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="cus_image" class="form-label">รูปภาพ:</label>
-                                <input type="file" class="form-control border-primary" id="cus_image" name="cus_image">
+                                <input type="file" class="form-control border-primary" id="cus_image" name="cus_image" accept="image/*">
+                                <small class="text-muted">อนุญาตเฉพาะไฟล์ JPG, JPEG, PNG และ GIF</small>
                             </div>
-                        </div> -->
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
@@ -649,6 +685,17 @@ function formatHN($id) {
                                         <textarea class="form-control border-primary" id="emergency_note" name="emergency_note"><?= $row->emergency_note ?></textarea>
                                     </div>
                                 </div>
+                                <!-- เพิ่มช่องอัปโหลดรูปและแสดงรูปปัจจุบัน -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="cus_image" class="form-label">รูปภาพ:</label>
+                                        <div class="mb-2">
+                                            <img src="../../img/customer/<?= $row->cus_image ?>" alt="รูปลูกค้า" class="img-thumbnail" style="max-width: 150px;">
+                                        </div>
+                                        <input type="file" class="form-control border-primary" id="cus_image" name="cus_image" accept="image/*">
+                                        <small class="text-muted">อัปโหลดรูปใหม่เพื่อเปลี่ยนรูปภาพ หรือเว้นว่างไว้เพื่อใช้รูปเดิม</small>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -665,6 +712,7 @@ function formatHN($id) {
         ?>
     </tbody>
 </table>
+
                 </div>
 
 </div>
@@ -699,7 +747,8 @@ function formatHN($id) {
 
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
-     <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+     <!-- <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" /> -->
     <!-- build:js assets/vendor/js/core.js -->
     <!-- <script src="../assets/vendor/libs/jquery/jquery.js"></script> -->
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -740,6 +789,52 @@ function formatHN($id) {
 
 
     <script type="text/javascript">
+        // เพิ่มต่อจาก script เดิม
+function validateImage(input) {
+    const file = input.files[0];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+
+    if (file) {
+        if (!allowedTypes.includes(file.type)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ไฟล์ไม่ถูกต้อง',
+                text: 'กรุณาเลือกไฟล์รูปภาพที่มีนามสกุล .jpg, .jpeg, .png หรือ .gif เท่านั้น'
+            });
+            input.value = '';
+            return false;
+        }
+
+        if (file.size > maxSize) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ไฟล์มีขนาดใหญ่เกินไป',
+                text: 'กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 5MB'
+            });
+            input.value = '';
+            return false;
+        }
+
+        // แสดงตัวอย่างรูปภาพ
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = input.closest('.mb-3').querySelector('img');
+            if (preview) {
+                preview.src = e.target.result;
+            }
+        }
+        reader.readAsDataURL(file);
+    }
+    return true;
+}
+
+// เพิ่ม event listener สำหรับการตรวจสอบไฟล์
+document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', function() {
+        validateImage(this);
+    });
+});
         //date input
         new Cleave(".date-mask", {
           date: true,
@@ -750,7 +845,7 @@ function formatHN($id) {
     // คงการตั้งค่า DataTable เดิม
     $('#customersTable').DataTable({ 
         "pageLength": 25,
-        "order": [[1, "asc"]], // เรียงตาม HN
+        "order": [[1, "desc"]], // เรียงตาม HN
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
         }
@@ -766,26 +861,59 @@ function formatHN($id) {
     });
 
       // ลบข้อมูล
-          function confirmDelete(url) {
-           Swal.fire({
-              title: 'คุณแน่ใจหรือไม่ที่จะลบข้อมูล?',
-              text: "การลบจะทำให้ข้อมูลหาย ไม่สามารถกู้คืนมาได้!",
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              confirmButtonText: 'ใช่ ฉันต้องการลบข้อมูล!',
-              customClass: {
-                confirmButton: 'btn btn-danger me-1 waves-effect waves-light',
-                cancelButton: 'btn btn-outline-secondary waves-effect'
-              },
-              buttonsStyling: false
-            }).then((result) => {
-              if (result.isConfirmed) {
-                top.location = url;
-              }
-            });
-          };
+function confirmDelete(url) {
+    Swal.fire({
+        title: 'ยืนยันการลบข้อมูล',
+        html: `
+            <form id="deleteForm">
+                <div class="mb-3">
+                    <label class="form-label">กรุณากรอกรหัสผ่านเพื่อยืนยัน:</label>
+                    <input type="password" class="form-control" id="confirmPassword" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">เหตุผลในการลบ:</label>
+                    <textarea class="form-control" id="deleteReason"></textarea>
+                </div>
+            </form>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยันการลบ',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        preConfirm: () => {
+            const password = document.getElementById('confirmPassword').value;
+            const reason = document.getElementById('deleteReason').value;
+            if (!password) {
+                Swal.showValidationMessage('กรุณากรอกรหัสผ่าน');
+                return false;
+            }
+            return { password, reason };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+
+            const passwordInput = document.createElement('input');
+            passwordInput.type = 'hidden';
+            passwordInput.name = 'password';
+            passwordInput.value = result.value.password;
+            form.appendChild(passwordInput);
+
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'delete_reason';
+            reasonInput.value = result.value.reason;
+            form.appendChild(reasonInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
 
     // modal insert error
 

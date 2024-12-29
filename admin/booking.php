@@ -53,163 +53,232 @@ function formatCustomerId($cusId) {
 <!doctype html>
 <html lang="en" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default" data-assets-path="../assets/" data-template="horizontal-menu-template-no-customizer-starter">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>จองคอร์ส - D Care Clinic</title>
+<title>จองคอร์ส - D Care Clinic</title>
 
-    <meta name="description" content="" />
+<meta name="description" content="" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="../assets/vendor/fonts/remixicon/remixicon.css" />
+<!-- Icons -->
+<link rel="stylesheet" href="../assets/vendor/fonts/remixicon/remixicon.css" />
 
-    <!-- Core CSS -->
-    <link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" />
-    <link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" />
-    <link rel="stylesheet" href="../assets/css/demo.css" />
-    <!-- Vendors CSS -->
-    <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
-    <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
+<!-- Core CSS -->
+<link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" />
+<link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" />
+<link rel="stylesheet" href="../assets/css/demo.css" />
+<!-- Vendors CSS -->
+<link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+<link rel="stylesheet" href="../assets/vendor/libs/node-waves/node-waves.css" />
+<link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css" />
+<link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css" />
 
-    <!-- Page CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-        <!-- Helpers -->
-    <script src="../assets/vendor/js/helpers.js"></script>
-    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
-    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
-    <script src="../assets/js/config.js"></script>
-    <style>
-        .time-slot {
-            cursor: pointer;
-        }
-        .time-slot.booked {
-            background-color: #ff8785;
-            cursor: not-allowed;
-        }
-        .time-slot.selected {
-            background-color: #8cff85;
-        }
-        .course-item {
-            height: 100%;
-        }
-        .course-item .card-img-top {
-            height: 200px;
-            object-fit: cover;
-        }
-        .course-item .card-body {
-            display: flex;
-            flex-direction: column;
-        }
-        .course-item .form-check {
-            margin-top: auto;
-        }
-
-        #customerDetails {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        #customerImage {
-            border: 3px solid #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        #customerDetails table {
-            margin-top: 20px;
-        }
-        #customerDetails th {
-            color: #6c757d;
-            font-weight: 600;
-        }
-    .select2-container .select2-selection--single {
-        height: 48px !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 38px !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 36px !important;
-    }
-    .select2-container .select2-selection--single, 
-    #booking_date {
-        border: 1px solid #ced4da;
-        border-radius: 0.25rem;
-    }
-    .course-item {
+<!-- Page CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- Helpers -->
+<script src="../assets/vendor/js/helpers.js"></script>
+<!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+<!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+<script src="../assets/js/config.js"></script>
+<style>
+    .time-slot {
         cursor: pointer;
-        transition: all 0.3s ease;
+    }
+    .time-slot.booked {
+        background-color: #ff8785;
+        cursor: not-allowed;
+    }
+    .time-slot.selected {
+        background-color: #8cff85;
     }
 
-    .course-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    .course-item .card-img-top {
+        height: 180px; /* ปรับความสูงรูปให้เท่ากันทุกการ์ด */
+        object-fit: cover;
     }
 
-    .course-item.selected {
-        border: 2px solid #007bff;
-        background-color: #e7f1ff;
-    }
-
-    .course-item.selected::after {
-        content: '✓';
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: #007bff;
-        color: white;
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
+    .course-item .card-body {
+        padding: 1rem;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-    }
-    #selected_course {
-        background-color: #e7f1ff;
-        border: 1px solid #b8daff;
-        border-radius: 5px;
-        padding: 10px;
-        margin-top: 10px;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
-    #selected_course h4 {
-        color: #004085;
-        margin-bottom: 0;
-    }
-    #backToCourseBtn {
-        font-size: 0.9rem;
-        padding: 0.375rem 0.75rem;
+    .course-item .form-check {
+        margin-top: auto;
     }
 
-    #backToCourseBtn i {
-        font-size: 1rem;
-        vertical-align: middle;
+    #customerDetails {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .flatpickr-calendar {
-        font-family: 'Sarabun', sans-serif; /* หรือฟอนต์ภาษาไทยที่คุณใช้ */
+    #customerImage {
+        border: 3px solid #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+    #customerDetails table {
+        margin-top: 20px;
+    }
+    #customerDetails th {
+        color: #6c757d;
+        font-weight: 600;
+    }
+.select2-container .select2-selection--single {
+    height: 48px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 38px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+}
+.select2-container .select2-selection--single, 
+#booking_date {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
 
-    .flatpickr-current-month .flatpickr-monthDropdown-months {
-        font-size: 1rem;
-    }
+.course-item {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    margin: 0; /* ลบ margin เดิมออก */
+}
 
-    .flatpickr-current-month .numInputWrapper {
-        font-size: 1rem;
+
+.course-item .card {
+    height: 100%;
+    margin: 0;
+}
+
+.course-item:hover {
+    transform: translateY(-5px);
+}
+
+#noResultMessage {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+}
+
+.course-item.selected {
+    border: 2px solid #007bff;
+    background-color: #e7f1ff;
+}
+
+.course-item.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #007bff;
+    color: white;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+#selected_course {
+    background-color: #e7f1ff;
+    border: 1px solid #b8daff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+#selected_course h4 {
+    color: #004085;
+    margin-bottom: 0;
+}
+#backToCourseBtn {
+    font-size: 0.9rem;
+    padding: 0.375rem 0.75rem;
+}
+
+#backToCourseBtn i {
+    font-size: 1rem;
+    vertical-align: middle;
+}
+.flatpickr-calendar {
+    font-family: 'Sarabun', sans-serif; /* หรือฟอนต์ภาษาไทยที่คุณใช้ */
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    font-size: 1rem;
+}
+
+.flatpickr-current-month .numInputWrapper {
+    font-size: 1rem;
+}
+
+/* เพิ่มในส่วน style */
+.input-group-text {
+    background-color: #fff;
+    border-right: none;
+}
+
+#courseSearch {
+    border-left: none;
+}
+
+#courseSearch:focus {
+    border-color: #dee2e6;
+    box-shadow: none;
+}
+
+#clearSearch {
+    display: none;
+}
+
+
+#searchResult {
+    font-size: 0.9rem;
+}
+
+.course-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* กำหนดให้มี 4 คอลัมน์เท่าๆ กัน */
+    gap: 1.5rem; /* ปรับระยะห่างระหว่างคอร์ส */
+    padding: 1.5rem;
+}
+
+/* สำหรับการแสดงผลบนหน้าจอขนาดเล็กกว่า */
+@media (max-width: 1400px) {
+    .course-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 คอลัมน์สำหรับหน้าจอขนาดกลาง */
     }
-    </style>
+}
+
+@media (max-width: 992px) {
+    .course-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 คอลัมน์สำหรับแท็บเล็ต */
+    }
+}
+
+@media (max-width: 576px) {
+    .course-grid {
+        grid-template-columns: 1fr; /* 1 คอลัมน์สำหรับมือถือ */
+    }
+}
+
+
+</style>
 
 </head>
 
@@ -308,29 +377,41 @@ function formatCustomerId($cusId) {
             <div class="row">
                 <div class="offset-md-1 col-md-10">
                     <div id="courseSection">
-                        <form method="POST" action="">
-                            <div class="mb-3">
-                                <div class="text-end">
-                                    <a href="booking.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ri-search-line"></i></span>
+                                        <input type="text" class="form-control" id="courseSearch" placeholder="ค้นหาคอร์ส...">
+                                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                            <i class="ri-close-line"></i>
+                                        </button>
+                                    </div>
                                 </div>
-<!--                                 <label for="courseSearch" class="form-label">ค้นหาคอร์ส</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="courseSearch" name="search_course" placeholder="พิมพ์ชื่อคอร์ส..." value="<?= htmlspecialchars($search_term) ?>">
-                                    <button type="submit" class="btn btn-primary">ค้นหา</button>
-                                </div> -->
+                                <div>
+                                    <span id="searchResult" class="text-muted"></span>
+                                </div>
                             </div>
-                            <input type="hidden" name="selected_customer_id" value="<?= $selected_customer_id; ?>">
-                            <input type="hidden" name="select_datetime" value="1">
-                        </form>
-                        <div id="courseList" class="row">
+                        </div>
+                        <div class="course-grid">
                             <?php foreach ($display_courses as $course): ?>
-                                <div class="col-md-4 col-lg-3 mb-3">
-                                    <div class="card course-item" data-course-id="<?= $course['id'] ?>" data-course-name="<?= htmlspecialchars($course['name']) ?>" data-course-price="<?= $course['price'] ?>" data-course-image="<?= htmlspecialchars($course['image']) ?>">
-                                        <img src="../img/course/<?= htmlspecialchars($course['image']) ?>" class="card-img-top" alt="<?= htmlspecialchars($course['name']) ?>">
+                                <div class="course-item" 
+                                     data-course-id="<?= $course['id'] ?>" 
+                                     data-course-name="<?= htmlspecialchars($course['name']) ?>" 
+                                     data-course-price="<?= $course['price'] ?>" 
+                                     data-course-image="<?= htmlspecialchars($course['image']) ?>">
+                                    <div class="card">
+                                        <img src="../img/course/<?= htmlspecialchars($course['image']) ?>" 
+                                             class="card-img-top" 
+                                             alt="<?= htmlspecialchars($course['name']) ?>">
                                         <div class="card-body">
-                                            <h5 class="card-title"><?= htmlspecialchars($course['name']) ?></h5>
-                                            <p class="card-text">ราคา: <?= number_format($course['price']) ?> บาท</p>
-                                            <button type="button" class="btn btn-primary select-course">เลือกคอร์สนี้</button>
+                                            <div>
+                                                <h5 class="card-title"><?= htmlspecialchars($course['name']) ?></h5>
+                                                <p class="card-text">ราคา: <?= number_format($course['price']) ?> บาท</p>
+                                            </div>
+                                            <button type="button" class="btn btn-primary select-course w-100 mt-3">
+                                                เลือกคอร์สนี้
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -409,8 +490,61 @@ function formatCustomerId($cusId) {
 
 <script>
 var selectedCustomerId = '<?php echo addslashes($selected_customer_id); ?>';
-// var customerName = '<?php echo addslashes($customer_name); ?>';
+// var customerName = '<?php //echo addslashes($customer_name); ?>';
+// เพิ่มต่อจาก script เดิม
 $(document).ready(function() {
+    const allCourses = $('.course-item').toArray();
+    let totalCourses = allCourses.length;
+    
+    // อัพเดตผลการค้นหาเริ่มต้น
+    updateSearchResult(totalCourses);
+
+    $('#courseSearch').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        let matchCount = 0;
+
+        $('.course-item').each(function() {
+            const courseName = $(this).find('.card-title').text().toLowerCase();
+            const coursePrice = $(this).data('course-price').toString();
+            
+            if (courseName.includes(searchTerm) || coursePrice.includes(searchTerm)) {
+                $(this).css('display', 'block');
+                matchCount++;
+            } else {
+                $(this).css('display', 'none');
+            }
+        });
+
+        updateSearchResult(matchCount);
+    });
+
+    $('#clearSearch').on('click', function() {
+        $('#courseSearch').val('');
+        $('.course-item').show();
+        updateSearchResult(totalCourses);
+        $(this).hide();
+    });
+
+function updateSearchResult(count) {
+    const resultText = count === 0 ? 
+        'ไม่พบคอร์สที่ค้นหา' : 
+        `พบ ${count} คอร์ส`;
+    $('#searchResult').text(resultText);
+    
+    if (count === 0) {
+        if ($('#noResultMessage').length === 0) {
+            $('.course-grid').append(`
+                <div id="noResultMessage">
+                    <h4 class="text-muted">ไม่พบคอร์สที่ค้นหา</h4>
+                    <p>ลองค้นหาด้วยคำค้นอื่น</p>
+                </div>
+            `);
+        }
+    } else {
+        $('#noResultMessage').remove();
+    }
+}
+
 let selectedCourses = [];
 
 function updateOrderList() {

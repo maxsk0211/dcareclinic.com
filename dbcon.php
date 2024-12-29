@@ -2,7 +2,7 @@
 	date_default_timezone_set("Asia/Bangkok");
 
 
-	//dcareclinic.com
+	// dcareclinic.com
 	// $conn=mysqli_connect("localhost","chanchal_dcareclinic","bwCuJxdEn87J7wSSHJ9J","chanchal_dcareclinic") or die("เกิดข้อผืดพลาด");
 
 	//demo.dcareclinic.com

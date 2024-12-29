@@ -1,37 +1,80 @@
 <?php
 session_start();
-// include '../chk-session.php';
 require '../../dbcon.php';
 
-if (isset($_GET['id']) && !empty($_GET['id'])) {
-    // รับค่า id และทำการ escape
-    $tool_id = mysqli_real_escape_string($conn, $_GET['id']);
-
-    // ตรวจสอบว่าเครื่องมือนี้ถูกใช้งานอยู่หรือไม่ (ถ้ามีตารางอื่นที่อ้างอิงถึง)
-    // ตัวอย่าง: $check_sql = "SELECT * FROM some_table WHERE tool_id = '$tool_id'";
-    // $check_result = mysqli_query($conn, $check_sql);
-    // if (mysqli_num_rows($check_result) > 0) {
-    //     $_SESSION['msg_error'] = "ไม่สามารถลบเครื่องมือนี้ได้ เนื่องจากมีการใช้งานในระบบ";
-    //     header("Location: ../tool.php");
-    //     exit();
-    // }
-
-    // ทำการลบข้อมูล
-    $sql = "DELETE FROM tool WHERE tool_id = '$tool_id'";
+// กรณีรับข้อมูล POST จาก AJAX
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
     
-    if (mysqli_query($conn, $sql)) {
-        $_SESSION['msg_ok'] = "ลบข้อมูลเครื่องมือแพทย์เรียบร้อยแล้ว";
-    } else {
-        $_SESSION['msg_error'] = "เกิดข้อผิดพลาดในการลบข้อมูล: " . mysqli_error($conn);
+    // ตรวจสอบข้อมูลที่ส่งมา
+    if (!isset($_POST['tool_id'], $_POST['password'], $_POST['reason'])) {
+        echo json_encode(['success' => false, 'message' => 'ข้อมูลไม่ครบถ้วน']);
+        exit;
     }
-} else {
-    $_SESSION['msg_error'] = "ไม่พบข้อมูล ID ที่ต้องการลบ";
+
+    $tool_id = mysqli_real_escape_string($conn, $_POST['tool_id']);
+    $password = mysqli_real_escape_string($conn, $_POST['password']);
+    $reason = mysqli_real_escape_string($conn, $_POST['reason']);
+    $user_id = $_SESSION['users_id'];
+
+    // ตรวจสอบรหัสผ่าน
+    $password_check_sql = "SELECT * FROM users WHERE users_id = '$user_id' AND users_password = '$password'";
+    $password_result = mysqli_query($conn, $password_check_sql);
+
+    if (mysqli_num_rows($password_result) == 0) {
+        echo json_encode(['success' => false, 'message' => 'รหัสผ่านไม่ถูกต้อง']);
+        exit;
+    }
+
+    // Get tool info before deletion for logging
+    $tool_sql = "SELECT * FROM tool WHERE tool_id = '$tool_id'";
+    $tool_result = mysqli_query($conn, $tool_sql);
+    $tool_data = mysqli_fetch_assoc($tool_result);
+
+    if (!$tool_data) {
+        echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลเครื่องมือที่ต้องการลบ']);
+        exit;
+    }
+
+    mysqli_begin_transaction($conn);
+    
+    try {
+        // Delete the tool
+        $delete_sql = "DELETE FROM tool WHERE tool_id = '$tool_id'";
+        
+        if (mysqli_query($conn, $delete_sql)) {
+            // Log the deletion
+            $details = json_encode([
+                'reason' => $reason,
+                'deleted_data' => [
+                    'tool_id' => $tool_data['tool_id'],
+                    'tool_name' => $tool_data['tool_name'],
+                    'tool_detail' => $tool_data['tool_detail']
+                ]
+            ]);
+            
+            $log_sql = "INSERT INTO activity_logs (user_id, action, entity_type, entity_id, details, branch_id) 
+                       VALUES ('$user_id', 'delete', 'tool', '$tool_id', '$details', '{$tool_data['branch_id']}')";
+                       
+            if (!mysqli_query($conn, $log_sql)) {
+                throw new Exception("Error logging deletion");
+            }
+            
+            mysqli_commit($conn);
+            echo json_encode(['success' => true]);
+        } else {
+            throw new Exception("Error deleting tool");
+        }
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการลบข้อมูล: ' . $e->getMessage()]);
+    }
+
+    mysqli_close($conn);
+    exit;
 }
 
-// ปิดการเชื่อมต่อ
-mysqli_close($conn);
-
-// Redirect กลับไปยังหน้าแสดงรายการเครื่องมือแพทย์
+// กรณีเรียกหน้าโดยตรง
 header("Location: ../tool.php");
-exit();
+exit;
 ?>
