@@ -12,13 +12,23 @@ if (!$queue_id) {
     die("ไม่พบข้อมูลคิว");
 }
 
-// ดึงข้อมูลคิวและลูกค้า
-$sql = "SELECT sq.*, c.cus_id, c.cus_firstname, c.cus_lastname, 
+// เพิ่มการดึงข้อมูล OPD ล่าสุด
+$sql = "SELECT sq.*, c.*, 
                (SELECT od.course_id 
                 FROM order_detail od 
                 JOIN order_course oc ON od.oc_id = oc.oc_id
                 WHERE oc.course_bookings_id = cb.id 
-                LIMIT 1) AS course_id
+                LIMIT 1) AS course_id,
+               (SELECT opd_smoke 
+                FROM opd 
+                WHERE opd.cus_id = c.cus_id 
+                ORDER BY opd.created_at DESC 
+                LIMIT 1) as last_opd_smoke,
+               (SELECT opd_alcohol 
+                FROM opd 
+                WHERE opd.cus_id = c.cus_id 
+                ORDER BY opd.created_at DESC 
+                LIMIT 1) as last_opd_alcohol
         FROM service_queue sq
         LEFT JOIN customer c ON sq.cus_id = c.cus_id
         LEFT JOIN course_bookings cb ON sq.booking_id = cb.id
@@ -918,15 +928,19 @@ while ($row = $result->fetch_assoc()) {
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label for="weight" class="form-label">น้ำหนัก (กก.)</label>
-                                        <input type="number" class="form-control" id="weight" name="weight" step="0.1" required value="<?php echo $opd_data['Weight'] ?? ''; ?>">
+                                        <input type="number" class="form-control" id="weight" name="weight" step="0.1" required 
+                                               value="<?php echo $opd_data ? $opd_data['Weight'] : $queue_data['weight']; ?>"
+                                               oninput="calculateBMI()">
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label for="height" class="form-label">ส่วนสูง (ซม.)</label>
-                                        <input type="number" class="form-control" id="height" name="height" step="0.1" required value="<?php echo $opd_data['Height'] ?? ''; ?>">
+                                        <input type="number" class="form-control" id="height" name="height" step="0.1" required 
+                                               value="<?php echo $opd_data ? $opd_data['Height'] : $queue_data['height']; ?>"
+                                               oninput="calculateBMI()">
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label for="bmi" class="form-label">BMI</label>
-                                        <input type="number" class="form-control" id="bmi" name="bmi" step="0.01" readonly value="<?php echo $opd_data['BMI'] ?? ''; ?>">
+                                        <input type="number" class="form-control" id="bmi" name="bmi" step="0.01" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -934,46 +948,49 @@ while ($row = $result->fetch_assoc()) {
                             <div class="form-section border-2 border-primary">
                                 <h3>ข้อมูลสัญญาณชีพ</h3>
                                 <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label for="fbs" class="form-label">FBS (mg/dL)</label>
-                                        <input type="number" class="form-control" id="fbs" name="fbs" step="0.1" required value="<?php echo $opd_data['FBS'] ?? ''; ?>">
-                                    </div>
+                                    <!-- <div class="col-md-4 mb-3"> -->
+                                        <!-- <label for="fbs" class="form-label">FBS (mg/dL)</label> -->
+                                        <input type="hidden" class="form-control" id="fbs" name="fbs" step="0.1"  value="0">
+                                    <!-- </div> -->
                                     <div class="col-md-4 mb-3">
                                         <label for="systolic" class="form-label">ความดันโลหิต (mmHg)</label>
-                                        <input type="number" class="form-control" id="systolic" name="systolic" required value="<?php echo $opd_data['Systolic'] ?? ''; ?>">
+                                        <input type="number" class="form-control" id="systolic" name="systolic" required 
+                                               value="<?php echo $opd_data ? $opd_data['Systolic'] : ''; ?>">
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label for="pulsation" class="form-label">ชีพจร (ครั้ง/นาที)</label>
-                                        <input type="number" class="form-control" id="pulsation" name="pulsation" required value="<?php echo $opd_data['Pulsation'] ?? ''; ?>">
+                                        <input type="number" class="form-control" id="pulsation" name="pulsation" required 
+                                               value="<?php echo $opd_data ? $opd_data['Pulsation'] : ''; ?>">
                                     </div>
                                 </div>
                             </div>
-                             <div class="form-section border-2 border-primary">
+
+                            <div class="form-section border-2 border-primary">
                                 <h3>ข้อมูลพฤติกรรมเสี่ยงและการแพ้</h3>
                                 <div class="row">
                                     <div class="col-md-3 mb-3">
                                         <label for="smoking" class="form-label">สูบบุหรี่</label>
                                         <select class="form-select" id="smoking" name="smoking" required>
                                             <option value="">เลือก</option>
-                                            <option value="ไม่สูบ" <?php echo ($smoking == 'ไม่สูบ') ? 'selected' : ''; ?>>ไม่สูบ</option>
-                                            <option value="สูบ" <?php echo ($smoking == 'สูบ') ? 'selected' : ''; ?>>สูบ</option>
+                                            <option value="ไม่สูบ" <?php echo ($opd_data['opd_smoke'] ?? $queue_data['last_opd_smoke'] ?? '') == 'ไม่สูบ' ? 'selected' : ''; ?>>ไม่สูบ</option>
+                                            <option value="สูบ" <?php echo ($opd_data['opd_smoke'] ?? $queue_data['last_opd_smoke'] ?? '') == 'สูบ' ? 'selected' : ''; ?>>สูบ</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3 mb-3">
                                         <label for="alcohol" class="form-label">ดื่มสุรา</label>
                                         <select class="form-select" id="alcohol" name="alcohol" required>
                                             <option value="">เลือก</option>
-                                            <option value="ไม่ดื่ม" <?php echo ($alcohol == 'ไม่ดื่ม') ? 'selected' : ''; ?>>ไม่ดื่ม</option>
-                                            <option value="ดื่ม" <?php echo ($alcohol == 'ดื่ม') ? 'selected' : ''; ?>>ดื่ม</option>
+                                            <option value="ไม่ดื่ม" <?php echo ($opd_data['opd_alcohol'] ?? $queue_data['last_opd_alcohol'] ?? '') == 'ไม่ดื่ม' ? 'selected' : ''; ?>>ไม่ดื่ม</option>
+                                            <option value="ดื่ม" <?php echo ($opd_data['opd_alcohol'] ?? $queue_data['last_opd_alcohol'] ?? '') == 'ดื่ม' ? 'selected' : ''; ?>>ดื่ม</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3 mb-3">
                                         <label for="drug_allergy" class="form-label">แพ้ยา</label>
-                                        <textarea class="form-control" id="drug_allergy" name="drug_allergy" rows="2"><?php echo htmlspecialchars($drug_allergy); ?></textarea>
+                                        <textarea class="form-control" id="drug_allergy" name="drug_allergy" rows="2"><?php echo $opd_data ? $opd_data['drug_allergy'] : $queue_data['cus_drugallergy']; ?></textarea>
                                     </div>
                                     <div class="col-md-3 mb-3">
                                         <label for="food_allergy" class="form-label">โรคประจำตัว</label>
-                                        <textarea class="form-control" id="food_allergy" name="food_allergy" rows="2"><?php echo htmlspecialchars($food_allergy); ?></textarea>
+                                        <textarea class="form-control" id="food_allergy" name="food_allergy" rows="2"><?php echo $opd_data ? $opd_data['food_allergy'] : $queue_data['cus_congenital']; ?></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -1358,17 +1375,9 @@ $(document).ready(function() {
         $('#opdFormPart1').show();
     });
 
-    // คำนวณ BMI อัตโนมัติ
-    function calculateBMI() {
-        var weight = parseFloat($('#weight').val());
-        var height = parseFloat($('#height').val()) / 100; // แปลงเซนติเมตรเป็นเมตร
-        if (weight && height) {
-            var bmi = weight / (height * height);
-            $('#bmi').val(bmi.toFixed(2));
-        }
-    }
 
-    $('#weight, #height').on('input', calculateBMI);
+
+    // $('#weight, #height').on('input', calculateBMI);
 
     // จัดการการส่งฟอร์มส่วนแรก
     if (canEditPart1) {
@@ -1953,8 +1962,21 @@ function updateUIBasedOnPermissions() {
 // console.log('Closed Days:', closedDays);
 // console.log('Closed Dates:', closedDates);
 // console.log('Booked Slots:', bookedSlots);
-
+    // คำนวณ BMI อัตโนมัติ
+    function calculateBMI() {
+        const weight = parseFloat(document.getElementById('weight').value);
+        const height = parseFloat(document.getElementById('height').value) / 100; // แปลงเป็นเมตร
+        
+        if (weight && height) {
+            const bmi = weight / (height * height);
+            document.getElementById('bmi').value = bmi.toFixed(2);
+        } else {
+            document.getElementById('bmi').value = '';
+        }
+    }
 document.addEventListener('DOMContentLoaded', function() {
+
+     calculateBMI();
     // Initialize Flatpickr for date selection
     flatpickr.localize(flatpickr.l10ns.th);
 

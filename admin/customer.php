@@ -236,12 +236,15 @@ function formatHN($id) {
               <div class="card">
                 <div class="card-header border-bottom d-flex justify-content-between">
                   <h5 class="card-title mb-0 alert alert-info">ข้อมูลลูกค้าในระบบทั้งหมด</h5>
+                  
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                       <i class="ri-user-add-line me-1"></i> เพิ่มผู้ใช้งาน
                     </button>
                 </div>
                 <div class="text-end my-2">
-                    <a href="customer-logs.php" class="btn btn-danger">ประวัติการแก้ไข</a>
+                    <button type="button" class="btn btn-danger" onclick="showHistory()">
+                        <i class="ri-history-line me-2"></i> ประวัติการแก้ไข
+                    </button>
                 </div>
                 <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -745,6 +748,45 @@ function formatHN($id) {
 
     <!--/ Layout wrapper -->
 
+
+<!-- Modal แสดงประวัติการเปลี่ยนแปลง -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">ประวัติการเปลี่ยนแปลงข้อมูลลูกค้า</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <select id="actionFilter" class="form-select">
+                        <option value="">แสดงทั้งหมด</option>
+                        <option value="create">เพิ่มข้อมูล</option>
+                        <option value="update">แก้ไขข้อมูล</option>
+                        <option value="delete">ลบข้อมูล</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table id="historyTable" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>วันที่-เวลา</th>
+                                <th>การดำเนินการ</th>
+                                <th>รหัสลูกค้า/ชื่อ</th>
+                                <th>รายละเอียด</th>
+                                <th>ผู้ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -789,6 +831,110 @@ function formatHN($id) {
 
 
     <script type="text/javascript">
+        // เพิ่มฟังก์ชันสำหรับแสดง modal ประวัติ
+function showHistory() {
+    const tableBody = $('#historyTableBody');
+    tableBody.html('<tr><td colspan="5" class="text-center"><div class="spinner-border text-primary"></div></td></tr>');
+    
+    $('#historyModal').modal('show');
+    loadHistory();
+}
+
+function loadHistory(action = '') {
+    $.ajax({
+        url: 'sql/get-customer-history.php',
+        type: 'GET',
+        data: { action: action },
+        success: function(response) {
+            if (response.success) {
+                updateHistoryTable(response.data);
+            } else {
+                $('#historyTableBody').html(`
+                    <tr>
+                        <td colspan="5" class="text-center text-danger">
+                            ${response.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล'}
+                        </td>
+                    </tr>
+                `);
+            }
+        },
+        error: function() {
+            $('#historyTableBody').html(`
+                <tr>
+                    <td colspan="5" class="text-center text-danger">
+                        ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้
+                    </td>
+                </tr>
+            `);
+        }
+    });
+}
+
+function updateHistoryTable(data) {
+    const tableBody = $('#historyTableBody');
+    tableBody.empty();
+
+    if (!data || data.length === 0) {
+        tableBody.html(`
+            <tr>
+                <td colspan="5" class="text-center">ไม่พบประวัติการเปลี่ยนแปลง</td>
+            </tr>
+        `);
+        return;
+    }
+
+    data.forEach(item => {
+        const actionMap = {
+            'create': '<span class="badge bg-success">เพิ่มข้อมูล</span>',
+            'update': '<span class="badge bg-warning">แก้ไขข้อมูล</span>',
+            'delete': '<span class="badge bg-danger">ลบข้อมูล</span>'
+        };
+
+        let detailsHtml = '';
+        let customerInfo = '';
+
+        if (item.action === 'update' && item.details.changes) {
+            detailsHtml = '<ul class="mb-0">';
+            Object.entries(item.details.changes).forEach(([field, change]) => {
+                detailsHtml += `<li><strong>${field}:</strong> ${change.from} ➜ ${change.to}</li>`;
+            });
+            detailsHtml += '</ul>';
+            customerInfo = `HN-${String(item.entity_id).padStart(5, '0')} ${item.details.customer_name || ''}`;
+        } else if (item.action === 'delete') {
+            detailsHtml = `<strong>เหตุผล:</strong> ${item.details.reason || ''}`;
+            if (item.details.deleted_data) {
+                customerInfo = `HN-${String(item.entity_id).padStart(5, '0')} ${item.details.deleted_data.customer_name || ''}`;
+            }
+        } else if (item.action === 'create') {
+            customerInfo = `HN-${String(item.entity_id).padStart(5, '0')} ${item.details.customer_name || ''}`;
+            detailsHtml = '<strong>เพิ่มลูกค้าใหม่</strong>';
+        }
+
+        tableBody.append(`
+            <tr>
+                <td>${item.created_at}</td>
+                <td>${actionMap[item.action]}</td>
+                <td>${customerInfo}</td>
+                <td>${detailsHtml}</td>
+                <td>${item.users_fname} ${item.users_lname}</td>
+            </tr>
+        `);
+    });
+}
+
+// Event listener สำหรับ filter
+$('#actionFilter').change(function() {
+    loadHistory($(this).val());
+});
+
+// Initialize DataTable for history
+$('#historyTable').DataTable({
+    "language": {
+        "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
+    },
+    "order": [[0, "desc"]], // เรียงตามวันที่ล่าสุด
+    "pageLength": 10
+});
         // เพิ่มต่อจาก script เดิม
 function validateImage(input) {
     const file = input.files[0];
