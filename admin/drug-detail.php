@@ -335,66 +335,92 @@ function formatId($id) {
 
             <div class="mt-4">
 
-                <!-- Modal -->
-<div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title text-white" id="addStockModalLabel">เพิ่มสต๊อก</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addStockForm" action="sql/stock-insert.php" method="post">
-          <div class="row mb-3">
-            <div class="col-md-6">
-               <label for="transaction_date" class="form-label">วันที่ทำรายการ</label>
-                <input type="text" class="form-control " id="transaction_date" name="transaction_date" readonly >
+<!-- Modal เพิ่มสต็อค -->
+<div class="modal fade" id="addStockModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">
+                    <i class="ri-medicine-bottle-line me-1"></i> เพิ่มสต็อคยา
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="col-md-6">
-                <div class="form-label">รหัส-ขื่อยา</div>
-                <input type="text" class="form-control text-danger fw-bold" value="<?php echo formatId($drug->drug_id)." - ".$drug->drug_name; ?>">
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="quantity" class="form-label">จำนวนรับเข้า (<?= $drug->unit_name ?>)</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="quantity" name="quantity" step="0.01" required>
-                <span class="input-group-text"><?= $drug->unit_name ?></span>
-               </div>
-            </div>
-          
-            <div class="col-md-6">
-              <label for="cost_per_unit" class="form-label">ต้นทุนต่อหน่วย</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit" step="0.01" required>
-                <span class="input-group-text">บาท</span>
-              </div> 
-            </div>
-           </div>          
-          <div class="row mb-3">
+            <div class="modal-body">
+                <form id="addStockForm" action="sql/stock-insert.php" method="post">
+                    <!-- ข้อมูลยา -->
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>รหัสยา:</strong> <?php echo formatId($drug->drug_id); ?></p>
+                                    <p class="mb-1"><strong>ชื่อยา:</strong> <?php echo $drug->drug_name; ?></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>หน่วยนับ:</strong> <?php echo $drug->unit_name; ?></p>
+                                    <p class="mb-1"><strong>คงเหลือปัจจุบัน:</strong> <?php echo number_format($drug->drug_amount); ?> <?php echo $drug->unit_name; ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="col-md-6">
-              <label for="expiry_date" class="form-label">วันหมดอายุ (พ.ศ.)</label>
-              <input type="text" class="form-control date-mask" id="expiry_date" name="expiry_date" placeholder="dd/mm/yyyy">
+                    <!-- แบบฟอร์มเพิ่มสต็อค -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">วันที่ทำรายการ <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="transaction_date" name="transaction_date" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">จำนวนรับเข้า <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="quantity" name="quantity" 
+                                           min="0.01" step="0.01" required
+                                           placeholder="ระบุจำนวน">
+                                    <span class="input-group-text"><?php echo $drug->unit_name; ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">ราคาต้นทุนต่อหน่วย <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit"
+                                           min="0.01" step="0.01" required
+                                           placeholder="ระบุราคาต้นทุน">
+                                    <span class="input-group-text">บาท</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">วันหมดอายุ</label>
+                                <input type="text" class="form-control date-mask" id="expiry_date" name="expiry_date" 
+                                       placeholder="วว/ดด/ปปปป">
+                                <div class="form-text">ระบุในรูปแบบ วัน/เดือน/ปี พ.ศ.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">หมายเหตุ</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"
+                                 placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"></textarea>
+                    </div>
+
+                    <input type="hidden" name="users_id" value="<?php echo $_SESSION['users_id']; ?>">
+                    <input type="hidden" name="stock_type" value="drug">
+                    <input type="hidden" name="related_id" value="<?php echo $_GET['drug_id']; ?>">
+                    <input type="hidden" name="branch_id" value="<?php echo $_SESSION['branch_id']; ?>">
+                </form>
             </div>
-          </div>
-          <div class="mb-3">
-            <label for="notes" class="form-label">หมายเหตุ</label>
-            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-          </div>
-          <input type="hidden" name="users_id" value="<?= $_SESSION['users_id']; ?>">
-          <input type="hidden" name="stock_type" value="drug">
-          <input type="hidden" name="related_id" value="<?= $_GET['drug_id']; ?>">
-          <input type="hidden" name="branch_id" value="<?= $_SESSION['branch_id']; ?>">
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-        <button class="btn btn-primary" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-dismiss="modal">บันทึกข้อมูล</button>
-      </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i> ยกเลิก
+                </button>
+                <button type="button" class="btn btn-primary" onclick="validateStockForm()">
+                    <i class="ri-save-line me-1"></i> บันทึกข้อมูล
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 
@@ -420,64 +446,126 @@ function formatId($id) {
 </div>
 
 
-<?php
-// ... (โค้ดอื่นๆ ที่มีอยู่แล้ว) ...
 
-// เพิ่มโค้ดนี้หลังจากส่วนที่แสดงรายละเอียดยา
-$stock_sql = "SELECT st.*, u.users_fname, u.users_lname 
-              FROM stock_transactions st
-              JOIN users u ON st.users_id = u.users_id
-              WHERE st.stock_type = 'drug' AND st.related_id = '$drug_id'
-              ORDER BY st.transaction_date DESC";
-$stock_result = mysqli_query($conn, $stock_sql);
-
-
-    ?>
 <div class="card mt-4 border-2 border-primary">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title text-white">ข้อมูลสต็อก</h5>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">
-            <i class="ri-add-line me-1"></i> เพิ่มสต็อก
+        <h5 class="card-title text-white mb-0">
+            <i class="ri-history-line me-1"></i> ประวัติรายการเข้า-ออก
+        </h5>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addStockModal">
+            <i class="ri-add-line me-1"></i> เพิ่มสต็อค
         </button>
     </div>
     <div class="card-body">
-        <?php // ตรวจสอบว่ามีข้อมูลสต็อกหรือไม่
-        if (mysqli_num_rows($stock_result) > 0) {
-        ?>
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            <table class="table table-hover" id="stockHistoryTable">
+                <thead class="table-primary">
                     <tr>
-                        <th>วันที่ทำรายการ</th>
-                        <th>ผู้ทำรายการ</th>
-                        <th>จำนวน</th>
-                        <th>ต้นทุนต่อหน่วย</th>
+                        <th>วันที่-เวลา</th>
+                        <th>ประเภทรายการ</th>
+                        <th class="text-end">จำนวน</th>
+                        <th>หน่วยนับ</th>
+                        <th class="text-end">ราคา/หน่วย</th>
+                        <th class="text-end">มูลค่ารวม</th>
                         <th>วันหมดอายุ</th>
+                        <th>ผู้ทำรายการ</th>
                         <th>หมายเหตุ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($stock = mysqli_fetch_object($stock_result)) { ?>
-                    <tr>
-                        <td><?php echo date('d/m/Y H:i', strtotime($stock->transaction_date)); ?></td>
-                        <td><?php echo $stock->users_fname . ' ' . $stock->users_lname; ?></td>
-                        <td><?php echo number_format($stock->quantity, 2); ?></td>
-                        <td><?php echo number_format($stock->cost_per_unit, 2)." บาท"; ?></td>
-                        <td><?php echo ($stock->expiry_date) ? date('d/m/Y', strtotime($stock->expiry_date)) : 'ไม่ระบุ'; ?></td>
-                        <td><?php echo $stock->notes; ?></td>
-                    </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
-            </div>   
-             <?php
-                } else {
-                    echo "<p>ไม่พบข้อมูลการทำรายการสต็อก</p>";
-                }
+                    <?php
+                    $stock_sql = "SELECT st.*, u.users_fname, u.users_lname,
+                                  d.drug_name, dt.drug_type_name, unit.unit_name,
+                                  CASE 
+                                      WHEN st.notes LIKE '%ORDER%' THEN 'ใช้ในคอร์ส'
+                                      WHEN st.notes LIKE '%คืนสต็อก%' THEN 'คืนสต็อก'
+                                      WHEN st.quantity > 0 THEN 'รับเข้า'
+                                      ELSE 'เบิกออก'
+                                  END as transaction_type_name,
+                                  CASE 
+                                      WHEN st.quantity > 0 THEN st.quantity
+                                      ELSE ABS(st.quantity)
+                                  END as display_quantity,
+                                  (ABS(st.quantity) * st.cost_per_unit) as total_value
+                                  FROM stock_transactions st
+                                  LEFT JOIN users u ON st.users_id = u.users_id
+                                  LEFT JOIN drug d ON st.related_id = d.drug_id
+                                  LEFT JOIN drug_type dt ON d.drug_type_id = dt.drug_type_id
+                                  LEFT JOIN unit ON d.drug_unit_id = unit.unit_id
+                                  WHERE st.stock_type = 'drug' 
+                                  AND st.related_id = ? 
+                                  AND st.status = 1
+                                  ORDER BY st.transaction_date DESC";
+                              
+                    $stmt = $conn->prepare($stock_sql);
+                    $stmt->bind_param("i", $_GET['drug_id']);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
 
-                // ... (โค้ดอื่นๆ ที่มีอยู่แล้ว) ...
-                ?>
-        
+                        if ($result->num_rows > 0) {
+                            while ($row = $result->fetch_object()) {
+                                // กำหนดสีและ class ตามประเภทรายการ
+                                $badgeClass = '';
+                                switch($row->transaction_type_name) {
+                                    case 'รับเข้า':
+                                        $badgeClass = 'bg-success';
+                                        break;
+                                    case 'เบิกออก':
+                                        $badgeClass = 'bg-danger';
+                                        break;
+                                    case 'ใช้ในคอร์ส':
+                                        $badgeClass = 'bg-info';
+                                        break;
+                                    case 'คืนสต็อก':
+                                        $badgeClass = 'bg-warning';
+                                        break;
+                                }
+                                
+                                echo "<tr>";
+                                echo "<td>" . date('d/m/Y H:i', strtotime($row->transaction_date)) . "</td>";
+                                echo "<td><span class='badge {$badgeClass}'>{$row->transaction_type_name}</span></td>";
+                                echo "<td class='text-end'>" . number_format($row->display_quantity, 2) . "</td>";
+                                echo "<td>{$row->unit_name}</td>";
+                                echo "<td class='text-end'>" . number_format($row->cost_per_unit, 2) . "</td>";
+                                echo "<td class='text-end'>" . number_format($row->total_value, 2) . "</td>";
+                                echo "<td>" . ($row->expiry_date ? date('d/m/Y', strtotime($row->expiry_date)) : '-') . "</td>";
+                                echo "<td>{$row->users_fname} {$row->users_lname}</td>";
+                                echo "<td>";
+                                // ตัดคำว่า "ORDER-" ออกจาก notes ถ้ามี
+                                echo $row->notes ? str_replace('ORDER-', 'รหัสการสั่งซื้อ: ', $row->notes) : '-';
+                                echo "</td>";
+                                echo "</tr>";
+                            }
+                        } else {
+                            echo "<tr><td colspan='9' class='text-center'>ไม่พบข้อมูลรายการ</td></tr>";
+                        }
+                    ?>
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="2" class="text-end">รวมทั้งหมด:</th>
+                        <th class="text-end" id="totalQuantity">0</th>
+                        <th colspan="2" class="text-end">มูลค่ารวม:</th>
+                        <th class="text-end" id="totalValue">0</th>
+                        <th colspan="3"></th>
+                    </tr>
+                    <tr>
+                        <th colspan="2" class="text-end">รับเข้า:</th>
+                        <th class="text-end" id="totalIn">0</th>
+                        <th colspan="2" class="text-end">มูลค่ารับเข้า:</th>
+                        <th class="text-end" id="totalInValue">0</th>
+                        <th colspan="3"></th>
+                    </tr>
+                    <tr>
+                        <th colspan="2" class="text-end">เบิกออก:</th>
+                        <th class="text-end" id="totalOut">0</th>
+                        <th colspan="2" class="text-end">มูลค่าเบิกออก:</th>
+                        <th class="text-end" id="totalOutValue">0</th>
+                        <th colspan="3"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -512,7 +600,8 @@ $stock_result = mysqli_query($conn, $stock_sql);
 
     <!-- Core JS -->
     <!-- sweet Alerts 2 -->
-    <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" />
+    <!-- <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js" /> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- build:js assets/vendor/js/core.js -->
 
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
@@ -602,72 +691,107 @@ $stock_result = mysqli_query($conn, $stock_sql);
     </script>
 
     <script>
+// ตั้งค่าวันที่ปัจจุบัน
 $(document).ready(function() {
-    $('#drugTable').DataTable({
-        // ภาษาไทย
-        language: {
-            "lengthMenu": "แสดง _MENU_ แถวต่อหน้า",
-            "zeroRecords": "ไม่พบข้อมูล",
-            "info": "แสดงหน้า _PAGE_ จาก _PAGES_",
-            "infoEmpty": "ไม่มีข้อมูล",
-            "infoFiltered": "(กรองข้อมูลจาก _MAX_ รายการทั้งหมด)",
-            "search": "ค้นหา:",
-            "paginate": {
-                "first": "หน้าแรก",
-                "last": "หน้าสุดท้าย",
-                "next": "ถัดไป",
-                "previous": "ก่อนหน้า"
-            }
-        },
-        lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"] ],
-        pagingType: 'full_numbers'
+    let totalIn = 0;
+    let totalOut = 0;
+    let totalInValue = 0;
+    let totalOutValue = 0;
+
+    $('#stockHistoryTable tbody tr').each(function() {
+        const type = $(this).find('td:eq(1) .badge').text();
+        const quantity = parseFloat($(this).find('td:eq(2)').text().replace(/,/g, ''));
+        const value = parseFloat($(this).find('td:eq(5)').text().replace(/,/g, ''));
+
+        if (type === 'รับเข้า' || type === 'คืนสต็อก') {
+            totalIn += quantity;
+            totalInValue += value;
+        } else {
+            totalOut += quantity;
+            totalOutValue += value;
+        }
     });
 
-        //date input
-        $(".date-mask").each(function() {
-            new Cleave(this, { // ใช้ 'this' เพื่ออ้างอิงถึง element ปัจจุบันใน loop
-                date: true,
-                delimiter: "/",
-                datePattern: ["d", "m", "Y"]
-            });
-        });
+    $('#totalQuantity').text(number_format(totalIn - totalOut, 2));
+    $('#totalValue').text(number_format(totalInValue - totalOutValue, 2));
+    $('#totalIn').text(number_format(totalIn, 2));
+    $('#totalInValue').text(number_format(totalInValue, 2));
+    $('#totalOut').text(number_format(totalOut, 2));
+    $('#totalOutValue').text(number_format(totalOutValue, 2));
 
+    // Format วันที่ปัจจุบัน
+    const now = new Date();
+    const currentDateTime = now.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    $('#transaction_date').val(currentDateTime);
 
-// Get the current date and time
-const currentDate = new Date();
-
-// Convert the year to the Buddhist Era
-const thaiYear = currentDate.getFullYear() + 543;
-
-// Format the date and time
-const formattedDateTime = currentDate.toLocaleString('th-TH', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false // Use 24-hour format
-}).replace(/\//g, '/'); // Replace '/' with '-'
-
-// Set the value of the input field
-document.getElementById('transaction_date').value = formattedDateTime;
+    // ตั้งค่า DataTable
+    $('#stockHistoryTable').DataTable({
+        order: [[0, 'desc']], // เรียงตามวันที่ล่าสุด
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"]],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json'
+        }
+    });
 });
-function submitAddStock() {
-    var form = document.getElementById('addStockForm');
-    if (form.checkValidity()) {
-        form.submit();
-    } else {
-        // แสดงข้อความแจ้งเตือนถ้าข้อมูลไม่ครบ
-          Swal.fire({
-            title: 'แจ้งเตือน!',
-            text: ' กรุณากรอกข้อมูลให้ครบ!',
-            icon: 'error',
-            customClass: {
-              confirmButton: 'btn btn-primary waves-effect waves-light'
-            },
-            buttonsStyling: false
-          })
+
+function number_format(number, decimals = 0) {
+    return number.toLocaleString('th-TH', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+}
+
+// ตรวจสอบข้อมูลก่อนบันทึก
+function validateStockForm() {
+    const form = document.getElementById('addStockForm');
+    const quantity = parseFloat($('#quantity').val());
+    const costPerUnit = parseFloat($('#cost_per_unit').val());
+
+    if (!quantity || quantity <= 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'กรุณาระบุจำนวน',
+            text: 'จำนวนต้องมากกว่า 0'
+        });
+        return false;
     }
+
+    if (!costPerUnit || costPerUnit <= 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'กรุณาระบุราคาต้นทุน',
+            text: 'ราคาต้นทุนต้องมากกว่า 0'
+        });
+        return false;
+    }
+
+    // แสดง Modal ยืนยันการบันทึก
+    Swal.fire({
+        title: 'ยืนยันการบันทึก',
+        html: `
+            <div class="text-start">
+                <p class="mb-2"><strong>จำนวนรับเข้า:</strong> ${quantity.toLocaleString()} ${$('#unit_name').text()}</p>
+                <p class="mb-2"><strong>ราคาต้นทุน:</strong> ${costPerUnit.toLocaleString()} บาท/หน่วย</p>
+                <p class="mb-0"><strong>มูลค่ารวม:</strong> ${(quantity * costPerUnit).toLocaleString()} บาท</p>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยัน',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
 }
     </script>
 </body>

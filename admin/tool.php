@@ -60,6 +60,12 @@
 
     <!-- datatables -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css"> 
+    <!-- SheetJS สำหรับ Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+    <!-- html2pdf สำหรับ Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
     body {
         background-color: #f8f9fa;
@@ -360,6 +366,14 @@
 
                 <div class="card">
     <div class="card-body">
+        <div class="text-end mb-2">
+            <button type="button" class="btn btn-primary me-2" onclick="showStockReport()">
+                <i class="ri-file-list-3-line me-1"></i> รายงานสต็อค
+            </button>
+            <button type="button" class="btn btn-info" onclick="showTransactionReport()">
+                <i class="ri-exchange-line me-1"></i> รายงานการเบิกเครื่องมือ
+            </button>
+        </div>
         <div class="table-responsive">
             <table id="toolTable" class="table table-hover">
                 <thead>
@@ -524,8 +538,6 @@
 
     <!--/ Layout wrapper -->
 
-
-<!-- Modal สำหรับแสดง Activity Logs -->
 <!-- Modal สำหรับแสดง Activity Logs -->
 <div class="modal fade" id="activityLogsModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
@@ -563,6 +575,201 @@
         </div>
     </div>
 </div>
+
+<!-- Modal สำหรับรายงานสต็อค -->
+<div class="modal fade" id="stockReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">รายงานสต็อคเครื่องมือคงเหลือ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ส่วนฟิลเตอร์ -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label">สถานะคงเหลือ</label>
+                        <select class="form-select" id="stockStatusFilter">
+                            <option value="">ทั้งหมด</option>
+                            <option value="low">ต่ำกว่าเกณฑ์</option>
+                            <option value="normal">ปกติ</option>
+                            <option value="out">หมด</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>จำนวนรายการทั้งหมด</h6>
+                                <h3 id="totalItems">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>มูลค่ารวม</h6>
+                                <h3 id="totalValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h6>รายการต่ำกว่าเกณฑ์</h6>
+                                <h3 id="lowStockItems">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6>รายการที่หมด</h6>
+                                <h3 id="outOfStockItems">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางรายละเอียด -->
+                <div class="table-responsive">
+                    <table id="stockReportTable" class="table table-bordered table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>รหัสเครื่องมือ</th>
+                                <th>ชื่อเครื่องมือ</th>
+                                <th>คงเหลือ</th>
+                                <th>หน่วยนับ</th>
+                                <th>ต้นทุน/หน่วย</th>
+                                <th>มูลค่ารวม</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ปุ่ม Export -->
+                <div class="text-end mt-3">
+                    <button type="button" class="btn btn-success me-2" onclick="exportToExcel()">
+                        <i class="ri-file-excel-2-line me-1"></i> Export Excel
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="exportToPDF()">
+                        <i class="ri-file-pdf-line me-1"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สำหรับรายงานการเบิก -->
+<div class="modal fade" id="transactionReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">รายงานการเบิกเครื่องมือเข้า-ออก</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ส่วนฟิลเตอร์ -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label">วันที่เริ่มต้น</label>
+                        <input type="date" class="form-control" id="transStartDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">วันที่สิ้นสุด</label>
+                        <input type="date" class="form-control" id="transEndDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">ประเภทรายการ</label>
+                        <select class="form-select" id="transactionType">
+                            <option value="">ทั้งหมด</option>
+                            <option value="in">รับเข้า</option>
+                            <option value="out">เบิกออก</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>จำนวนรายการทั้งหมด</h6>
+                                <h3 id="totalTransactions">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>มูลค่ารวมรับเข้า</h6>
+                                <h3 id="totalInValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6>มูลค่ารวมเบิกออก</h6>
+                                <h3 id="totalOutValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6>มูลค่าคงเหลือ</h6>
+                                <h3 id="netValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางรายละเอียด -->
+                <div class="table-responsive">
+                    <table id="transactionTable" class="table table-bordered table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>วันที่-เวลา</th>
+                                <th>รหัสเครื่องมือ</th>
+                                <th>ชื่อเครื่องมือ</th>
+                                <th>ประเภทรายการ</th>
+                                <th>จำนวน</th>
+                                <th>หน่วยนับ</th>
+                                <th>ราคา/หน่วย</th>
+                                <th>มูลค่ารวม</th>
+                                <th>ผู้ดำเนินการ</th>
+                                <th>หมายเหตุ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ปุ่ม Export -->
+                <div class="text-end mt-3">
+                    <button type="button" class="btn btn-success me-2" onclick="exportTransactionToExcel()">
+                        <i class="ri-file-excel-2-line me-1"></i> Export Excel
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="exportTransactionToPDF()">
+                        <i class="ri-file-pdf-line me-1"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
     <!-- Core JS -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
@@ -807,6 +1014,682 @@ function confirmDelete(toolId) {
     });
 }
 
+
+
+//////////////////////////////////////////////////////
+// ฟังก์ชันแสดง Modal รายงาน
+function showStockReport() {
+    loadStockData();
+    $('#stockReportModal').modal('show');
+}
+
+// โหลดข้อมูลสต็อค
+function loadStockData() {
+    const filters = {
+        stock_type: 'tool',
+        stockStatus: $('#stockStatusFilter').val()
+    };
+
+    $.ajax({
+        url: 'sql/get-stock-report.php',
+        type: 'GET',
+        data: filters,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                if (response.summary) updateSummary(response.summary);
+                if (response.items) updateTable(response.items);
+            } else {
+                console.error('Error:', response.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถโหลดข้อมูลได้'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+        }
+    });
+}
+
+// อัพเดทข้อมูลสรุป
+function updateSummary(summary) {
+    if (!summary) return;
+    
+    $('#totalItems').text(summary.totalItems || 0);
+    $('#totalValue').text(
+        (summary.totalValue || 0).toLocaleString('th-TH', {
+            style: 'currency',
+            currency: 'THB'
+        })
+    );
+    $('#lowStockItems').text(summary.lowStockItems || 0);
+    $('#outOfStockItems').text(summary.outOfStockItems || 0);
+}
+
+// อัพเดทตาราง
+function updateTable(items) {
+    const tbody = $('#stockReportTable tbody');
+    tbody.empty();
+
+    if (!items || items.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="7" class="text-center">ไม่พบข้อมูล</td>
+            </tr>
+        `);
+        return;
+    }
+
+    items.forEach(item => {
+        const amount = parseFloat(item.amount || item.tool_amount || 0);
+        const cost = parseFloat(item.cost || item.tool_cost || 0);
+        const totalValue = amount * cost;
+
+        const row = `
+            <tr>
+                <td>TOOL-${String(item.tool_id).padStart(6, '0')}</td>
+                <td>${item.tool_name}</td>
+                <td class="text-end">${amount.toLocaleString()}</td>
+                <td>${item.unit_name}</td>
+                <td class="text-end">${cost.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="text-end">${totalValue.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td>${getStatusBadge(amount)}</td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// ฟังก์ชันแสดงสถานะ
+function getStatusBadge(amount) {
+    if (amount <= 0) {
+        return '<span class="badge bg-danger">หมด</span>';
+    } else if (amount < 10) {
+        return '<span class="badge bg-warning">ต่ำกว่าเกณฑ์</span>';
+    }
+    return '<span class="badge bg-success">ปกติ</span>';
+}
+
+// Event Listeners
+$('#stockStatusFilter').change(loadStockData);
+// ฟังก์ชันแสดง Modal รายงาน
+function showTransactionReport() {
+    loadTransactionData();
+    $('#transactionReportModal').modal('show');
+}
+
+// โหลดข้อมูลการเบิก
+function loadTransactionData() {
+    const filters = {
+        startDate: $('#transStartDate').val(),
+        endDate: $('#transEndDate').val(),
+        transactionType: $('#transactionType').val(),
+        stock_type: 'tool'
+    };
+
+    $.ajax({
+        url: 'sql/get-transaction-report.php',
+        type: 'GET',
+        data: filters,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                updateTransactionSummary(response.summary);
+                updateTransactionTable(response.items);
+            } else {
+                console.error('Error:', response.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถโหลดข้อมูลได้'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+        }
+    });
+}
+
+// อัพเดทข้อมูลสรุปการเบิก
+function updateTransactionSummary(summary) {
+    if (!summary) return;
+    
+    $('#totalTransactions').text(summary.totalTransactions.toLocaleString());
+    $('#totalInValue').text(summary.totalInValue.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    }));
+    $('#totalOutValue').text(summary.totalOutValue.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    }));
+    $('#netValue').text(summary.netValue.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    }));
+}
+
+// เพิ่มฟังก์ชัน getBadgeClass ตรงนี้
+function getBadgeClass(type) { 
+    switch(type) { 
+        case 'รับเข้า': 
+            return 'bg-success'; // สีเขียว 
+        case 'เบิกออก': 
+            return 'bg-danger'; // สีแดง 
+        case 'ใช้ในคอร์ส': 
+            return 'bg-info'; // สีฟ้า 
+        default: 
+            return 'bg-secondary'; 
+    } 
+}
+
+// อัพเดทตารางการเบิก
+function updateTransactionTable(items) {
+    const tbody = $('#transactionTable tbody');
+    tbody.empty();
+
+    if (!items || items.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="10" class="text-center">ไม่พบข้อมูล</td>
+            </tr>
+        `);
+        return;
+    }
+
+    items.forEach(item => {
+        const badgeClass = getBadgeClass(item.transaction_type_name);
+
+        const row = `
+            <tr>
+                <td>${formatDateTime(item.transaction_date)}</td>
+                <td>TOOL-${String(item.related_id).padStart(6, '0')}</td>
+                <td>${item.item_name}</td>
+                <td><span class="badge ${badgeClass}">${item.transaction_type_name}</span></td>
+                <td class="text-end">${formatNumber(item.display_quantity)}</td>
+                <td>${item.unit_name}</td>
+                <td class="text-end">${formatNumber(item.cost_per_unit)}</td>
+                <td class="text-end">${formatNumber(item.total_value)}</td>
+                <td>${item.users_fname} ${item.users_lname}</td>
+                <td>${item.notes}</td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบ
+function formatDateTime(dateTimeStr) {
+    const date = new Date(dateTimeStr);
+    return date.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+}
+
+function formatNumber(number, decimals = 2) {
+    return Number(number).toLocaleString('th-TH', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+}
+
+function formatNote(note) {
+    if (!note) return '-';
+    
+    // กรณีเป็นการคืนสต็อก
+    if (note.includes('คืนสต็อกจากการยกเลิกชำระเงิน')) {
+        return note.replace(
+            'คืนสต็อกจากการยกเลิกชำระเงิน ORDER-', 
+            'รับเข้า - ยกเลิกการสั่งซื้อ รหัสสินค้า: '
+        );
+    }
+    
+    // กรณีเป็นการใช้ในคอร์ส
+    if (note.includes('ตัดสต็อกจากการใช้บริการ')) {
+        return note.replace(
+            'ตัดสต็อกจากการใช้บริการ ORDER-', 
+            'เบิกออก - ใช้ในคอร์ส รหัสสินค้า: '
+        );
+    }
+    
+    // กรณีอื่นๆ
+    return note;
+}
+
+// Event Listeners
+$('#transactionType, #transStartDate, #transEndDate').change(loadTransactionData);
+// Export to Excel
+function exportToExcel() {
+    const wb = XLSX.utils.book_new();
+    
+    // สร้าง worksheet สำหรับสรุป
+    const summaryData = [
+        ['รายงานสต็อคเครื่องมือคงเหลือ'],
+        ['วันที่ออกรายงาน:', new Date().toLocaleString('th-TH')],
+        [''],
+        ['สรุปภาพรวม'],
+        ['จำนวนรายการทั้งหมด:', $('#totalItems').text()],
+        ['มูลค่ารวม:', $('#totalValue').text()],
+        ['รายการต่ำกว่าเกณฑ์:', $('#lowStockItems').text()],
+        ['รายการที่หมด:', $('#outOfStockItems').text()]
+    ];
+    
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, "สรุป");
+
+    // สร้าง worksheet สำหรับรายละเอียด
+    const table = document.getElementById('stockReportTable');
+    const wsDetails = XLSX.utils.table_to_sheet(table);
+    XLSX.utils.book_append_sheet(wb, wsDetails, "รายละเอียด");
+
+    // บันทึกไฟล์
+    XLSX.writeFile(wb, `stock_report_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// Export to PDF
+async function exportToPDF() {
+    try {
+        Swal.fire({
+            title: 'กำลังสร้าง PDF',
+            html: 'กรุณารอสักครู่...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const currentDate = new Date().toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const content = `
+            <div style="font-family: 'Sarabun', sans-serif;">
+                <!-- ส่วนหัว -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">รายงานสต็อคเครื่องมือแพทย์คงเหลือ</h2>
+                    <p style="margin: 5px 0;">วันที่ออกรายงาน: ${currentDate}</p>
+                </div>
+
+                <!-- เงื่อนไขการกรอง -->
+                <div style="margin-bottom: 15px; font-size: 14px;">
+                    <p>เงื่อนไขการกรอง:</p>
+                    <table style="width: 100%; margin-bottom: 10px;">
+                        <tr>
+                            <td>สถานะคงเหลือ: ${$('#stockStatusFilter option:selected').text()}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">สรุปภาพรวม</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr style="background-color: #f8f9fa;">
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;">จำนวนรายการทั้งหมด:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;"><strong>${$('#totalItems').text()}</strong></td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;">มูลค่ารวม:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;"><strong>${$('#totalValue').text()}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">รายการต่ำกว่าเกณฑ์:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#lowStockItems').text()}</strong></td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">รายการที่หมด:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#outOfStockItems').text()}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ตารางข้อมูล -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">รายละเอียดสต็อค</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background-color: #4e73df; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">รหัสเครื่องมือ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">ชื่อเครื่องมือ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">คงเหลือ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">ต้นทุน/หน่วย</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">มูลค่ารวม</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Array.from($('#stockReportTable tbody tr')).map(row => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(0).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(1).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(2).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(4).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(5).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                        ${getStatusForPDF($(row).find('td').eq(6).text())}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ลายเซ็นต์ -->
+                <div style="margin-top: 30px; text-align: right;">
+                    <p>ผู้ออกรายงาน: ................................................</p>
+                    <p style="margin-top: 5px;">(${$('#currentUserName').text()})</p>
+                    <p style="margin-top: 5px;">วันที่: ${currentDate}</p>
+                </div>
+            </div>
+        `;
+
+        const opt = {
+            margin: 10,
+            filename: `stock_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                logging: true
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'landscape'
+            },
+            pagebreak: { mode: 'avoid-all' }
+        };
+
+        // สร้าง PDF
+        const pdf = await html2pdf().set(opt).from(content).save();
+        
+        // ปิด loading และแสดงข้อความสำเร็จ
+        Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ',
+            text: 'สร้างไฟล์ PDF เรียบร้อยแล้ว',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('PDF Export Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ไม่สามารถสร้างไฟล์ PDF ได้'
+        });
+    }
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบสถานะสำหรับ PDF
+function getStatusForPDF(status) {
+    const statusText = status.toLowerCase();
+    if (statusText.includes('หมด')) {
+        return `<span style="color: #dc3545; font-weight: bold;">หมด</span>`;
+    } else if (statusText.includes('ต่ำกว่าเกณฑ์')) {
+        return `<span style="color: #ffc107; font-weight: bold;">ต่ำกว่าเกณฑ์</span>`;
+    }
+    return `<span style="color: #28a745; font-weight: bold;">ปกติ</span>`;
+}
+
+
+async function exportTransactionToPDF() {
+    try {
+        // แสดง loading
+        Swal.fire({
+            title: 'กำลังสร้าง PDF',
+            html: 'กรุณารอสักครู่...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const currentDate = new Date().toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const content = `
+            <div style="font-family: 'Sarabun', sans-serif;">
+                <!-- ส่วนหัว -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">รายงานการเบิกเครื่องมือเข้า-ออก</h2>
+                    <p style="margin: 5px 0;">วันที่ออกรายงาน: ${currentDate}</p>
+                </div>
+
+                <!-- เงื่อนไขการกรอง -->
+                <div style="margin-bottom: 15px; font-size: 14px;">
+                    <p>เงื่อนไขการกรอง:</p>
+                    <table style="width: 100%; margin-bottom: 10px;">
+                        <tr>
+                            <td>วันที่เริ่มต้น: ${$('#transStartDate').val() || '-'}</td>
+                            <td>วันที่สิ้นสุด: ${$('#transEndDate').val() || '-'}</td>
+                        </tr>
+                        <tr>
+                            <td>ประเภทรายการ: ${$('#transactionType option:selected').text()}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">สรุปภาพรวม</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr style="background-color: #f8f9fa;">
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;">จำนวนรายการทั้งหมด:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;"><strong>${$('#totalTransactions').text()}</strong></td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;">มูลค่าสุทธิ:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;"><strong>${$('#netValue').text()}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">มูลค่ารวมรับเข้า:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#totalInValue').text()}</strong></td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">มูลค่ารวมเบิกออก:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#totalOutValue').text()}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ตารางข้อมูล -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">รายการเบิกเครื่องมือ</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background-color: #4e73df; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 8px;">วันที่-เวลา</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">รหัสเครื่องมือ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ชื่อเครื่องมือ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ประเภทรายการ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">จำนวน</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ราคา/หน่วย</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">มูลค่ารวม</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ผู้ดำเนินการ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">หมายเหตุ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Array.from($('#transactionTable tbody tr')).map(row => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(0).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(1).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(2).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                        ${getTransactionTypeBadge($(row).find('td').eq(3).text())}
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(4).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(6).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(7).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(8).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(9).text()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ลายเซ็นต์ -->
+                <div style="margin-top: 30px; text-align: right;">
+                    <p>ผู้ออกรายงาน: ................................................</p>
+                    <p style="margin-top: 5px;">(${$('#currentUserName').text()})</p>
+                    <p style="margin-top: 5px;">วันที่: ${currentDate}</p>
+                </div>
+            </div>
+        `;
+
+        const opt = {
+            margin: 10,
+            filename: `transaction_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                logging: true
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'landscape'
+            },
+            pagebreak: { mode: 'avoid-all' }
+        };
+
+        // สร้าง PDF
+        const pdf = await html2pdf().set(opt).from(content).save();
+        
+        // ปิด loading และแสดงข้อความสำเร็จ
+        Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ',
+            text: 'สร้างไฟล์ PDF เรียบร้อยแล้ว',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('PDF Export Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ไม่สามารถสร้างไฟล์ PDF ได้'
+        });
+    }
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบประเภทรายการสำหรับ PDF
+function getTransactionTypeBadge(type) {
+    switch(type.trim()) {
+        case 'รับเข้า':
+            return `<span style="color: #28a745; font-weight: bold;">รับเข้า</span>`;
+        case 'ใช้ในคอร์ส':
+            return `<span style="color: #17a2b8; font-weight: bold;">ใช้ในคอร์ส</span>`;
+        case 'เบิกออก':
+            return `<span style="color: #dc3545; font-weight: bold;">เบิกออก</span>`;
+        default:
+            return type;
+    }
+}
+
+function exportTransactionToExcel() {
+    const wb = XLSX.utils.book_new();
+    
+    // สร้าง worksheet สำหรับสรุป
+    const summaryData = [
+        ['รายงานการเบิกเครื่องมือเข้า-ออก'],
+        ['วันที่ออกรายงาน:', new Date().toLocaleString('th-TH')],
+        [''],
+        ['เงื่อนไขการค้นหา:'],
+        ['วันที่เริ่มต้น:', $('#transStartDate').val() || '-'],
+        ['วันที่สิ้นสุด:', $('#transEndDate').val() || '-'],
+        ['ประเภทรายการ:', $('#transactionType option:selected').text()],
+        [''],
+        ['สรุปภาพรวม'],
+        ['จำนวนรายการทั้งหมด:', $('#totalTransactions').text()],
+        ['มูลค่ารวมรับเข้า:', $('#totalInValue').text()],
+        ['มูลค่ารวมเบิกออก:', $('#totalOutValue').text()],
+        ['มูลค่าคงเหลือ:', $('#netValue').text()]
+    ];
+    
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, "สรุป");
+
+    // สร้าง worksheet สำหรับรายละเอียด
+    const headers = [
+        'วันที่-เวลา',
+        'รหัสเครื่องมือ',
+        'ชื่อเครื่องมือ',
+        'ประเภทรายการ',
+        'จำนวน',
+        'หน่วยนับ',
+        'ราคา/หน่วย',
+        'มูลค่ารวม',
+        'ผู้ดำเนินการ',
+        'หมายเหตุ'
+    ];
+
+    const wsData = [headers];
+    
+    $('#transactionTable tbody tr').each(function() {
+        wsData.push([
+            $(this).find('td').eq(0).text(),
+            $(this).find('td').eq(1).text(),
+            $(this).find('td').eq(2).text(),
+            $(this).find('td').eq(3).text().trim(),
+            $(this).find('td').eq(4).text().replace(/,/g, ''),
+            $(this).find('td').eq(5).text(),
+            $(this).find('td').eq(6).text().replace(/,/g, ''),
+            $(this).find('td').eq(7).text().replace(/,/g, ''),
+            $(this).find('td').eq(8).text(),
+            $(this).find('td').eq(9).text()
+        ]);
+    });
+
+    const wsDetails = XLSX.utils.aoa_to_sheet(wsData);
+
+    // กำหนดความกว้างคอลัมน์
+    const wscols = [
+        {wch: 20}, // วันที่-เวลา
+        {wch: 12}, // รหัสเครื่องมือ
+        {wch: 30}, // ชื่อเครื่องมือ
+        {wch: 15}, // ประเภทรายการ
+        {wch: 10}, // จำนวน
+        {wch: 10}, // หน่วยนับ
+        {wch: 12}, // ราคา/หน่วย
+        {wch: 12}, // มูลค่ารวม
+        {wch: 20}, // ผู้ดำเนินการ
+        {wch: 30}  // หมายเหตุ
+    ];
+    wsDetails['!cols'] = wscols;
+
+    XLSX.utils.book_append_sheet(wb, wsDetails, "รายการเบิกเครื่องมือ");
+
+    // Export ไฟล์
+    XLSX.writeFile(wb, `transaction_report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+//////////////////////////////////////////////////////
       // Display success message
       <?php if(isset($_SESSION['msg_ok'])){ ?>
         Swal.fire({

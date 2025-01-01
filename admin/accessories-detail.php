@@ -437,10 +437,18 @@ function formatId($id) {
 
 
 <?php
-// ... (โค้ดอื่นๆ ที่มีอยู่แล้ว) ...
-
-// เพิ่มโค้ดนี้หลังจากส่วนที่แสดงรายละเอียดยา
-$stock_sql = "SELECT st.*, u.users_fname, u.users_lname 
+$stock_sql = "SELECT st.*, u.users_fname, u.users_lname,  
+              CASE 
+                  WHEN st.notes LIKE '%ORDER%' THEN 'ใช้ในคอร์ส'
+                  WHEN st.notes LIKE '%คืนสต็อก%' THEN 'คืนสต็อก'
+                  WHEN st.quantity > 0 THEN 'รับเข้า'
+                  ELSE 'เบิกออก'
+              END as transaction_type_name,
+              CASE 
+                  WHEN st.quantity > 0 THEN st.quantity
+                  ELSE ABS(st.quantity)
+              END as display_quantity,
+              (ABS(st.quantity) * st.cost_per_unit) as total_value
               FROM stock_transactions st
               JOIN users u ON st.users_id = u.users_id
               WHERE st.stock_type = 'accessory' AND st.related_id = '$acc_id'
@@ -449,51 +457,83 @@ $stock_result = mysqli_query($conn, $stock_sql);
 
 
     ?>
-    <<div class="card mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title text-white">ข้อมูลสต็อก</h5>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStockModal">
-            <i class="ri-add-line me-1"></i> เพิ่มสต็อก
-        </button>
-    </div>
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title text-white mb-0">
+                <i class="ri-history-line me-1"></i> ประวัติรายการเข้า-ออก
+            </h5>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addStockModal">
+                <i class="ri-add-line me-1"></i> เพิ่มสต็อก
+            </button>
+        </div>
     <div class="card-body">
-        <?php 
-            // ตรวจสอบว่ามีข้อมูลสต็อกหรือไม่
-            if (mysqli_num_rows($stock_result) > 0) {
-         ?>
+        <?php if (mysqli_num_rows($stock_result) > 0) { ?>
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" id="stockHistoryTable">
                 <thead>
                     <tr>
-                        <th>วันที่ทำรายการ</th>
-                        <th>ผู้ทำรายการ</th>
-                        <th>จำนวน</th>
-                        <th>ต้นทุนต่อหน่วย</th>
+                        <th>วันที่-เวลา</th>
+                        <th>ประเภทรายการ</th>
+                        <th class="text-end">จำนวน</th>
+                        <th>หน่วยนับ</th>
+                        <th class="text-end">ราคา/หน่วย</th>
+                        <th class="text-end">มูลค่ารวม</th>
                         <th>วันหมดอายุ</th>
+                        <th>ผู้ทำรายการ</th>
                         <th>หมายเหตุ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($stock = mysqli_fetch_object($stock_result)) { ?>
+                    <?php 
+                    while ($stock = mysqli_fetch_object($stock_result)) {
+                        // กำหนดสีและ class ตามประเภทรายการ
+                        $badgeClass = '';
+                        switch($stock->transaction_type_name) {
+                            case 'รับเข้า':
+                                $badgeClass = 'bg-success';
+                                break;
+                            case 'เบิกออก':
+                                $badgeClass = 'bg-danger';
+                                break;
+                            case 'ใช้ในคอร์ส':
+                                $badgeClass = 'bg-info';
+                                break;
+                            case 'คืนสต็อก':
+                                $badgeClass = 'bg-warning';
+                                break;
+                        }
+                    ?>
                     <tr>
                         <td><?php echo date('d/m/Y H:i', strtotime($stock->transaction_date)); ?></td>
+                        <td><span class="badge <?php echo $badgeClass; ?>"><?php echo $stock->transaction_type_name; ?></span></td>
+                        <td class="text-end"><?php echo number_format($stock->display_quantity, 2); ?></td>
+                        <td><?php echo $acc->unit_name; ?></td>
+                        <td class="text-end"><?php echo number_format($stock->cost_per_unit, 2); ?></td>
+                        <td class="text-end"><?php echo number_format($stock->total_value, 2); ?></td>
+                        <td><?php echo ($stock->expiry_date) ? date('d/m/Y', strtotime($stock->expiry_date)) : '-'; ?></td>
                         <td><?php echo $stock->users_fname . ' ' . $stock->users_lname; ?></td>
-                        <td><?php echo number_format($stock->quantity, 2); ?></td>
-                        <td><?php echo number_format($stock->cost_per_unit, 2)." บาท"; ?></td>
-                        <td><?php echo ($stock->expiry_date) ? date('d/m/Y', strtotime($stock->expiry_date)) : 'ไม่ระบุ'; ?></td>
-                        <td><?php echo $stock->notes; ?></td>
+                        <td>
+                            <?php 
+                            echo $stock->notes ?: '-';  // แสดงข้อความตามที่บันทึกในฐานข้อมูล หรือ '-' ถ้าไม่มีข้อมูล
+                            ?>
+                        </td>
                     </tr>
                     <?php } ?>
                 </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="2" class="text-end">รวมทั้งหมด:</th>
+                        <th class="text-end" id="totalQuantity">-</th>
+                        <th colspan="2" class="text-end">มูลค่ารวม:</th>
+                        <th class="text-end" id="totalValue">-</th>
+                        <th colspan="3"></th>
+                    </tr>
+                </tfoot>
             </table>
         </div>
-            <?php
-} else {
-    echo "<p>ไม่พบข้อมูลการทำรายการสต็อก</p>";
-}
-
-// ... (โค้ดอื่นๆ ที่มีอยู่แล้ว) ...
-?>
+        <?php } else { ?>
+            <p class="text-center">ไม่พบข้อมูลการทำรายการสต็อก</p>
+        <?php } ?>
     </div>
 </div>
 
@@ -630,38 +670,41 @@ $(document).ready(function() {
                 "previous": "ก่อนหน้า"
             }
         },
-        lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"] ],
-        pagingType: 'full_numbers'
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"]],
+        order: [[0, 'desc']], // เรียงตามวันที่ล่าสุด
+        initComplete: function () {
+            calculateTotals();
+        }
     });
 
-        //date input
-        $(".date-mask").each(function() {
-            new Cleave(this, { // ใช้ 'this' เพื่ออ้างอิงถึง element ปัจจุบันใน loop
-                date: true,
-                delimiter: "/",
-                datePattern: ["d", "m", "Y"]
-            });
+    function calculateTotals() {
+        let totalQuantity = 0;
+        let totalValue = 0;
+
+        table.rows().every(function() {
+            const data = this.data();
+            const type = $(data[1]).text(); // ประเภทรายการ
+            const quantity = parseFloat(data[2].replace(/,/g, '')); // จำนวน
+            const value = parseFloat(data[5].replace(/,/g, '')); // มูลค่ารวม
+
+            if (type === 'รับเข้า' || type === 'คืนสต็อก') {
+                totalQuantity += quantity;
+                totalValue += value;
+            } else {
+                totalQuantity -= quantity;
+                totalValue -= value;
+            }
         });
 
-
-// Get the current date and time
-const currentDate = new Date();
-
-// Convert the year to the Buddhist Era
-const thaiYear = currentDate.getFullYear() + 543;
-
-// Format the date and time
-const formattedDateTime = currentDate.toLocaleString('th-TH', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false // Use 24-hour format
-}).replace(/\//g, '/'); // Replace '/' with '-'
-
-// Set the value of the input field
-document.getElementById('transaction_date').value = formattedDateTime;
+        $('#totalQuantity').text(totalQuantity.toLocaleString('th-TH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+        $('#totalValue').text(totalValue.toLocaleString('th-TH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+    }
 });
 function submitAddStock() {
     var form = document.getElementById('addStockForm');

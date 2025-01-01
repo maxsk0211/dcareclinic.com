@@ -62,6 +62,14 @@
 
     <!-- datatables -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css"> 
+    <!-- Chart.js สำหรับแสดงกราฟ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+
+    <!-- SheetJS สำหรับ Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+    <!-- html2pdf สำหรับ Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
   body {
@@ -244,6 +252,42 @@
   .form-control:focus, .form-select:focus {
     box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
     border-color: #4e73df;
+  }
+  .stock-summary-card {
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+  }
+
+  .stock-summary-card h6 {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+  }
+
+  .stock-summary-card h3 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: bold;
+  }
+
+  #stockReportTable th {
+      background-color: #4e73df;
+      color: white;
+  }
+
+  .export-btn {
+      min-width: 120px;
+  }
+
+  .filter-section {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+  }
+
+  #stockValueChart {
+      min-height: 300px;
   }
 </style>
   </head>
@@ -461,6 +505,14 @@ $unit_result = mysqli_query($conn, $unit_sql);
 
 <div class="card">
   <div class="card-body">
+    <div class="text-end mb-2">
+        <button type="button" class="btn btn-primary me-2" onclick="showStockReport()">
+            <i class="ri-file-list-3-line me-1"></i> รายงานสต็อค
+        </button>
+        <button type="button" class="btn btn-info" onclick="showTransactionReport()">
+            <i class="ri-exchange-line me-1"></i> รายงานการเบิกยา
+        </button>
+    </div>
     <div class="table-responsive">
       <table id="drugTable" class="table table-hover">
         <thead>
@@ -709,6 +761,215 @@ function formatId($id) {
     </div>
 </div>
 
+
+<!-- Modal สำหรับรายงานสต็อค -->
+<div class="modal fade" id="stockReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">รายงานสต็อคยาคงเหลือ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ส่วนฟิลเตอร์ -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label">ประเภทยา</label>
+                        <select class="form-select" id="drugTypeFilter">
+                            <option value="">ทั้งหมด</option>
+                            <!-- จะเพิ่ม options ด้วย JavaScript -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">สถานะคงเหลือ</label>
+                        <select class="form-select" id="stockStatusFilter">
+                            <option value="">ทั้งหมด</option>
+                            <option value="low">ต่ำกว่าเกณฑ์</option>
+                            <option value="normal">ปกติ</option>
+                            <option value="out">หมด</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>จำนวนรายการทั้งหมด</h6>
+                                <h3 id="totalItems">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>มูลค่ารวม</h6>
+                                <h3 id="totalValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h6>รายการต่ำกว่าเกณฑ์</h6>
+                                <h3 id="lowStockItems">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6>รายการที่หมด</h6>
+                                <h3 id="outOfStockItems">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางแสดงข้อมูล -->
+                <div class="table-responsive">
+                    <table id="stockReportTable" class="table table-bordered table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>รหัสยา</th>
+                                <th>ชื่อยา</th>
+                                <th>ประเภทยา</th>
+                                <th>คงเหลือ</th>
+                                <th>หน่วยนับ</th>
+                                <th>ต้นทุน/หน่วย</th>
+                                <th>มูลค่ารวม</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- จะเพิ่มข้อมูลด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ปุ่ม Export -->
+                <div class="text-end mt-3">
+                    <button type="button" class="btn btn-success me-2" onclick="exportToExcel()">
+                        <i class="ri-file-excel-2-line me-1"></i> Export Excel
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="exportToPDF()">
+                        <i class="ri-file-pdf-line me-1"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สำหรับรายงานการเบิกยา -->
+<div class="modal fade" id="transactionReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">รายงานการเบิกยาเข้า-ออก</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ส่วนฟิลเตอร์ -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label">วันที่เริ่มต้น</label>
+                        <input type="date" class="form-control" id="transStartDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">วันที่สิ้นสุด</label>
+                        <input type="date" class="form-control" id="transEndDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">ประเภทรายการ</label>
+                        <select class="form-select" id="transactionType">
+                            <option value="">ทั้งหมด</option>
+                            <option value="in">รับเข้า</option>
+                            <option value="out">เบิกออก</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">ประเภทยา</label>
+                        <select class="form-select" id="transDrugType">
+                            <option value="">ทั้งหมด</option>
+                            <!-- จะเพิ่ม options ด้วย JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>จำนวนรายการทั้งหมด</h6>
+                                <h3 id="totalTransactions">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>มูลค่ารวมรับเข้า</h6>
+                                <h3 id="totalInValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6>มูลค่ารวมเบิกออก</h6>
+                                <h3 id="totalOutValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6>มูลค่าคงเหลือ</h6>
+                                <h3 id="netValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางแสดงข้อมูล -->
+                <div class="table-responsive">
+                    <table id="transactionTable" class="table table-bordered table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>วันที่-เวลา</th>
+                                <th>รหัสยา</th>
+                                <th>ชื่อยา</th>
+                                <th>ประเภทยา</th>
+                                <th>ประเภทรายการ</th>
+                                <th>จำนวน</th>
+                                <th>หน่วยนับ</th>
+                                <th>ราคา/หน่วย</th>
+                                <th>มูลค่ารวม</th>
+                                <th>ผู้ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- จะเพิ่มข้อมูลด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ปุ่ม Export -->
+                <div class="text-end mt-3">
+                    <button type="button" class="btn btn-success me-2" onclick="exportTransactionToExcel()">
+                        <i class="ri-file-excel-2-line me-1"></i> Export Excel
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="exportTransactionToPDF()">
+                        <i class="ri-file-pdf-line me-1"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <!--/ Layout wrapper -->
 
     <!-- Core JS -->
@@ -753,6 +1014,146 @@ function formatId($id) {
 
 
     <script type="text/javascript">
+      // ฟังก์ชันแสดง Modal รายงาน
+function showStockReport() {
+    loadDrugTypes();
+    loadStockData();
+    $('#stockReportModal').modal('show');
+}
+
+// โหลดข้อมูลประเภทยา
+function loadDrugTypes() {
+    $.ajax({
+        url: 'sql/get-drug-types.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success && Array.isArray(response.data)) {
+                const select = $('#drugTypeFilter');
+                select.empty().append('<option value="">ทั้งหมด</option>');
+                // เปลี่ยนการเข้าถึง property ให้ตรงกับ API response
+                response.data.forEach(type => {
+                    select.append(`<option value="${type.drug_type_id}">${type.drug_type_name}</option>`);
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading drug types:', error);
+        }
+    });
+}
+
+// โหลดข้อมูลสต็อค
+function loadStockData() {
+    const filters = {
+        stock_type: 'drug',
+        typeFilter: $('#drugTypeFilter').val(), // เปลี่ยนเป็น typeFilter ตามที่ backend รับ
+        stockStatus: $('#stockStatusFilter').val()
+    };
+
+    $.ajax({
+        url: 'sql/get-stock-report.php',
+        type: 'GET',
+        data: filters,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                if (response.summary) updateSummary(response.summary);
+                if (response.items) updateTable(response.items);
+            } else {
+                console.error('Error:', response.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถโหลดข้อมูลได้'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+        }
+    });
+}
+
+
+// อัพเดทข้อมูลสรุป
+function updateSummary(summary) {
+    if (!summary) return;
+    
+    $('#totalItems').text(summary.totalItems || 0);
+    $('#totalValue').text(
+        (summary.totalValue || 0).toLocaleString('th-TH', {
+            style: 'currency',
+            currency: 'THB'
+        })
+    );
+    $('#lowStockItems').text(summary.lowStockItems || 0);
+    $('#outOfStockItems').text(summary.outOfStockItems || 0);
+}
+
+
+
+// อัพเดทตาราง
+function updateTable(items) {
+    const tbody = $('#stockReportTable tbody');
+    tbody.empty();
+
+    if (!items || items.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="8" class="text-center">ไม่พบข้อมูล</td>
+            </tr>
+        `);
+        return;
+    }
+
+    items.forEach(item => {
+        // ฟังก์ชันจัดรูปแบบรหัสยา
+        const formatDrugId = (id) => {
+            return `D-${String(id).padStart(6, '0')}`;
+        };
+
+        // ปรับการแสดงผลประเภทยา
+        const typeName = item.type_name || item.drug_type_name || 'ไม่ระบุประเภท';
+        const amount = parseFloat(item.amount || item.drug_amount || 0);
+        const cost = parseFloat(item.cost || item.drug_cost || 0);
+        const totalValue = amount * cost;
+
+        const row = `
+            <tr>
+                <td>${formatDrugId(item.drug_id)}</td>
+                <td>${item.drug_name}</td>
+                <td>${typeName}</td>
+                <td class="text-end">${amount.toLocaleString()}</td>
+                <td>${item.unit_name}</td>
+                <td class="text-end">${cost.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="text-end">${totalValue.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td>${getStatusBadge(amount)}</td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// ฟังก์ชันแสดงสถานะ (ไม่ต้องเปลี่ยนแปลง)
+function getStatusBadge(amount) {
+    if (amount <= 0) {
+        return '<span class="badge bg-danger">หมด</span>';
+    } else if (amount < 10) {
+        return '<span class="badge bg-warning">ต่ำกว่าเกณฑ์</span>';
+    }
+    return '<span class="badge bg-success">ปกติ</span>';
+}
+
+// Event Listeners
+$('#drugTypeFilter, #stockStatusFilter').change(loadStockData);
+$('#startDate, #endDate').change(loadStockData);
+
 function showDrugHistory() {
     // แสดง loading
     const tableBody = $('#drugHistoryTableBody');
@@ -865,8 +1266,271 @@ $('#actionFilter').change(function() {
     loadDrugHistory($(this).val());
 });
  
+// ฟังก์ชัน Export Excel
+async function exportToExcel() {
+    try {
+        const filters = {
+            startDate: $('#startDate').val(),
+            endDate: $('#endDate').val(),
+            drugType: $('#drugTypeFilter').val(),
+            stockStatus: $('#stockStatusFilter').val()
+        };
+
+        // ดึงข้อมูลล่าสุด
+        const response = await $.ajax({
+            url: 'sql/get-stock-report.php',
+            type: 'GET',
+            data: filters
+        });
+
+        if (!response.success) {
+            throw new Error(response.message || 'Failed to fetch data');
+        }
+
+        // สร้าง Workbook
+        const wb = XLSX.utils.book_new();
+        
+        // สร้าง Worksheet สำหรับสรุป
+        const summaryData = [
+            ['รายงานสต็อคยาคงเหลือ'],
+            ['วันที่ออกรายงาน:', new Date().toLocaleString('th-TH')],
+            [''],
+            ['สรุปภาพรวม'],
+            ['จำนวนรายการทั้งหมด:', response.summary.totalItems],
+            ['มูลค่ารวม:', response.summary.totalValue.toLocaleString('th-TH', {style: 'currency', currency: 'THB'})],
+            ['รายการต่ำกว่าเกณฑ์:', response.summary.lowStockItems],
+            ['รายการที่หมด:', response.summary.outOfStockItems]
+        ];
+        
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(wb, wsSummary, "สรุป");
+
+        // สร้าง Worksheet สำหรับรายละเอียด
+        const headers = [
+            'รหัสยา',
+            'ชื่อยา',
+            'ประเภทยา',
+            'คงเหลือ',
+            'หน่วยนับ',
+            'ต้นทุน/หน่วย',
+            'มูลค่ารวม',
+            'สถานะ'
+        ];
+
+        const wsData = [headers];
+        
+        response.items.forEach(item => {
+            let status = '';
+            const amount = parseFloat(item.amount || item.drug_amount || 0);
+            const cost = parseFloat(item.cost || item.drug_cost || 0);
+            const totalValue = amount * cost;
+            // กำหนดสถานะ
+            if (amount <= 0) status = 'หมด';
+            else if (amount < 10) status = 'ต่ำกว่าเกณฑ์';
+            else status = 'ปกติ';
+
+            // ฟังก์ชันจัดรูปแบบรหัสยา
+            const formatDrugId = (id) => {
+                return `D-${String(id).padStart(6, '0')}`;
+            };
+
+            // จัดการข้อมูลประเภทยา
+            const typeName = item.type_name || item.drug_type_name || 'ไม่ระบุประเภท';
+
+            wsData.push([
+                formatDrugId(item.drug_id),
+                item.drug_name,
+                typeName,
+                amount,
+                item.unit_name,
+                cost,
+                totalValue,
+                status
+            ]);
+        });
+
+        const wsDetails = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, wsDetails, "รายละเอียด");
+
+        // กำหนดความกว้างคอลัมน์
+        const wscols = [
+            {wch: 10}, // รหัสยา
+            {wch: 30}, // ชื่อยา
+            {wch: 20}, // ประเภทยา
+            {wch: 10}, // คงเหลือ
+            {wch: 10}, // หน่วยนับ
+            {wch: 15}, // ต้นทุน/หน่วย
+            {wch: 15}, // มูลค่ารวม
+            {wch: 15}  // สถานะ
+        ];
+        wsDetails['!cols'] = wscols;
+
+        // Export ไฟล์
+        const fileName = `stock_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: error.message
+        });
+    }
+}
 
 
+async function exportToPDF() {
+    try {
+        // แสดง loading
+        Swal.fire({
+            title: 'กำลังสร้าง PDF',
+            html: 'กรุณารอสักครู่...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // สร้างเนื้อหา HTML
+        const currentDate = new Date().toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        // สร้าง Header
+        const content = `
+            <div style="font-family: 'Sarabun', sans-serif;">
+                <!-- ส่วนหัว -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">รายงานสต็อคยาคงเหลือ</h2>
+                    <p style="margin: 5px 0;">วันที่ออกรายงาน: ${currentDate}</p>
+                </div>
+
+                <!-- เงื่อนไขการกรอง -->
+                <div style="margin-bottom: 15px; font-size: 14px;">
+                    <p>เงื่อนไขการกรอง:</p>
+                    <table style="width: 100%; margin-bottom: 10px;">
+                        <tr>
+                            <td>ประเภทยา: ${$('#drugTypeFilter option:selected').text()}</td>
+                            <td>สถานะคงเหลือ: ${$('#stockStatusFilter option:selected').text()}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">สรุปภาพรวม</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr style="background-color: #f8f9fa;">
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;">จำนวนรายการทั้งหมด:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;"><strong>${$('#totalItems').text()}</strong></td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;">มูลค่ารวม:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 25%;"><strong>${$('#totalValue').text()}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">รายการต่ำกว่าเกณฑ์:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#lowStockItems').text()}</strong></td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">รายการที่หมด:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#outOfStockItems').text()}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ตารางข้อมูล -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">รายละเอียดสต็อค</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background-color: #4e73df; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">รหัสยา</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">ชื่อยา</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">ประเภทยา</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">คงเหลือ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">ต้นทุน/หน่วย</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">มูลค่ารวม</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Array.from($('#stockReportTable tbody tr')).map(row => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(0).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(1).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(2).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(3).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(5).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(6).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                        ${getStatusForPDF($(row).find('td').eq(7).text())}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ลายเซ็นต์ -->
+                <div style="margin-top: 30px; text-align: right;">
+                    <p>ผู้ออกรายงาน: ................................................</p>
+                    <p style="margin-top: 5px;">(${$('#currentUserName').text()})</p>
+                    <p style="margin-top: 5px;">วันที่: ${currentDate}</p>
+                </div>
+            </div>
+        `;
+
+        // กำหนดค่า options สำหรับ html2pdf
+        const opt = {
+            margin: 10,
+            filename: `stock_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                logging: true
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'landscape'
+            },
+            pagebreak: { mode: 'avoid-all' }
+        };
+
+        // สร้าง PDF
+        const pdf = await html2pdf().set(opt).from(content).save();
+        
+        // ปิด loading และแสดงข้อความสำเร็จ
+        Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ',
+            text: 'สร้างไฟล์ PDF เรียบร้อยแล้ว',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('PDF Export Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ไม่สามารถสร้างไฟล์ PDF ได้'
+        });
+    }
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบสถานะสำหรับ PDF
+function getStatusForPDF(status) {
+    const statusText = status.toLowerCase();
+    if (statusText.includes('หมด')) {
+        return `<span style="color: #dc3545; font-weight: bold;">หมด</span>`;
+    } else if (statusText.includes('ต่ำกว่าเกณฑ์')) {
+        return `<span style="color: #ffc107; font-weight: bold;">ต่ำกว่าเกณฑ์</span>`;
+    }
+    return `<span style="color: #28a745; font-weight: bold;">ปกติ</span>`;
+}
 
 
       // ลบข้อมูล
@@ -942,7 +1606,437 @@ function confirmDelete(drugId) {
     });
 }
 
+// ฟังก์ชันแสดง Modal รายงานการเบิกยา
+function showTransactionReport() {
+    loadDrugTypes(); // ใช้ฟังก์ชันเดิมสำหรับโหลดประเภทยา
+    loadTransactionData();
+    $('#transactionReportModal').modal('show');
+}
 
+// ฟังก์ชันโหลดข้อมูลการเบิกยา
+function loadTransactionData() {
+    const filters = {
+        startDate: $('#transStartDate').val(),
+        endDate: $('#transEndDate').val(),
+        transactionType: $('#transactionType').val(),
+        drugType: $('#transDrugType').val(),
+        stock_type: 'drug'  // เพิ่มพารามิเตอร์ stock_type
+    };
+
+    $.ajax({
+        url: 'sql/get-transaction-report.php',
+        type: 'GET',
+        data: filters,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                updateTransactionSummary(response.summary);
+                updateTransactionTable(response.items);
+            } else {
+                console.error('Error:', response.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถโหลดข้อมูลได้'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+        }
+    });
+}
+
+// อัพเดทข้อมูลสรุป
+function updateTransactionSummary(summary) {
+    if (!summary) return;
+    
+    $('#totalTransactions').text(summary.totalTransactions.toLocaleString());
+    $('#totalInValue').text(summary.totalInValue.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    }));
+    $('#totalOutValue').text(summary.totalOutValue.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    }));
+    $('#netValue').text(summary.netValue.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    }));
+}
+
+
+
+// อัพเดทการแสดงผลในตาราง
+function updateTransactionTable(items) {
+    const tbody = $('#transactionTable tbody');
+    tbody.empty();
+
+    if (!items || items.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="10" class="text-center">ไม่พบข้อมูล</td>
+            </tr>
+        `);
+        return;
+    }
+
+    items.forEach(item => {
+        // กำหนดสีและ class ตามประเภทรายการ
+        let badgeClass = '';
+        switch(item.transaction_type_name) {
+            case 'รับเข้า':
+                badgeClass = 'bg-success';
+                break;
+            case 'เบิกออก':
+                badgeClass = 'bg-danger';
+                break;
+            case 'ใช้ในคอร์ส':
+                badgeClass = 'bg-info';
+                break;
+            case 'คืนสต็อก':
+                badgeClass = 'bg-warning';
+                break;
+        }
+
+        const row = `
+            <tr>
+                <td>${formatDateTime(item.transaction_date)}</td>
+                <td>${formatDrugId(item.related_id)}</td>
+                <td>${item.item_name}</td>
+                <td>${item.type_name}</td>
+                <td class="text-center">
+                    <span class="badge ${badgeClass}">${item.transaction_type_name}</span>
+                </td>
+                <td class="text-end">${formatNumber(item.display_quantity)}</td>
+                <td>${item.unit_name}</td>
+                <td class="text-end">${formatNumber(item.cost_per_unit, 2)}</td>
+                <td class="text-end">${formatNumber(item.total_value, 2)}</td>
+                <td>${item.users_fname} ${item.users_lname}</td>
+                <td>${item.notes}</td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// Export Excel
+async function exportTransactionToExcel() {
+    try {
+        const filters = {
+            startDate: $('#transStartDate').val(),
+            endDate: $('#transEndDate').val(),
+            transactionType: $('#transactionType').val(),
+            drugType: $('#transDrugType').val(),
+            stock_type: 'drug'
+        };
+
+        const response = await $.ajax({
+            url: 'sql/get-transaction-report.php',
+            type: 'GET',
+            data: filters
+        });
+
+        if (!response.success) {
+            throw new Error(response.message || 'Failed to fetch data');
+        }
+
+        // สร้าง Workbook
+        const wb = XLSX.utils.book_new();
+        
+        // สร้าง Worksheet สำหรับสรุป
+        const summaryData = [
+            ['รายงานการเบิกยาเข้า-ออก'],
+            ['วันที่ออกรายงาน:', new Date().toLocaleString('th-TH')],
+            ['เงื่อนไขการค้นหา:'],
+            ['วันที่เริ่มต้น:', $('#transStartDate').val() || '-'],
+            ['วันที่สิ้นสุด:', $('#transEndDate').val() || '-'],
+            ['ประเภทรายการ:', $('#transactionType option:selected').text()],
+            ['ประเภทยา:', $('#transDrugType option:selected').text()],
+            [''],
+            ['สรุปภาพรวม'],
+            ['จำนวนรายการทั้งหมด:', response.summary.totalTransactions],
+            ['มูลค่ารวมรับเข้า:', response.summary.totalInValue.toLocaleString('th-TH', {style: 'currency', currency: 'THB'})],
+            ['มูลค่ายาใช้ในคอร์ส:', response.summary.totalOutValue.toLocaleString('th-TH', {style: 'currency', currency: 'THB'})],
+            ['มูลค่าคงเหลือ:', response.summary.netValue.toLocaleString('th-TH', {style: 'currency', currency: 'THB'})]
+        ];
+        
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(wb, wsSummary, "สรุป");
+
+        // สร้าง Worksheet สำหรับรายละเอียด
+        const headers = [
+            'วันที่-เวลา',
+            'รหัสยา',
+            'ชื่อยา',
+            'ประเภทยา',
+            'ประเภทรายการ',
+            'จำนวน',
+            'หน่วยนับ',
+            'ราคา/หน่วย',
+            'มูลค่ารวม',
+            'ผู้ดำเนินการ',
+            'หมายเหตุ'
+        ];
+
+        const wsData = [headers];
+        
+        response.items.forEach(item => {
+            // แปลงรหัสยาให้อยู่ในรูปแบบ D-000001
+            const formattedDrugId = `D-${String(item.related_id).padStart(6, '0')}`;
+            
+            wsData.push([
+                new Date(item.transaction_date).toLocaleString('th-TH'),
+                formattedDrugId,
+                item.item_name,
+                item.type_name,
+                item.transaction_type_name,
+                item.display_quantity,
+                item.unit_name,
+                item.cost_per_unit,
+                item.total_value,
+                `${item.users_fname} ${item.users_lname}`,
+                item.notes
+            ]);
+        });
+
+        const wsDetails = XLSX.utils.aoa_to_sheet(wsData);
+
+        // กำหนดความกว้างคอลัมน์
+        const wscols = [
+            {wch: 20}, // วันที่-เวลา
+            {wch: 10}, // รหัสยา
+            {wch: 30}, // ชื่อยา
+            {wch: 20}, // ประเภทยา
+            {wch: 15}, // ประเภทรายการ
+            {wch: 10}, // จำนวน
+            {wch: 10}, // หน่วยนับ
+            {wch: 12}, // ราคา/หน่วย
+            {wch: 12}, // มูลค่ารวม
+            {wch: 20}, // ผู้ดำเนินการ
+            {wch: 30}  // หมายเหตุ
+        ];
+        wsDetails['!cols'] = wscols;
+
+        XLSX.utils.book_append_sheet(wb, wsDetails, "รายการเบิกยา");
+
+        // Export ไฟล์
+        const fileName = `transaction_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: error.message
+        });
+    }
+}
+
+// Export PDF
+async function exportTransactionToPDF() {
+    try {
+        Swal.fire({
+            title: 'กำลังสร้าง PDF',
+            html: 'กรุณารอสักครู่...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const currentDate = new Date().toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const content = `
+            <div style="font-family: 'Sarabun', sans-serif;">
+                <!-- ส่วนหัว -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">รายงานการเบิกยาเข้า-ออก</h2>
+                    <p style="margin: 5px 0;">วันที่ออกรายงาน: ${currentDate}</p>
+                </div>
+
+                <!-- เงื่อนไขการกรอง -->
+                <div style="margin-bottom: 15px; font-size: 14px;">
+                    <p>เงื่อนไขการกรอง:</p>
+                    <table style="width: 100%; margin-bottom: 10px;">
+                        <tr>
+                            <td>วันที่เริ่มต้น: ${$('#transStartDate').val() || '-'}</td>
+                            <td>วันที่สิ้นสุด: ${$('#transEndDate').val() || '-'}</td>
+                        </tr>
+                        <tr>
+                            <td>ประเภทรายการ: ${$('#transactionType option:selected').text()}</td>
+                            <td>ประเภทยา: ${$('#transDrugType option:selected').text()}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">สรุปภาพรวม</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">จำนวนรายการทั้งหมด:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#totalTransactions').text()}</strong></td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">มูลค่าคงเหลือ:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#netValue').text()}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">มูลค่ารวมรับเข้า:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#totalInValue').text()}</strong></td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">มูลค่ารวมเบิกออก:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${$('#totalOutValue').text()}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ตารางข้อมูล -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">รายการเบิกยา</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background-color: #4e73df; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 8px;">วันที่-เวลา</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">รหัสยา</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ชื่อยา</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ประเภท</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ประเภทรายการ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">จำนวน</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">หน่วยนับ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ราคา/หน่วย</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">มูลค่ารวม</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ผู้ดำเนินการ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">หมายเหตุ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Array.from($('#transactionTable tbody tr')).map(row => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(0).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(1).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(2).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(3).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${$(row).find('td').eq(4).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(5).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(6).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(7).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${$(row).find('td').eq(8).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(9).text()}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${$(row).find('td').eq(10).text()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ลายเซ็นต์ -->
+                <div style="margin-top: 30px; text-align: right;">
+                    <p>ผู้ออกรายงาน: ................................................</p>
+                    <p style="margin-top: 5px;">(${$('#currentUserName').text()})</p>
+                    <p style="margin-top: 5px;">วันที่: ${currentDate}</p>
+                </div>
+            </div>
+        `;
+
+        const opt = {
+            margin: 10,
+            filename: `transaction_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                logging: true
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'landscape'
+            },
+            pagebreak: { mode: 'avoid-all' }
+        };
+
+        const pdf = await html2pdf().set(opt).from(content).save();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ',
+            text: 'สร้างไฟล์ PDF เรียบร้อยแล้ว',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('PDF Export Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ไม่สามารถสร้างไฟล์ PDF ได้'
+        });
+    }
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบ
+function formatDateTime(dateTimeStr) {
+    const date = new Date(dateTimeStr);
+    return date.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function formatDrugId(id) {
+    return `D-${String(id).padStart(6, '0')}`;
+}
+
+// อัพเดท Event Listeners
+$('#transactionType, #transDrugType, #transStartDate, #transEndDate').change(function() {
+    loadTransactionData();
+});
+
+// เพิ่มคอลัมน์หมายเหตุในตาราง
+// Event Listeners
+$(document).ready(function() {
+    // โหลดข้อมูลเริ่มต้น
+    loadDrugTypes();
+    loadStockData();
+
+    // เพิ่ม event listeners สำหรับ filters
+    $('#drugTypeFilter, #stockStatusFilter').change(function() {
+        loadStockData();
+    });
+});
+
+// ฟังก์ชันจัดรูปแบบเงิน
+function formatCurrency(amount) {
+    return amount.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// ฟังก์ชันจัดรูปแบบตัวเลข
+function formatNumber(number) {
+    return number.toLocaleString('th-TH', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    });
+}
     // msg error
      <?php if(isset($_SESSION['msg_error'])){ ?>
 
@@ -972,9 +2066,7 @@ function confirmDelete(drugId) {
 
       })
     <?php unset($_SESSION['msg_ok']); } ?>
-    </script>
 
-    <script>
 $(document).ready(function() {
     $('#drugTable').DataTable({
         // ภาษาไทย
