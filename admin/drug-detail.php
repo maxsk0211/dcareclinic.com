@@ -541,7 +541,7 @@ function formatId($id) {
                         }
                     ?>
                 </tbody>
-                <tfoot class="table-light">
+<!--                 <tfoot class="table-light">
                     <tr>
                         <th colspan="2" class="text-end">รวมทั้งหมด:</th>
                         <th class="text-end" id="totalQuantity">0</th>
@@ -563,7 +563,7 @@ function formatId($id) {
                         <th class="text-end" id="totalOutValue">0</th>
                         <th colspan="3"></th>
                     </tr>
-                </tfoot>
+                </tfoot> -->
             </table>
         </div>
     </div>
@@ -733,7 +733,7 @@ $(document).ready(function() {
 
     // ตั้งค่า DataTable
     $('#stockHistoryTable').DataTable({
-        order: [[0, 'desc']], // เรียงตามวันที่ล่าสุด
+        // เorder: [[0, 'desc']], รียงตามวันที่ล่าสุด
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"]],
         language: {

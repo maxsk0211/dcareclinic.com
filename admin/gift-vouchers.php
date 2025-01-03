@@ -60,6 +60,11 @@ require '../dbcon.php';
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.1.1/css/buttons.dataTables.css"> 
 
+    <!-- SheetJS สำหรับ Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+    <!-- html2pdf สำหรับ Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 
     <style>
@@ -294,9 +299,15 @@ require '../dbcon.php';
                                 <div class="card">
                                     <div class="card-header d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0">รายการบัตรกำนัล</h5>
-                                        <button type="button" class="btn btn-primary" onclick="showAddVoucherModal()">
-                                            <i class="ri-add-circle-line"></i> สร้างบัตรกำนัลใหม่
-                                        </button>
+                                        <div>
+                                            <button type="button" class="btn btn-info me-2" onclick="showVoucherUsageHistory()">
+                                                <i class="ri-history-line me-1"></i> ประวัติการใช้งาน
+                                            </button>
+                                            <button type="button" class="btn btn-primary" onclick="showAddVoucherModal()">
+                                                <i class="ri-add-circle-line"></i> สร้างบัตรกำนัลใหม่
+                                            </button>
+                                        </div>
+
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">
@@ -434,8 +445,83 @@ require '../dbcon.php';
     </div>
 </div>
 
+<div class="modal fade" id="voucherUsageHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">ประวัติการใช้งานบัตรกำนัล</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ส่วนฟิลเตอร์ -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label">วันที่เริ่มต้น</label>
+                        <input type="date" class="form-control" id="startDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">วันที่สิ้นสุด</label>
+                        <input type="date" class="form-control" id="endDate">
+                    </div>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>จำนวนการใช้งานทั้งหมด</h6>
+                                <h3 id="totalUsage">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>มูลค่าการใช้งานรวม</h6>
+                                <h3 id="totalValue">0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางแสดงข้อมูล -->
+                <div class="table-responsive">
+                    <table id="usageHistoryTable" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>วันที่ใช้งาน</th>
+                                <th>รหัสบัตรกำนัล</th>
+                                <th>ชื่อลูกค้า</th>
+                                <th>ประเภท</th>
+                                <th>มูลค่าที่ใช้</th>
+                                <th>มูลค่าคงเหลือ</th>
+                                <th>เลขที่บิล</th>
+                                <th>สาขา</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- ปุ่ม Export -->
+                <div class="text-end mt-3">
+                    <button type="button" class="btn btn-success me-2" onclick="exportUsageHistoryToExcel()">
+                        <i class="ri-file-excel-2-line me-1"></i> Export Excel
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="exportUsageHistoryToPDF()">
+                        <i class="ri-file-pdf-line me-1"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
     <!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- build:js assets/vendor/js/core.js -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -1746,6 +1832,418 @@ window.viewUsageHistory = function(voucherId) {
         }
     });
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// ฟังก์ชันแสดง Modal ประวัติการใช้งาน
+function showVoucherUsageHistory() {
+    // ตั้งค่าวันที่เริ่มต้นเป็นต้นเดือนปัจจุบัน
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    $('#startDate').val(firstDay.toISOString().split('T')[0]);
+    $('#endDate').val(now.toISOString().split('T')[0]);
+
+    // โหลดข้อมูลและแสดง Modal
+    loadVoucherUsageData();
+    $('#voucherUsageHistoryModal').modal('show');
+}
+
+// ฟังก์ชันโหลดข้อมูลประวัติการใช้งาน
+function loadVoucherUsageData() {
+    const filters = {
+        startDate: $('#startDate').val(),
+        endDate: $('#endDate').val()
+    };
+
+    $.ajax({
+        url: 'sql/get-voucher-usage-history.php',
+        type: 'GET',
+        data: filters,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                updateUsageSummary(response.summary);
+                updateUsageTable(response.items);
+            } else {
+                console.error('Error:', response.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: response.message || 'ไม่สามารถโหลดข้อมูลได้'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+            });
+        }
+    });
+}
+
+// ฟังก์ชันอัพเดทข้อมูลสรุป
+function updateUsageSummary(summary) {
+    if (!summary) return;
+    
+    $('#totalUsage').text(summary.totalUsage.toLocaleString());
+    $('#totalValue').text(summary.totalValue.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    }));
+}
+
+// ฟังก์ชันอัพเดทตารางประวัติการใช้งาน
+function updateUsageTable(items) {
+    const tbody = $('#usageHistoryTable tbody');
+    tbody.empty();
+
+    if (!items || items.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="8" class="text-center">ไม่พบข้อมูล</td>
+            </tr>
+        `);
+        return;
+    }
+
+    items.forEach(item => {
+        const row = `
+            <tr>
+                <td>${formatDateTime(item.used_at)}</td>
+                <td>${formatVoucherId(item.voucher_code)}</td>
+                <td>${item.customer_name}</td>
+                <td>${getVoucherTypeText(item.discount_type, item.amount, item.max_discount)}</td>
+                <td class="text-end">${formatCurrency(item.amount_used)}</td>
+                <td class="text-end">${formatCurrency(item.remaining_amount)}</td>
+                <td>${formatOrderId(item.order_id)}</td>
+                <td>${item.branch_name}</td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// ฟังก์ชัน Export Excel
+async function exportUsageHistoryToExcel() {
+    try {
+        const filters = {
+            startDate: $('#startDate').val(),
+            endDate: $('#endDate').val()
+        };
+
+        const response = await $.ajax({
+            url: 'sql/get-voucher-usage-history.php',
+            type: 'GET',
+            data: filters
+        });
+
+        if (!response.success) {
+            throw new Error(response.message || 'Failed to fetch data');
+        }
+
+        // สร้าง Workbook
+        const wb = XLSX.utils.book_new();
+        
+        // สร้าง Worksheet สำหรับสรุป
+        const summaryData = [
+            ['รายงานประวัติการใช้งานบัตรกำนัล'],
+            ['วันที่ออกรายงาน:', new Date().toLocaleString('th-TH')],
+            ['ช่วงวันที่:', `${formatDate($('#startDate').val())} ถึง ${formatDate($('#endDate').val())}`],
+            [''],
+            ['สรุปการใช้งาน'],
+            ['จำนวนการใช้งานทั้งหมด:', response.summary.totalUsage],
+            ['มูลค่าการใช้งานรวม:', response.summary.totalValue.toLocaleString('th-TH', {style: 'currency', currency: 'THB'})]
+        ];
+        
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(wb, wsSummary, "สรุป");
+
+        // สร้าง Worksheet สำหรับรายละเอียด
+        const headers = [
+            'วันที่ใช้งาน',
+            'รหัสบัตรกำนัล',
+            'ชื่อลูกค้า',
+            'ประเภท',
+            'มูลค่าที่ใช้',
+            'มูลค่าคงเหลือ',
+            'เลขที่บิล',
+            'สาขา'
+        ];
+
+        const wsData = [headers];
+        
+        response.items.forEach(item => {
+            wsData.push([
+                formatDateTime(item.used_at),
+                item.voucher_code,
+                item.customer_name,
+                getVoucherTypeText(item.discount_type, item.amount, item.max_discount),
+                item.amount_used,
+                item.remaining_amount,
+                formatOrderId(item.order_id),
+                item.branch_name
+            ]);
+        });
+
+        const wsDetails = XLSX.utils.aoa_to_sheet(wsData);
+
+        // กำหนดความกว้างคอลัมน์
+        const wscols = [
+            {wch: 20}, // วันที่ใช้งาน
+            {wch: 15}, // รหัสบัตรกำนัล
+            {wch: 30}, // ชื่อลูกค้า
+            {wch: 20}, // ประเภท
+            {wch: 15}, // มูลค่าที่ใช้
+            {wch: 15}, // มูลค่าคงเหลือ
+            {wch: 15}, // เลขที่บิล
+            {wch: 20}  // สาขา
+        ];
+        wsDetails['!cols'] = wscols;
+
+        XLSX.utils.book_append_sheet(wb, wsDetails, "รายการใช้งาน");
+
+        // Export ไฟล์
+        const fileName = `voucher_usage_history_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: error.message
+        });
+    }
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบ
+function formatDateTime(dateTimeStr) {
+    return new Date(dateTimeStr).toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+function formatCurrency(amount) {
+    return Number(amount).toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    });
+}
+
+function formatVoucherId(code) {
+    return code || '-';
+}
+
+function formatOrderId(id) {
+    return id ? `ORDER-${String(id).padStart(6, '0')}` : '-';
+}
+
+function getVoucherTypeText(type, amount, maxDiscount) {
+    if (type === 'percent') {
+        return `ส่วนลด ${amount}%` + (maxDiscount ? ` (สูงสุด ${formatCurrency(maxDiscount)})` : '');
+    }
+    return formatCurrency(amount);
+}
+
+// Event Listeners
+$(document).ready(function() {
+    // Event Listeners สำหรับฟิลเตอร์
+    $('#startDate, #endDate').change(function() {
+        loadVoucherUsageData();
+    });
+});
+
+
+// ฟังก์ชัน Export PDF
+async function exportUsageHistoryToPDF() {
+    try {
+        // แสดง loading
+        Swal.fire({
+            title: 'กำลังสร้าง PDF',
+            html: 'กรุณารอสักครู่...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // ดึงข้อมูลจาก server
+        const filters = {
+            startDate: $('#startDate').val(),
+            endDate: $('#endDate').val()
+        };
+
+        const response = await $.ajax({
+            url: 'sql/get-voucher-usage-history.php',
+            type: 'GET',
+            data: filters
+        });
+
+        if (!response.success) {
+            throw new Error(response.message || 'ไม่สามารถดึงข้อมูลได้');
+        }
+
+        // สร้างเนื้อหา HTML สำหรับ PDF
+        const content = `
+            <div style="font-family: 'Sarabun', sans-serif;">
+                <!-- ส่วนหัว -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">รายงานประวัติการใช้งานบัตรกำนัล</h2>
+                    <p style="margin: 5px 0;">
+                        วันที่ออกรายงาน: ${new Date().toLocaleDateString('th-TH', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                    </p>
+                </div>
+
+                <!-- เงื่อนไขการกรอง -->
+                <div style="margin-bottom: 15px;">
+                    <p>เงื่อนไขการค้นหา:</p>
+                    <table style="width: 100%; margin-bottom: 10px;">
+                        <tr>
+                            <td>วันที่เริ่มต้น: ${formatDate($('#startDate').val())}</td>
+                            <td>วันที่สิ้นสุด: ${formatDate($('#endDate').val())}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- ส่วนสรุป -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">สรุปการใช้งาน</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 50%;">จำนวนการใช้งานทั้งหมด:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 50%;">
+                                <strong>${response.summary.totalUsage.toLocaleString()} รายการ</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">มูลค่าการใช้งานรวม:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                <strong>${response.summary.totalValue.toLocaleString('th-TH', {
+                                    style: 'currency',
+                                    currency: 'THB'
+                                })}</strong>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- รายละเอียดการใช้งาน -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">รายการใช้งานบัตรกำนัล</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background-color: #4e73df; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 8px;">วันที่ใช้งาน</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">รหัสบัตรกำนัล</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ชื่อลูกค้า</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">ประเภท</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">มูลค่าที่ใช้</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">คงเหลือ</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">เลขที่บิล</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">สาขา</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${response.items.map(item => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        ${formatDateTime(item.used_at)}
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        ${item.voucher_code}
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        ${item.customer_name}
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        ${getVoucherTypeText(item.discount_type, item.amount, item.max_discount)}
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                        ${formatCurrency(item.amount_used)}
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                        ${formatCurrency(item.remaining_amount)}
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        ${formatOrderId(item.order_id)}
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        ${item.branch_name}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ลายเซ็นต์ -->
+                <div style="margin-top: 30px; text-align: right;">
+                    <p>ผู้ออกรายงาน: ................................................</p>
+                    // <p style="margin-top: 5px;">(${$('#currentUserName').text()})</p>
+                    <p style="margin-top: 5px;">วันที่พิมพ์: ${formatDateTime(new Date())}</p>
+                </div>
+            </div>
+        `;
+
+        // กำหนดค่า options สำหรับ html2pdf
+        const opt = {
+            margin: 10,
+            filename: `voucher_usage_history_${new Date().toISOString().slice(0, 10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                logging: true
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'landscape'
+            },
+            pagebreak: { mode: 'avoid-all' }
+        };
+
+        // สร้าง PDF
+        const pdf = await html2pdf().set(opt).from(content).save();
+        
+        // ปิด loading และแสดงข้อความสำเร็จ
+        Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ',
+            text: 'สร้างไฟล์ PDF เรียบร้อยแล้ว',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('PDF Export Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ไม่สามารถสร้างไฟล์ PDF ได้'
+        });
+    }
+}
     </script>
 </body>
 </html>

@@ -12,21 +12,21 @@ $branch_id = $_SESSION['branch_id'];
 // ดึงข้อมูลห้องทั้งหมด
 $sql_rooms = "SELECT * FROM rooms WHERE branch_id = ? AND status = 'active'";
 $stmt_rooms = $conn->prepare($sql_rooms);
+if ($stmt_rooms === false) {
+    die("Error preparing statement: " . $conn->error);
+}
+
 $stmt_rooms->bind_param("i", $branch_id);
-$stmt_rooms->execute();
+if (!$stmt_rooms->execute()) {
+    die("Error executing statement: " . $stmt_rooms->error);
+}
+
 $result_rooms = $stmt_rooms->get_result();
 $rooms = $result_rooms->fetch_all(MYSQLI_ASSOC);
 
 // ดึงข้อมูลวันที่ปิดคลินิก
-$sql_closures = "SELECT closure_date FROM clinic_closures WHERE branch_id = ? AND MONTH(closure_date) = ? AND YEAR(closure_date) = ?";
-$stmt_closures = $conn->prepare($sql_closures);
-$stmt_closures->bind_param("iii", $branch_id, $selected_month, $selected_year);
-$stmt_closures->execute();
-$result_closures = $stmt_closures->get_result();
+// เนื่องจากไม่ใช้ตาราง clinic_closures แล้ว เราจะใช้ array เปล่า
 $closures = array();
-while ($row = $result_closures->fetch_assoc()) {
-    $closures[] = $row['closure_date'];
-}
 
 // แปลงเดือนเป็นภาษาไทย
 function thaiMonth($month) {

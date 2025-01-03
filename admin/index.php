@@ -355,6 +355,12 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Page CSS -->
 
+    <!-- SheetJS สำหรับ Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+    <!-- html2pdf สำหรับ Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <!-- Helpers -->
     <script src="../assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
@@ -404,6 +410,50 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     }
     .select2-container--bootstrap-5 {
         --bs-form-select-bg-img: none;
+    }
+
+    .summary-row {
+        background-color: #f8f9fa;
+    }
+
+    .summary-row:hover {
+        background-color: #e9ecef;
+        cursor: pointer;
+    }
+
+    .details-row td {
+        padding: 0 !important;
+    }
+
+    .toggle-details {
+        transition: transform 0.2s;
+    }
+
+    .details-row .table {
+        margin-bottom: 0;
+    }
+    .summary-row {
+        cursor: pointer;
+    }
+
+    .summary-row:hover {
+        background-color: #f5f5f5;
+    }
+
+    .detail-row table {
+        background-color: #ffffff;
+    }
+
+    .toggle-details {
+        transition: transform 0.2s;
+    }
+
+    .toggle-details i {
+        font-size: 1.2rem;
+    }
+
+    .detail-row td {
+        padding: 0 !important;
     }
 </style>
 </head>
@@ -463,6 +513,36 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
                                         <button type="button" class="btn btn-secondary" onclick="resetFilters()">รีเซ็ต</button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+
+                        <!-- เพิ่มปุ่มรายงานต่างๆ ไว้ด้านบนของ content ในหน้า index.php -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <!-- ปุ่มรายงานสรุปรายได้ -->
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#incomeReportModal">
+                                                <i class="ri-money-dollar-circle-line me-1"></i>
+                                                สรุปรายได้
+                                            </button>
+                                            
+                                            <!-- ปุ่มรายงานสรุปยอดขาย -->
+                                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#salesReportModal">
+                                                <i class="ri-line-chart-line me-1"></i>
+                                                สรุปยอดขาย
+                                            </button>
+                                            
+                                            <!-- ปุ่มรายงานยอดค้างชำระ -->
+                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#unpaidReportModal">
+                                                <i class="ri-time-line me-1"></i>
+                                                ยอดค้างชำระ
+                                                <span class="badge bg-white text-danger ms-1" id="unpaidCount">0</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -808,6 +888,300 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     </div>
     <!-- / Layout wrapper -->
 
+
+<div class="modal fade" id="incomeReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">
+                    <i class="ri-money-dollar-circle-line me-2"></i>รายงานสรุปรายได้แยกตามประเภทการชำระเงิน
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ส่วนสรุป -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">ยอดรวมทั้งหมด</h6>
+                                        <h3 class="text-white mb-0" id="totalIncome">฿0.00</h3>
+                                    </div>
+                                    <div class="bg-primary bg-opacity-25 p-3 rounded">
+                                        <i class="ri-money-dollar-circle-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">จำนวนรายการทั้งหมด</h6>
+                                        <h3 class="text-white mb-0" id="totalTransactions">0</h3>
+                                    </div>
+                                    <div class="bg-info bg-opacity-25 p-3 rounded">
+                                        <i class="ri-file-list-3-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">ยอดเฉลี่ยต่อรายการ</h6>
+                                        <h3 class="text-white mb-0" id="averageIncome">฿0.00</h3>
+                                    </div>
+                                    <div class="bg-success bg-opacity-25 p-3 rounded">
+                                        <i class="ri-calculator-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางแสดงข้อมูล -->
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">รายละเอียดรายได้ตามประเภทการชำระเงิน</h6>
+                        <div>
+                            <button type="button" class="btn btn-success btn-sm me-2" onclick="exportIncomeToExcel()">
+                                <i class="ri-file-excel-2-line me-1"></i> Excel
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="exportIncomeToPDF()">
+                                <i class="ri-file-pdf-line me-1"></i> PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="incomeTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ประเภทการชำระเงิน</th>
+                                        <th class="text-end">จำนวนรายการ</th>
+                                        <th class="text-end">ยอดรวม</th>
+                                        <th class="text-end">เปอร์เซ็นต์</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="incomeTableBody">
+                                    <!-- ข้อมูลจะถูกเพิ่มด้วย JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="unpaidReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">
+                    <i class="ri-time-line me-2"></i>รายงานยอดค้างชำระ
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ส่วนสรุป -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-danger">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">ยอดค้างชำระรวม</h6>
+                                        <h3 class="text-white mb-0" id="totalUnpaid">฿0.00</h3>
+                                    </div>
+                                    <div class="bg-danger bg-opacity-25 p-3 rounded">
+                                        <i class="ri-money-dollar-circle-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">จำนวนรายการค้างชำระ</h6>
+                                        <h3 class="text-white mb-0" id="totalUnpaidItems">0</h3>
+                                    </div>
+                                    <div class="bg-warning bg-opacity-25 p-3 rounded">
+                                        <i class="ri-file-list-3-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">จำนวนลูกค้าที่ค้างชำระ</h6>
+                                        <h3 class="text-white mb-0" id="totalUnpaidCustomers">0</h3>
+                                    </div>
+                                    <div class="bg-info bg-opacity-25 p-3 rounded">
+                                        <i class="ri-user-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางแสดงรายการค้างชำระ -->
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">รายการค้างชำระทั้งหมด</h6>
+                        <div>
+                            <button type="button" class="btn btn-success btn-sm me-2" onclick="exportUnpaidToExcel()">
+                                <i class="ri-file-excel-2-line me-1"></i> Excel
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="exportUnpaidToPDF()">
+                                <i class="ri-file-pdf-line me-1"></i> PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="unpaidTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-top-0">ชื่อ-นามสกุล</th>
+                                        <th class="border-top-0">เบอร์โทรศัพท์</th>
+                                        <th class="border-top-0">วันที่สั่งซื้อ</th>
+                                        <th class="border-top-0">เลขที่ใบสั่งซื้อ</th>
+                                        <th class="border-top-0">รายการ</th>
+                                        <th class="border-top-0 text-end">ยอดค้างชำระ</th>
+                                        <th class="border-top-0 text-end">ระยะเวลาที่ค้างชำระ</th>
+                                        <th class="border-top-0 text-center">สถานะ</th>
+                                        <th class="border-top-0 text-center">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unpaidTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="unpaidReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">
+                    <i class="ri-time-line me-2"></i>รายงานยอดค้างชำระ
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ส่วนสรุป -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-danger">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">ยอดค้างชำระรวม</h6>
+                                        <h3 class="text-white mb-0" id="totalUnpaid">฿0.00</h3>
+                                    </div>
+                                    <div class="bg-danger bg-opacity-25 p-3 rounded">
+                                        <i class="ri-money-dollar-circle-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">จำนวนรายการค้างชำระ</h6>
+                                        <h3 class="text-white mb-0" id="totalUnpaidItems">0</h3>
+                                    </div>
+                                    <div class="bg-warning bg-opacity-25 p-3 rounded">
+                                        <i class="ri-file-list-3-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-white mb-2">จำนวนลูกค้าที่ค้างชำระ</h6>
+                                        <h3 class="text-white mb-0" id="totalUnpaidCustomers">0</h3>
+                                    </div>
+                                    <div class="bg-info bg-opacity-25 p-3 rounded">
+                                        <i class="ri-user-line text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางแสดงรายการค้างชำระ -->
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">รายการค้างชำระทั้งหมด</h6>
+                        <div>
+                            <button type="button" class="btn btn-success btn-sm me-2" onclick="exportUnpaidToExcel()">
+                                <i class="ri-file-excel-2-line me-1"></i> Excel
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="exportUnpaidToPDF()">
+                                <i class="ri-file-pdf-line me-1"></i> PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="unpaidTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-top-0">ชื่อ-นามสกุล</th>
+                                        <th class="border-top-0">เบอร์โทรศัพท์</th>
+                                        <th class="border-top-0">วันที่สั่งซื้อ</th>
+                                        <th class="border-top-0">เลขที่ใบสั่งซื้อ</th>
+                                        <th class="border-top-0">รายการ</th>
+                                        <th class="border-top-0 text-end">ยอดค้างชำระ</th>
+                                        <th class="border-top-0 text-end">ระยะเวลาที่ค้างชำระ</th>
+                                        <th class="border-top-0 text-center">สถานะ</th>
+                                        <th class="border-top-0 text-center">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unpaidTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Core JS -->
     <!-- build:js assets/vendor/js/core.js -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
@@ -999,6 +1373,494 @@ $(document).ready(function() {
         }
     }
 });
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// ฟังก์ชันสำหรับรายงานสรุปรายได้
+function loadIncomeReport() {
+    // ดึงค่าวันที่จาก daterange
+    let daterange = $('#daterange').val();
+    console.log("Daterange value:", daterange); // debug
+
+    $.ajax({
+        url: 'sql/get-income-report.php',
+        type: 'GET',
+        data: { daterange: daterange }, // ส่งค่า daterange ไปทั้งสตริง
+        success: function(response) {
+            if (response.success) {
+                updateIncomeSummary(response.summary);
+                updateIncomeTable(response.details);
+            } else {
+                showErrorAlert(response.message || 'ไม่สามารถโหลดข้อมูลได้');
+            }
+        },
+        error: function() {
+            showErrorAlert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+        }
+    });
+}
+
+function updateIncomeSummary(summary) {
+    $('#totalIncome').text(formatCurrency(summary.total));
+    $('#totalTransactions').text(formatNumber(summary.transactions));
+    $('#averageIncome').text(formatCurrency(summary.average));
+}
+
+function updateIncomeTable(details) {
+    const tbody = $('#incomeTableBody');
+    tbody.empty();
+    
+    details.forEach(item => {
+        // สร้างแถวหลัก (header) สำหรับแต่ละประเภทการชำระเงิน
+        const mainRow = $(`
+            <tr class="summary-row table-light">
+                <td>
+                    <button class="btn btn-link btn-sm p-0 me-2 toggle-details">
+                        <i class="ri-add-line"></i>
+                    </button>
+                    ${item.payment_type}
+                </td>
+                <td class="text-end">${formatNumber(item.count)} รายการ</td>
+                <td class="text-end">${formatCurrency(item.amount)}</td>
+                <td class="text-end">${formatNumber(item.percentage)}%</td>
+            </tr>
+        `);
+
+        // สร้างแถวรายละเอียด
+        const detailRow = $(`
+            <tr class="detail-row" style="display: none;">
+                <td colspan="4" class="p-0">
+                    <div class="border-top">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr class="table-secondary">
+                                    <th>เลขที่คำสั่งซื้อ</th>
+                                    <th>วันที่สั่งซื้อ</th>
+                                    <th>วันที่ชำระเงิน</th>
+                                    <th>ลูกค้า</th>
+                                    <th>เบอร์โทร</th>
+                                    <th>รายการ</th>
+                                    <th class="text-end">จำนวนเงิน</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${item.orders.map(order => `
+                                    <tr>
+                                        <td>${order.order_id}</td>
+                                        <td>${order.order_date}</td>
+                                        <td>${order.payment_date}</td>
+                                        <td>${order.customer_name}</td>
+                                        <td>${order.customer_tel}</td>
+                                        <td>${order.courses}</td>
+                                        <td class="text-end">${formatCurrency(order.amount)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-secondary">
+                                    <td colspan="6" class="text-end fw-bold">รวม:</td>
+                                    <td class="text-end fw-bold">${formatCurrency(item.amount)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        `);
+
+        tbody.append(mainRow);
+        tbody.append(detailRow);
+
+        // เพิ่ม event listener สำหรับปุ่มแสดง/ซ่อนรายละเอียด
+        mainRow.find('.toggle-details').click(function() {
+            const icon = $(this).find('i');
+            const detailRow = mainRow.next('.detail-row');
+            
+            detailRow.toggle();
+            
+            if (detailRow.is(':visible')) {
+                icon.removeClass('ri-add-line').addClass('ri-subtract-line');
+            } else {
+                icon.removeClass('ri-subtract-line').addClass('ri-add-line');
+            }
+        });
+    });
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบตัวเลข
+function formatNumber(num) {
+    return new Intl.NumberFormat('th-TH').format(num);
+}
+
+// ฟังก์ชันสำหรับรายงานสรุปยอดขาย
+function loadSalesReport() {
+    const dateRange = $('#daterange').val().split(' - ');
+    const startDate = dateRange[0];
+    const endDate = dateRange[1];
+
+    $.ajax({
+        url: 'sql/get-sales-report.php',
+        type: 'GET',
+        data: {
+            startDate: startDate,
+            endDate: endDate
+        },
+        success: function(response) {
+            if (response.success) {
+                updateSalesSummary(response.summary);
+                updateSalesRankingTable(response.rankings);
+                updateTopSalesTable(response.topItems);
+            } else {
+                showErrorAlert(response.message || 'ไม่สามารถโหลดข้อมูลได้');
+            }
+        },
+        error: function() {
+            showErrorAlert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+        }
+    });
+}
+
+function updateSalesSummary(summary) {
+    $('#totalSales').text(formatCurrency(summary.total));
+    $('#totalItems').text(formatNumber(summary.items));
+    $('#totalCategories').text(formatNumber(summary.categories));
+}
+
+function updateSalesRankingTable(rankings) {
+    const tbody = $('#salesRankingTableBody');
+    tbody.empty();
+    
+    rankings.forEach((item, index) => {
+        const row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.category}</td>
+                <td class="text-end">${formatNumber(item.quantity)}</td>
+                <td class="text-end">${formatCurrency(item.amount)}</td>
+                <td class="text-end">${formatNumber(item.percentage)}%</td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+function updateTopSalesTable(topItems) {
+    const tbody = $('#topSalesTableBody');
+    tbody.empty();
+    
+    topItems.forEach((item, index) => {
+        const row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.category}</td>
+                <td class="text-end">${formatNumber(item.quantity)}</td>
+                <td class="text-end">${formatCurrency(item.amount)}</td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// ฟังก์ชันสำหรับรายงานยอดค้างชำระ
+function loadUnpaidReport() {
+    const dateRange = $('#daterange').val().split(' - ');
+    const startDate = dateRange[0];
+    const endDate = dateRange[1];
+
+    $.ajax({
+        url: 'sql/get-unpaid-report.php',
+        type: 'GET',
+        data: {
+            startDate: startDate,
+            endDate: endDate
+        },
+        success: function(response) {
+            if (response.success) {
+                updateUnpaidSummary(response.summary);
+                updateUnpaidTable(response.details);
+                updateUnpaidCount(response.summary.items);
+            } else {
+                showErrorAlert(response.message || 'ไม่สามารถโหลดข้อมูลได้');
+            }
+        },
+        error: function() {
+            showErrorAlert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+        }
+    });
+}
+
+function updateUnpaidSummary(summary) {
+    $('#totalUnpaid').text(formatCurrency(summary.total));
+    $('#totalUnpaidItems').text(formatNumber(summary.items));
+    $('#totalUnpaidCustomers').text(formatNumber(summary.customers));
+}
+
+function updateUnpaidTable(details) {
+    const tbody = $('#unpaidTableBody');
+    tbody.empty();
+    
+    details.forEach(item => {
+        const overdueBadge = getOverdueBadge(item.days_overdue);
+        const row = `
+            <tr>
+                <td>${item.customer_name}</td>
+                <td>${item.phone}</td>
+                <td>${formatDate(item.order_date)}</td>
+                <td>${item.order_id}</td>
+                <td>${item.items}</td>
+                <td class="text-end">${formatCurrency(item.unpaid_amount)}</td>
+                <td class="text-end">${item.days_overdue} วัน</td>
+                <td class="text-center">${overdueBadge}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-primary me-1" onclick="showPaymentModal(${item.order_id})">
+                        <i class="ri-money-dollar-circle-line"></i>
+                    </button>
+                    <button class="btn btn-sm btn-info" onclick="showOrderDetail(${item.order_id})">
+                        <i class="ri-file-list-3-line"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+function updateUnpaidCount(count) {
+    $('#unpaidCount').text(count);
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบ
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('th-TH', {
+        style: 'currency',
+        currency: 'THB'
+    }).format(amount);
+}
+
+function formatNumber(number) {
+    return new Intl.NumberFormat('th-TH').format(number);
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    };
+    return date.toLocaleDateString('th-TH', options);
+}
+
+function getOverdueBadge(days) {
+    if (days > 30) {
+        return '<span class="badge bg-danger">เกินกำหนดมาก</span>';
+    } else if (days > 15) {
+        return '<span class="badge bg-warning">เกินกำหนด</span>';
+    } else {
+        return '<span class="badge bg-info">ปกติ</span>';
+    }
+}
+
+function showErrorAlert(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: message
+    });
+}
+
+// Event Listeners
+$(document).ready(function() {
+    // เมื่อเปิด Modal
+    $('#incomeReportModal').on('show.bs.modal', function() {
+        loadIncomeReport();
+    });
+
+    $('#salesReportModal').on('show.bs.modal', function() {
+        loadSalesReport();
+    });
+
+    $('#unpaidReportModal').on('show.bs.modal', function() {
+        loadUnpaidReport();
+    });
+
+    // เมื่อ daterange มีการเปลี่ยนแปลง
+    $('#daterange').on('change', function() {
+        if ($('#incomeReportModal').is(':visible')) {
+            loadIncomeReport();
+        }
+        if ($('#salesReportModal').is(':visible')) {
+            loadSalesReport();
+        }
+        if ($('#unpaidReportModal').is(':visible')) {
+            loadUnpaidReport();
+        }
+    });
+});
+
+// Export Functions
+function exportToExcel(tableId, filename) {
+    const table = document.getElementById(tableId);
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.table_to_sheet(table);
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    XLSX.writeFile(wb, `${filename}_${formatDateFilename(new Date())}.xlsx`);
+}
+
+function exportToPDF(elementId, filename) {
+    const element = document.getElementById(elementId);
+    const opt = {
+        margin: 1,
+        filename: `${filename}_${formatDateFilename(new Date())}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
+}
+
+
+// ฟังก์ชันสำหรับ Export Excel
+function exportIncomeToExcel() {
+    // สร้าง workbook ใหม่
+    const wb = XLSX.utils.book_new();
+    
+    // สร้างข้อมูลสำหรับ Excel
+    const summaryData = [
+        ['รายงานสรุปรายได้แยกตามประเภทการชำระเงิน'],
+        ['วันที่: ' + $('#daterange').val()],
+        [''],
+        ['สรุปภาพรวม'],
+        ['ยอดรวมทั้งหมด:', $('#totalIncome').text()],
+        ['จำนวนรายการทั้งหมด:', $('#totalTransactions').text()],
+        ['ยอดเฉลี่ยต่อรายการ:', $('#averageIncome').text()],
+        [''],
+        ['รายละเอียดตามประเภทการชำระเงิน'],
+        ['ประเภทการชำระเงิน', 'จำนวนรายการ', 'ยอดรวม', 'เปอร์เซ็นต์']
+    ];
+
+    // เพิ่มข้อมูลจากตาราง
+    $('#incomeTableBody tr').each(function() {
+        const row = [];
+        $(this).find('td').each(function() {
+            row.push($(this).text().trim());
+        });
+        summaryData.push(row);
+    });
+
+    // สร้าง worksheet จากข้อมูล
+    const ws = XLSX.utils.aoa_to_sheet(summaryData);
+
+    // กำหนดความกว้างคอลัมน์
+    const wscols = [
+        {wch: 25}, // ประเภทการชำระเงิน
+        {wch: 15}, // จำนวนรายการ
+        {wch: 15}, // ยอดรวม
+        {wch: 12}  // เปอร์เซ็นต์
+    ];
+    ws['!cols'] = wscols;
+
+    // เพิ่ม worksheet ลงใน workbook
+    XLSX.utils.book_append_sheet(wb, ws, "รายงานรายได้");
+
+    // สร้างไฟล์ Excel และดาวน์โหลด
+    const filename = `income_report_${formatDateFilename(new Date())}.xlsx`;
+    XLSX.writeFile(wb, filename);
+}
+
+// ฟังก์ชันสำหรับ Export PDF
+function exportIncomeToPDF() {
+    // สร้าง HTML สำหรับ PDF
+    const content = `
+        <div style="font-family: 'Sarabun', sans-serif; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">รายงานสรุปรายได้แยกตามประเภทการชำระเงิน</h2>
+                <p style="margin: 5px 0;">วันที่: ${$('#daterange').val()}</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 10px;">สรุปภาพรวม</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">ยอดรวมทั้งหมด:</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${$('#totalIncome').text()}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">จำนวนรายการทั้งหมด:</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${$('#totalTransactions').text()}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">ยอดเฉลี่ยต่อรายการ:</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${$('#averageIncome').text()}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;"></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 10px;">รายละเอียดตามประเภทการชำระเงิน</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #4e73df; color: white;">
+                            <th style="padding: 12px; border: 1px solid #ddd;">ประเภทการชำระเงิน</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">จำนวนรายการ</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">ยอดรวม</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">เปอร์เซ็นต์</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Array.from($('#incomeTableBody tr')).map(row => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${$(row).find('td').eq(0).text()}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${$(row).find('td').eq(1).text()}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${$(row).find('td').eq(2).text()}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${$(row).find('td').eq(3).text()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align: right; margin-top: 30px;">
+                <p>วันที่ออกรายงาน: ${new Date().toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}</p>
+            </div>
+        </div>
+    `;
+
+    // กำหนดค่า options สำหรับ html2pdf
+    const opt = {
+        margin: 1,
+        filename: `income_report_${formatDateFilename(new Date())}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            useCORS: true
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        }
+    };
+
+    // สร้าง PDF
+    html2pdf().set(opt).from(content).save();
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบวันที่สำหรับชื่อไฟล์
+function formatDateFilename(date) {
+    return date.toISOString().split('T')[0];
+}
 </script>
 </body>
 </html>

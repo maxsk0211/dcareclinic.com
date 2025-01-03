@@ -83,11 +83,14 @@ $result = $conn->query($sql);
 
                     <!-- Content -->
                     <div class="container flex-grow-1 container-p-y">
-                        <h4 class="py-3 mb-4"><span class="text-muted fw-light"></span> รายการบิล</h4>
+                        <!-- <h4 class="py-3 mb-4"><span class="text-muted fw-light"></span> รายการบิล</h4> -->
                         
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="card-title">รายการคำสั่งซื้อทั้งหมด</h5>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#logModal">
+                                    <i class="ri-history-line me-1"></i> ประวัติการยกเลิกการชำระเงิน
+                                </button>
                             </div>
                             <div class="card-body">
                                 <table class="table table-striped" id="orderTable">
@@ -139,6 +142,66 @@ $result = $conn->query($sql);
     </div>
     <!-- / Layout wrapper -->
 
+<!-- เพิ่ม Modal สำหรับแสดง Log -->
+<div class="modal fade" id="logModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ประวัติการยกเลิกการชำระเงิน</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table" id="logTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>ผู้ยกเลิก</th>
+                                <th>เลขที่บิล</th>
+                                <th>ลูกค้า</th>
+                                <th>จำนวนเงิน</th>
+                                <th>เหตุผล</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // Query logs
+                            $log_sql = "SELECT al.*, u.users_fname, u.users_lname 
+                                      FROM activity_logs al
+                                      JOIN users u ON al.user_id = u.users_id
+                                      WHERE al.action = 'cancel_payment'
+                                      AND al.branch_id = ?
+                                      ORDER BY al.id DESC";
+                            $stmt = $conn->prepare($log_sql);
+                            $stmt->bind_param("i", $_SESSION['branch_id']);
+                            $stmt->execute();
+                            $logs = $stmt->get_result();
+                            
+                            while($log = $logs->fetch_assoc()) {
+                                $details = json_decode($log['details'], true);
+                                ?>
+                                <tr>
+                                    <td><?php echo date('d/m/Y H:i', strtotime($log['created_at'])); ?></td>
+                                    <td><?php echo $log['users_fname'] . ' ' . $log['users_lname']; ?></td>
+                                    <td><?php echo 'ORDER-' . str_pad($log['entity_id'], 6, '0', STR_PAD_LEFT); ?></td>
+                                    <td><?php echo $details['customer_info']['name']; ?></td>
+                                    <td><?php echo number_format($details['payment_info']['amount'], 2); ?></td>
+                                    <td><?php echo $details['reason']; ?></td>
+                                </tr>
+                                <?php
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Core JS -->
     <script src="../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../assets/vendor/libs/popper/popper.js"></script>
@@ -167,6 +230,14 @@ $result = $conn->query($sql);
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
 <script>
     $(document).ready(function() {
+        $('#logTable').DataTable({
+            "pageLength": 10,
+            "ordering": false,  
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
+            }
+        });
+
         $('#orderTable').DataTable({
             "pageLength": 25,
             "order": [[1, "desc"]], // เรียงลำดับคอลัมน์ที่ 1 (วันที่สั่งซื้อ) จากมากไปน้อย
@@ -177,6 +248,8 @@ $result = $conn->query($sql);
                 "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Thai.json"
             }
         });
+
+
     });
 
 // Display success message

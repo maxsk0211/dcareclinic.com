@@ -98,7 +98,7 @@ try {
         {$unit_join}
         LEFT JOIN users usr ON st.users_id = usr.users_id
         WHERE {$where}
-        ORDER BY st.transaction_date DESC";
+        ORDER BY st.transaction_id DESC";
 
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
