@@ -353,6 +353,7 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <!-- Page CSS -->
 
     <!-- SheetJS สำหรับ Export Excel -->
@@ -366,6 +367,11 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="../assets/js/config.js"></script>
+
+        <!-- เพิ่ม CSS ของ toastr -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- เพิ่ม CSS ของ sweetalert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
     .card {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -413,31 +419,15 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     }
 
     .summary-row {
+        transition: all 0.3s ease;
+    }
+
+    .summary-row:hover {
         background-color: #f8f9fa;
     }
 
-    .summary-row:hover {
-        background-color: #e9ecef;
-        cursor: pointer;
-    }
-
-    .details-row td {
-        padding: 0 !important;
-    }
-
-    .toggle-details {
-        transition: transform 0.2s;
-    }
-
-    .details-row .table {
-        margin-bottom: 0;
-    }
-    .summary-row {
-        cursor: pointer;
-    }
-
-    .summary-row:hover {
-        background-color: #f5f5f5;
+    .bg-light-primary {
+        background-color: rgba(105, 108, 255, 0.05) !important;
     }
 
     .detail-row table {
@@ -445,6 +435,9 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     }
 
     .toggle-details {
+        padding: 0;
+        background: transparent;
+        border: none;
         transition: transform 0.2s;
     }
 
@@ -455,6 +448,86 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     .detail-row td {
         padding: 0 !important;
     }
+
+    .toggle-details:hover {
+        transform: scale(1.1);
+    }
+
+    .badge.bg-label-primary {
+        background-color: rgba(105, 108, 255, 0.1) !important;
+        color: #696cff !important;
+    }
+
+    .badge.bg-label-info {
+        background-color: rgba(3, 195, 236, 0.1) !important;
+        color: #03c3ec !important;
+    }
+
+    .progress {
+        border-radius: 10px;
+        background-color: #eceef1;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    /* เพิ่ม CSS สำหรับ badge */
+.badge {
+    transition: all 0.3s ease;
+}
+
+#unpaidCount {
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+}
+
+/* สีและการจัดวางของ badge */
+.btn-danger .badge {
+    background-color: #fff !important;
+    color: #dc3545 !important;
+    font-weight: 600;
+    min-width: 20px;
+}
+
+/* Animation effect */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.badge.animate {
+    animation: pulse 1s infinite;
+}
+
+.courses-container {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+td {
+    vertical-align: middle !important;
+}
+
+.text-nowrap {
+    white-space: nowrap !important;
+}
+
+.badge {
+    line-height: 1.2;
+    padding: 0.4em 0.6em;
+}
 </style>
 </head>
 
@@ -528,17 +601,12 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
                                                 สรุปรายได้
                                             </button>
                                             
-                                            <!-- ปุ่มรายงานสรุปยอดขาย -->
-                                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#salesReportModal">
-                                                <i class="ri-line-chart-line me-1"></i>
-                                                สรุปยอดขาย
-                                            </button>
                                             
                                             <!-- ปุ่มรายงานยอดค้างชำระ -->
                                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#unpaidReportModal">
                                                 <i class="ri-time-line me-1"></i>
                                                 ยอดค้างชำระ
-                                                <span class="badge bg-white text-danger ms-1" id="unpaidCount">0</span>
+                                                <span id="unpaidCount" class="badge bg-white text-danger ms-1" style="display: none;">0</span>
                                             </button>
                                         </div>
                                     </div>
@@ -967,7 +1035,6 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
                                 <thead class="table-light">
                                     <tr>
                                         <th>ประเภทการชำระเงิน</th>
-                                        <th class="text-end">จำนวนรายการ</th>
                                         <th class="text-end">ยอดรวม</th>
                                         <th class="text-end">เปอร์เซ็นต์</th>
                                     </tr>
@@ -994,48 +1061,134 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- ส่วนสรุป -->
+                <!-- Cards สรุป -->
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card bg-danger">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-2">ยอดค้างชำระรวม</h6>
-                                        <h3 class="text-white mb-0" id="totalUnpaid">฿0.00</h3>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="text-white">
+                                        <h6 class="mb-0">ยอดค้างชำระรวม</h6>
                                     </div>
-                                    <div class="bg-danger bg-opacity-25 p-3 rounded">
-                                        <i class="ri-money-dollar-circle-line text-white" style="font-size: 2rem;"></i>
+                                    <div class="avatar bg-white bg-opacity-10">
+                                        <span class="avatar-content">
+                                            <i class="ri-money-dollar-circle-line text-white fs-4"></i>
+                                        </span>
                                     </div>
                                 </div>
+                                <h3 class="text-white mb-0" id="totalUnpaid">฿0.00</h3>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card bg-warning">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-2">จำนวนรายการค้างชำระ</h6>
-                                        <h3 class="text-white mb-0" id="totalUnpaidItems">0</h3>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="text-white">
+                                        <h6 class="mb-0">จำนวนรายการค้างชำระ</h6>
                                     </div>
-                                    <div class="bg-warning bg-opacity-25 p-3 rounded">
-                                        <i class="ri-file-list-3-line text-white" style="font-size: 2rem;"></i>
+                                    <div class="avatar bg-white bg-opacity-10">
+                                        <span class="avatar-content">
+                                            <i class="ri-file-list-3-line text-white fs-4"></i>
+                                        </span>
                                     </div>
                                 </div>
+                                <h3 class="text-white mb-0"><span id="totalUnpaidItems">0</span> รายการ</h3>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card bg-info">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-2">จำนวนลูกค้าที่ค้างชำระ</h6>
-                                        <h3 class="text-white mb-0" id="totalUnpaidCustomers">0</h3>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="text-white">
+                                        <h6 class="mb-0">จำนวนลูกค้าที่ค้างชำระ</h6>
                                     </div>
-                                    <div class="bg-info bg-opacity-25 p-3 rounded">
-                                        <i class="ri-user-line text-white" style="font-size: 2rem;"></i>
+                                    <div class="avatar bg-white bg-opacity-10">
+                                        <span class="avatar-content">
+                                            <i class="ri-user-line text-white fs-4"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <h3 class="text-white mb-0"><span id="totalUnpaidCustomers">0</span> คน</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 mb-3">
+                        <div class="card bg-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="text-white">
+                                        <h6 class="mb-0">ยอดเฉลี่ยต่อรายการ</h6>
+                                    </div>
+                                    <div class="avatar bg-white bg-opacity-10">
+                                        <span class="avatar-content">
+                                            <i class="ri-calculator-line text-white fs-4"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <h3 class="text-white mb-0" id="averageUnpaid">฿0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แยกตามระยะเวลาค้างชำระ -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">ระยะเวลาค้างชำระ</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <div class="border rounded p-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>น้อยกว่า 30 วัน</span>
+                                                <span class="badge bg-label-success" id="under30Count">0</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted">ยอดรวม</small>
+                                                <span class="fw-semibold" id="under30Amount">฿0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="border rounded p-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>30-60 วัน</span>
+                                                <span class="badge bg-label-warning" id="30to60Count">0</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted">ยอดรวม</small>
+                                                <span class="fw-semibold" id="30to60Amount">฿0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="border rounded p-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>61-90 วัน</span>
+                                                <span class="badge bg-label-danger" id="61to90Count">0</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted">ยอดรวม</small>
+                                                <span class="fw-semibold" id="61to90Amount">฿0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="border rounded p-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>มากกว่า 90 วัน</span>
+                                                <span class="badge bg-label-dark" id="over90Count">0</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted">ยอดรวม</small>
+                                                <span class="fw-semibold" id="over90Amount">฿0.00</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1043,132 +1196,32 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
                     </div>
                 </div>
 
-                <!-- ตารางแสดงรายการค้างชำระ -->
+                <!-- ตารางรายการค้างชำระ -->
                 <div class="card">
-                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">รายการค้างชำระทั้งหมด</h6>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">รายการค้างชำระ</h5>
                         <div>
-                            <button type="button" class="btn btn-success btn-sm me-2" onclick="exportUnpaidToExcel()">
+                            <button class="btn btn-success btn-sm me-2" onclick="exportUnpaidToExcel()">
                                 <i class="ri-file-excel-2-line me-1"></i> Excel
                             </button>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="exportUnpaidToPDF()">
+                            <button class="btn btn-danger btn-sm" onclick="exportUnpaidToPDF()">
                                 <i class="ri-file-pdf-line me-1"></i> PDF
                             </button>
                         </div>
                     </div>
-                    <div class="card-body p-0">
+                    <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0" id="unpaidTable">
-                                <thead class="table-light">
+                            <table class="table table-hover" id="unpaidTable">
+                                <thead>
                                     <tr>
-                                        <th class="border-top-0">ชื่อ-นามสกุล</th>
-                                        <th class="border-top-0">เบอร์โทรศัพท์</th>
-                                        <th class="border-top-0">วันที่สั่งซื้อ</th>
-                                        <th class="border-top-0">เลขที่ใบสั่งซื้อ</th>
-                                        <th class="border-top-0">รายการ</th>
-                                        <th class="border-top-0 text-end">ยอดค้างชำระ</th>
-                                        <th class="border-top-0 text-end">ระยะเวลาที่ค้างชำระ</th>
-                                        <th class="border-top-0 text-center">สถานะ</th>
-                                        <th class="border-top-0 text-center">จัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="unpaidTableBody">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="unpaidReportModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-danger">
-                <h5 class="modal-title text-white">
-                    <i class="ri-time-line me-2"></i>รายงานยอดค้างชำระ
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- ส่วนสรุป -->
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="card bg-danger">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-2">ยอดค้างชำระรวม</h6>
-                                        <h3 class="text-white mb-0" id="totalUnpaid">฿0.00</h3>
-                                    </div>
-                                    <div class="bg-danger bg-opacity-25 p-3 rounded">
-                                        <i class="ri-money-dollar-circle-line text-white" style="font-size: 2rem;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-warning">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-2">จำนวนรายการค้างชำระ</h6>
-                                        <h3 class="text-white mb-0" id="totalUnpaidItems">0</h3>
-                                    </div>
-                                    <div class="bg-warning bg-opacity-25 p-3 rounded">
-                                        <i class="ri-file-list-3-line text-white" style="font-size: 2rem;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-info">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-2">จำนวนลูกค้าที่ค้างชำระ</h6>
-                                        <h3 class="text-white mb-0" id="totalUnpaidCustomers">0</h3>
-                                    </div>
-                                    <div class="bg-info bg-opacity-25 p-3 rounded">
-                                        <i class="ri-user-line text-white" style="font-size: 2rem;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ตารางแสดงรายการค้างชำระ -->
-                <div class="card">
-                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">รายการค้างชำระทั้งหมด</h6>
-                        <div>
-                            <button type="button" class="btn btn-success btn-sm me-2" onclick="exportUnpaidToExcel()">
-                                <i class="ri-file-excel-2-line me-1"></i> Excel
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="exportUnpaidToPDF()">
-                                <i class="ri-file-pdf-line me-1"></i> PDF
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0" id="unpaidTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="border-top-0">ชื่อ-นามสกุล</th>
-                                        <th class="border-top-0">เบอร์โทรศัพท์</th>
-                                        <th class="border-top-0">วันที่สั่งซื้อ</th>
-                                        <th class="border-top-0">เลขที่ใบสั่งซื้อ</th>
-                                        <th class="border-top-0">รายการ</th>
-                                        <th class="border-top-0 text-end">ยอดค้างชำระ</th>
-                                        <th class="border-top-0 text-end">ระยะเวลาที่ค้างชำระ</th>
-                                        <th class="border-top-0 text-center">สถานะ</th>
-                                        <th class="border-top-0 text-center">จัดการ</th>
+                                        <th>เลขที่คำสั่งซื้อ</th>
+                                        <th>วันที่สั่งซื้อ</th>
+                                        <th>ลูกค้า</th>
+                                        <th>เบอร์โทร</th>
+                                        <th>รายการ</th>
+                                        <th class="text-end">จำนวนเงิน</th>
+                                        <th class="text-end">ระยะเวลา</th>
+                                        <th class="text-center">สถานะ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="unpaidTableBody">
@@ -1202,9 +1255,34 @@ $selected_branches_display = !empty($selected_branches_names) ? implode(', ', $s
     <!-- Main JS -->
     <script src="../assets/js/main.js"></script>
 
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Page JS -->
 <script>
 $(document).ready(function() {
+
+
+        // กำหนดค่าเริ่มต้นของ toastr
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+
     // Initialize Select2 with proper options
     $('.select2').select2({
         theme: 'bootstrap-5',
@@ -1412,58 +1490,94 @@ function updateIncomeTable(details) {
     tbody.empty();
     
     details.forEach(item => {
-        // สร้างแถวหลัก (header) สำหรับแต่ละประเภทการชำระเงิน
+        // แถวสรุปของแต่ละประเภทการชำระเงิน
         const mainRow = $(`
-            <tr class="summary-row table-light">
-                <td>
-                    <button class="btn btn-link btn-sm p-0 me-2 toggle-details">
-                        <i class="ri-add-line"></i>
-                    </button>
-                    ${item.payment_type}
+            <tr class="summary-row">
+                <td style="width: 30%">
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-sm btn-icon me-2 toggle-details">
+                            <i class="ri-add-circle-fill text-primary fs-5"></i>
+                        </button>
+                        <div>
+                            <span class="fw-semibold">${item.payment_type}</span>
+                            <div class="small text-muted">${item.count} รายการ</div>
+                        </div>
+                    </div>
                 </td>
-                <td class="text-end">${formatNumber(item.count)} รายการ</td>
-                <td class="text-end">${formatCurrency(item.amount)}</td>
-                <td class="text-end">${formatNumber(item.percentage)}%</td>
+                <td class="text-end" style="width: 25%">
+                    <span class="fw-semibold">${formatCurrency(item.amount)}</span>
+                </td>
+                <td class="text-end" style="width: 20%">
+                    <div class="d-flex align-items-center justify-content-end">
+                        <div class="progress flex-grow-1 me-2" style="height: 8px; max-width: 100px">
+                            <div class="progress-bar bg-primary" style="width: ${item.percentage}%"></div>
+                        </div>
+                        <span class="text-muted">${formatNumber(item.percentage)}%</span>
+                    </div>
+                </td>
             </tr>
         `);
 
-        // สร้างแถวรายละเอียด
+        // แถวรายละเอียดรายการ
         const detailRow = $(`
             <tr class="detail-row" style="display: none;">
                 <td colspan="4" class="p-0">
-                    <div class="border-top">
-                        <table class="table table-sm mb-0">
-                            <thead>
-                                <tr class="table-secondary">
-                                    <th>เลขที่คำสั่งซื้อ</th>
-                                    <th>วันที่สั่งซื้อ</th>
-                                    <th>วันที่ชำระเงิน</th>
-                                    <th>ลูกค้า</th>
-                                    <th>เบอร์โทร</th>
-                                    <th>รายการ</th>
-                                    <th class="text-end">จำนวนเงิน</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                    <div class="border-start border-4 border-primary ms-4 bg-light-primary">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped mb-0">
+                                <thead>
+                                    <tr class="table-primary">
+                                        <th>เลขที่คำสั่งซื้อ</th>
+                                        <th>วันที่สั่งซื้อ</th>
+                                        <th>วันที่ชำระเงิน</th>
+                                        <th>ลูกค้า</th>
+                                        <th>เบอร์โทร</th>
+                                        <th>รายการ</th>
+                                        <th class="text-end">จำนวนเงิน</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                 ${item.orders.map(order => `
                                     <tr>
-                                        <td>${order.order_id}</td>
-                                        <td>${order.order_date}</td>
-                                        <td>${order.payment_date}</td>
-                                        <td>${order.customer_name}</td>
-                                        <td>${order.customer_tel}</td>
-                                        <td>${order.courses}</td>
-                                        <td class="text-end">${formatCurrency(order.amount)}</td>
+                                        <td>
+                                            <span class="badge bg-label-primary">${order.order_id}</span>
+                                        </td>
+                                        <td class="text-nowrap">${formatDateTime(order.order_date)}</td>
+                                        <td class="text-nowrap">${formatDateTime(order.payment_date)}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="ri-user-3-line me-2 text-danger"></i>
+                                                <span>${order.customer_name}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="ri-phone-line me-2 text-danger"></i>
+                                                <span class="text-nowrap">${order.customer_tel}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="courses-container" style="max-width: 200px;">
+                                                ${order.courses.split(',').map(course => 
+                                                    `<span class="badge bg-label-danger me-1 mb-1">${course.trim()}</span>`
+                                                ).join('')}
+                                            </div>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            ${formatCurrency(order.amount)}
+                                        </td>
                                     </tr>
                                 `).join('')}
-                            </tbody>
-                            <tfoot>
-                                <tr class="table-secondary">
-                                    <td colspan="6" class="text-end fw-bold">รวม:</td>
-                                    <td class="text-end fw-bold">${formatCurrency(item.amount)}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-light">
+                                        <td colspan="6" class="text-end fw-bold">รวมทั้งสิ้น:</td>
+                                        <td class="text-end fw-bold">${formatCurrency(item.amount)}</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </td>
             </tr>
@@ -1472,20 +1586,58 @@ function updateIncomeTable(details) {
         tbody.append(mainRow);
         tbody.append(detailRow);
 
-        // เพิ่ม event listener สำหรับปุ่มแสดง/ซ่อนรายละเอียด
-        mainRow.find('.toggle-details').click(function() {
+        // Event listener สำหรับการแสดง/ซ่อนรายละเอียด
+        mainRow.find('.toggle-details').click(function(e) {
+            e.preventDefault();
             const icon = $(this).find('i');
             const detailRow = mainRow.next('.detail-row');
             
             detailRow.toggle();
             
             if (detailRow.is(':visible')) {
-                icon.removeClass('ri-add-line').addClass('ri-subtract-line');
+                icon.removeClass('ri-add-circle-fill').addClass('ri-subtract-circle-fill');
             } else {
-                icon.removeClass('ri-subtract-line').addClass('ri-add-line');
+                icon.removeClass('ri-subtract-circle-fill').addClass('ri-add-circle-fill');
             }
         });
     });
+}
+
+
+function formatDateTime(dateStr) {
+    if (!dateStr) return '-';
+
+    try {
+        // แยกวันที่และเวลา
+        const [date, time] = dateStr.split(' ');
+        
+        // แยกวัน เดือน ปี
+        const [day, month, year] = date.split('/');
+        
+        // แปลงเป็น Date object - ต้องแปลงปีให้เป็น ค.ศ.
+        const dateObj = new Date(`${year}-${month}-${day} ${time}`);
+        
+        // ตรวจสอบว่าวันที่ถูกต้องหรือไม่
+        if (isNaN(dateObj.getTime())) {
+            return '-';
+        }
+
+        // จัดรูปแบบวันที่และเวลา
+        const thaiDate = new Date(dateObj).toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+
+        // จัดรูปแบบเวลา
+        const timeStr = time ? time : '00:00';
+        
+        return `${thaiDate} ${timeStr}`;
+
+    } catch (e) {
+        console.error('Error formatting date:', dateStr, e);
+        return '-';
+    }
 }
 
 // ฟังก์ชันช่วยจัดรูปแบบตัวเลข
@@ -1565,28 +1717,24 @@ function updateTopSalesTable(topItems) {
 
 // ฟังก์ชันสำหรับรายงานยอดค้างชำระ
 function loadUnpaidReport() {
-    const dateRange = $('#daterange').val().split(' - ');
-    const startDate = dateRange[0];
-    const endDate = dateRange[1];
-
     $.ajax({
         url: 'sql/get-unpaid-report.php',
         type: 'GET',
         data: {
-            startDate: startDate,
-            endDate: endDate
+            startDate: $('#daterange').data('daterangepicker').startDate.format('YYYY-MM-DD'),
+            endDate: $('#daterange').data('daterangepicker').endDate.format('YYYY-MM-DD')
         },
         success: function(response) {
             if (response.success) {
                 updateUnpaidSummary(response.summary);
+                updateUnpaidByPeriod(response.byPeriod);
                 updateUnpaidTable(response.details);
-                updateUnpaidCount(response.summary.items);
             } else {
-                showErrorAlert(response.message || 'ไม่สามารถโหลดข้อมูลได้');
+                toastr.error(response.message || 'ไม่สามารถโหลดข้อมูลได้');
             }
         },
         error: function() {
-            showErrorAlert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            toastr.error('เกิดข้อผิดพลาดในการเชื่อมต่อ');
         }
     });
 }
@@ -1595,35 +1743,119 @@ function updateUnpaidSummary(summary) {
     $('#totalUnpaid').text(formatCurrency(summary.total));
     $('#totalUnpaidItems').text(formatNumber(summary.items));
     $('#totalUnpaidCustomers').text(formatNumber(summary.customers));
+    $('#averageUnpaid').text(formatCurrency(summary.average));
+}
+
+function updateUnpaidByPeriod(data) {
+    // น้อยกว่า 30 วัน
+    $('#under30Count').text(formatNumber(data.under30.count));
+    $('#under30Amount').text(formatCurrency(data.under30.amount));
+
+    // 30-60 วัน
+    $('#30to60Count').text(formatNumber(data.days30to60.count));
+    $('#30to60Amount').text(formatCurrency(data.days30to60.amount));
+
+    // 61-90 วัน
+    $('#61to90Count').text(formatNumber(data.days61to90.count));
+    $('#61to90Amount').text(formatCurrency(data.days61to90.amount));
+
+    // มากกว่า 90 วัน
+    $('#over90Count').text(formatNumber(data.over90.count));
+    $('#over90Amount').text(formatCurrency(data.over90.amount));
 }
 
 function updateUnpaidTable(details) {
     const tbody = $('#unpaidTableBody');
     tbody.empty();
-    
+
     details.forEach(item => {
-        const overdueBadge = getOverdueBadge(item.days_overdue);
+        const statusBadge = getUnpaidStatusBadge(item.days_overdue);
         const row = `
             <tr>
-                <td>${item.customer_name}</td>
-                <td>${item.phone}</td>
-                <td>${formatDate(item.order_date)}</td>
-                <td>${item.order_id}</td>
-                <td>${item.items}</td>
-                <td class="text-end">${formatCurrency(item.unpaid_amount)}</td>
-                <td class="text-end">${item.days_overdue} วัน</td>
-                <td class="text-center">${overdueBadge}</td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-primary me-1" onclick="showPaymentModal(${item.order_id})">
-                        <i class="ri-money-dollar-circle-line"></i>
-                    </button>
-                    <button class="btn btn-sm btn-info" onclick="showOrderDetail(${item.order_id})">
-                        <i class="ri-file-list-3-line"></i>
-                    </button>
+                <td>
+                    <span class="badge bg-label-danger">${item.order_id}</span>
                 </td>
+                <td>${formatDateTime(item.order_date)}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <i class="ri-user-3-line me-2 text-danger"></i>
+                        ${item.customer_name}
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <i class="ri-phone-line me-2 text-danger"></i>
+                        ${item.customer_tel}
+                    </div>
+                </td>
+                <td>
+                    <div style="max-width: 250px;">
+                        ${item.courses.split(',').map(course => 
+                            `<span class="badge bg-label-danger me-1 mb-1">${course.trim()}</span>`
+                        ).join('')}
+                    </div>
+                </td>
+                <td class="text-end fw-semibold">
+                    ${formatCurrency(item.amount)}
+                </td>
+                <td class="text-end">
+                    ${item.days_overdue} วัน
+                </td>
+                <td class="text-center">
+                    ${statusBadge}
+                </td>
+
             </tr>
         `;
         tbody.append(row);
+    });
+}
+
+function getUnpaidStatusBadge(days) {
+    if (days <= 30) {
+        return '<span class="badge bg-success">ปกติ</span>';
+    } else if (days <= 60) {
+        return '<span class="badge bg-warning">เกินกำหนด</span>';
+    } else if (days <= 90) {
+        return '<span class="badge bg-danger">ค้างนาน</span>';
+    } else {
+        return '<span class="badge bg-dark">ค้างนานมาก</span>';
+    }
+}
+
+function recordPayment(orderId) {
+    // แสดง Modal สำหรับบันทึกการชำระเงิน
+    $('#paymentModal').modal('show');
+    // เก็บ orderId ไว้ใน input hidden
+    $('#paymentOrderId').val(orderId);
+}
+
+function sendReminder(orderId) {
+    Swal.fire({
+        title: 'ยืนยันการส่งการแจ้งเตือน',
+        text: 'ระบบจะส่งข้อความแจ้งเตือนไปยังลูกค้า',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ส่งการแจ้งเตือน',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // ส่ง API request เพื่อส่งการแจ้งเตือน
+            $.ajax({
+                url: 'sql/send-payment-reminder.php',
+                type: 'POST',
+                data: { orderId: orderId },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('สำเร็จ', 'ส่งการแจ้งเตือนเรียบร้อยแล้ว', 'success');
+                    } else {
+                        Swal.fire('ผิดพลาด', response.message, 'error');
+                    }
+                }
+            });
+        }
     });
 }
 
@@ -1666,23 +1898,28 @@ function getOverdueBadge(days) {
 }
 
 function showErrorAlert(message) {
-    Swal.fire({
-        icon: 'error',
-        title: 'เกิดข้อผิดพลาด',
-        text: message
+    toastr.error(message, 'ผิดพลาด', {
+        timeOut: 3000,
+        positionClass: 'toast-top-right',
+        closeButton: true
     });
 }
 
 // Event Listeners
 $(document).ready(function() {
+    updateUnpaidCount();
+    
+    // อัพเดททุก 5 นาที
+    setInterval(updateUnpaidCount, 300000);
+
     // เมื่อเปิด Modal
     $('#incomeReportModal').on('show.bs.modal', function() {
         loadIncomeReport();
     });
 
-    $('#salesReportModal').on('show.bs.modal', function() {
-        loadSalesReport();
-    });
+    // $('#salesReportModal').on('show.bs.modal', function() {
+    //     loadSalesReport();
+    // });
 
     $('#unpaidReportModal').on('show.bs.modal', function() {
         loadUnpaidReport();
@@ -1693,13 +1930,19 @@ $(document).ready(function() {
         if ($('#incomeReportModal').is(':visible')) {
             loadIncomeReport();
         }
-        if ($('#salesReportModal').is(':visible')) {
-            loadSalesReport();
-        }
+        // if ($('#salesReportModal').is(':visible')) {
+        //     loadSalesReport();
+        // }
         if ($('#unpaidReportModal').is(':visible')) {
             loadUnpaidReport();
         }
+        updateUnpaidCount();
+
     });
+});
+
+$('#unpaidReportModal').on('hidden.bs.modal', function () {
+    updateUnpaidCount();
 });
 
 // Export Functions
@@ -1775,64 +2018,85 @@ function exportIncomeToExcel() {
 
 // ฟังก์ชันสำหรับ Export PDF
 function exportIncomeToPDF() {
-    // สร้าง HTML สำหรับ PDF
+    // สร้าง HTML content สำหรับ PDF
     const content = `
-        <div style="font-family: 'Sarabun', sans-serif; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="margin: 0;">รายงานสรุปรายได้แยกตามประเภทการชำระเงิน</h2>
-                <p style="margin: 5px 0;">วันที่: ${$('#daterange').val()}</p>
+        <div style="font-family: 'Sarabun', sans-serif;">
+            <!-- ส่วนหัวรายงาน -->
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #333; margin: 0;">รายงานสรุปรายได้แยกตามประเภทการชำระเงิน</h2>
+                <p style="color: #666; margin: 10px 0;">
+                    วันที่: ${$('#daterange').val()}
+                </p>
+                <p style="color: #666; margin: 5px 0;">
+                    วันที่ออกรายงาน: ${new Date().toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}
+                </p>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <h3 style="margin-bottom: 10px;">สรุปภาพรวม</h3>
+            <!-- สรุปภาพรวม -->
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-bottom: 15px;">
+                    สรุปภาพรวม
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                        <p style="color: #666; margin: 0 0 5px 0;">ยอดรวมทั้งหมด</p>
+                        <h4 style="color: #007bff; margin: 0;">${$('#totalIncome').text()}</h4>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                        <p style="color: #666; margin: 0 0 5px 0;">จำนวนรายการทั้งหมด</p>
+                        <h4 style="color: #28a745; margin: 0;">${$('#totalTransactions').text()} รายการ</h4>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                        <p style="color: #666; margin: 0 0 5px 0;">ยอดเฉลี่ยต่อรายการ</p>
+                        <h4 style="color: #17a2b8; margin: 0;">${$('#averageIncome').text()}</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ตารางรายละเอียด -->
+            <div>
+                <h3 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-bottom: 15px;">
+                    รายละเอียดตามประเภทการชำระเงิน
+                </h3>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                    <tr>
-                        <td style="padding: 8px; border: 1px solid #ddd;">ยอดรวมทั้งหมด:</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${$('#totalIncome').text()}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">จำนวนรายการทั้งหมด:</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${$('#totalTransactions').text()}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px; border: 1px solid #ddd;">ยอดเฉลี่ยต่อรายการ:</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${$('#averageIncome').text()}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;"></td>
-                        <td style="padding: 8px; border: 1px solid #ddd;"></td>
-                    </tr>
-                </table>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h3 style="margin-bottom: 10px;">รายละเอียดตามประเภทการชำระเงิน</h3>
-                <table style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr style="background-color: #4e73df; color: white;">
-                            <th style="padding: 12px; border: 1px solid #ddd;">ประเภทการชำระเงิน</th>
-                            <th style="padding: 12px; border: 1px solid #ddd;">จำนวนรายการ</th>
-                            <th style="padding: 12px; border: 1px solid #ddd;">ยอดรวม</th>
-                            <th style="padding: 12px; border: 1px solid #ddd;">เปอร์เซ็นต์</th>
+                        <tr style="background-color: #007bff; color: white;">
+                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">ประเภทการชำระเงิน</th>
+                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">จำนวนรายการ</th>
+                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">ยอดรวม</th>
+                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">เปอร์เซ็นต์</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${Array.from($('#incomeTableBody tr')).map(row => `
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${$(row).find('td').eq(0).text()}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${$(row).find('td').eq(1).text()}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${$(row).find('td').eq(2).text()}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${$(row).find('td').eq(3).text()}</td>
+                        ${Array.from($('#incomeTableBody tr')).map((row, index) => `
+                            <tr style="background-color: ${index % 2 === 0 ? '#f8f9fa' : '#ffffff'};">
+                                <td style="padding: 12px; border: 1px solid #dee2e6;">
+                                    ${$(row).find('td').eq(0).text()}
+                                </td>
+                                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">
+                                    ${$(row).find('td').eq(1).text()}
+                                </td>
+                                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">
+                                    ${$(row).find('td').eq(2).text()}
+                                </td>
+                                <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">
+                                    ${$(row).find('td').eq(3).text()}
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             </div>
 
-            <div style="text-align: right; margin-top: 30px;">
-                <p>วันที่ออกรายงาน: ${new Date().toLocaleDateString('th-TH', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })}</p>
+            <!-- ส่วนท้าย -->
+            <div style="margin-top: 40px; text-align: right; font-size: 12px; color: #666;">
+                <p style="margin: 0;">* รายงานนี้ออกโดยระบบอัตโนมัติ</p>
             </div>
         </div>
     `;
@@ -1844,13 +2108,15 @@ function exportIncomeToPDF() {
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
             scale: 2,
-            useCORS: true
+            useCORS: true,
+            letterRendering: true
         },
         jsPDF: {
-            unit: 'mm',
+            unit: 'cm',
             format: 'a4',
             orientation: 'portrait'
-        }
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     // สร้าง PDF
@@ -1859,7 +2125,34 @@ function exportIncomeToPDF() {
 
 // ฟังก์ชันช่วยจัดรูปแบบวันที่สำหรับชื่อไฟล์
 function formatDateFilename(date) {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().slice(0, 10);
+}
+
+function updateUnpaidCount() {
+    const dateRange = $('#daterange').val();  // ดึงค่าช่วงวันที่ที่เลือก
+    const dates = dateRange.split(' - ');
+    
+    $.ajax({
+        url: 'sql/get-unpaid-count.php',
+        type: 'GET',
+        data: {
+            startDate: dates[0],
+            endDate: dates[1]
+        },
+        success: function(response) {
+            if (response.success) {
+                const count = response.count;
+                const badge = $('#unpaidCount');
+                
+                if (count > 0) {
+                    badge.text(count);
+                    badge.show();
+                } else {
+                    badge.hide();
+                }
+            }
+        }
+    });
 }
 </script>
 </body>
