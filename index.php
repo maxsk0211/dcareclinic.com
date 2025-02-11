@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th" class="light-style layout-navbar-fixed layout-menu-fixed">
+<html lang="th" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default" data-assets-path="../assets/" data-template="horizontal-menu-template-no-customizer-starter">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
@@ -17,7 +17,7 @@
 
     <!-- Icons -->
     <link rel="stylesheet" href="../assets/vendor/fonts/fontawesome.css" />
-    <link rel="stylesheet" href="../assets/vendor/fonts/tabler-icons.css" />
+    <!-- <link rel="stylesheet" href="../assets/vendor/fonts/tabler-icons.css" /> -->
     <link rel="stylesheet" href="../assets/vendor/fonts/flag-icons.css" />
 
     <!-- Core CSS -->
@@ -32,69 +32,149 @@
     <link rel="stylesheet" href="../assets/vendor/libs/swiper/swiper.css" />
     <link rel="stylesheet" href="../assets/vendor/libs/toastr/toastr.css" />
 
+
+
     <!-- Custom CSS -->
     <style>
-/* ===============================================
-   Global Styles
-   =============================================== */
+/* Global Styles */
 body {
     font-family: 'Prompt', sans-serif;
+}
+
+/* ===============================================
+   Navbar Styles
+   =============================================== */
+.layout-navbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+}
+
+.navbar-brand img {
+    transition: all 0.3s ease;
+}
+
+.app-brand-text {
+    font-size: 1.2rem;
+}
+
+.navbar-toggler {
+    background-color: rgba(147, 51, 234, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navbar-toggler:hover {
+    background-color: rgba(147, 51, 234, 0.2);
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.25);
+}
+
+.navbar-toggler[aria-expanded="true"] {
+    background-color: rgba(147, 51, 234, 0.2);
+}
+
+.navbar-toggler[aria-expanded="true"] i {
+    transform: rotate(90deg);
+}
+
+.navbar-toggler i {
+    transition: transform 0.3s ease;
+    font-size: 1.75rem;
 }
 
 /* ===============================================
    Hero Section Styles
    =============================================== */
 .hero-section {
-    height: 100vh;
-    overflow: hidden;
-    background-color: #000;
     position: relative;
+    height: 80vh;
+    overflow: hidden;
+    margin-top: 70px;
 }
 
-.hero-swiper {
-    width: 100%;
+.hero-swiper,
+.swiper-wrapper,
+.swiper-slide {
     height: 100%;
 }
 
-.hero-slide {
+.swiper-slide {
+    position: relative;
+}
+
+/* Background Layer */
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     background-size: cover;
     background-position: center;
+    z-index: 1;
 }
 
-/* Hero Content and Overlay */
-.hero-content-overlay {
+/* Gradient Overlay */
+.overlay-gradient {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(120deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.4) 100%);
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        rgba(0,0,0,0.8) 0%, 
+        rgba(0,0,0,0.6) 50%, 
+        rgba(0,0,0,0.4) 100%
+    );
+    z-index: 2;
+}
+
+/* Content Wrapper */
+.hero-content-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
     display: flex;
     align-items: center;
 }
 
+/* Text Content */
 .hero-text-content {
-    position: relative;
-    z-index: 2;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 1s ease;
 }
 
-/* Hero Typography */
+.hero-text-content.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .hero-subtitle-top {
     font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 3px;
-    color: #fff;
     opacity: 0.9;
-    font-weight: 400;
+    margin-bottom: 1.5rem;
 }
 
 .hero-title {
     font-size: 4rem;
     font-weight: 700;
     line-height: 1.2;
-    color: #fff;
     margin-bottom: 1.5rem;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
@@ -108,19 +188,23 @@ body {
 
 .hero-subtitle {
     font-size: 1.25rem;
-    color: rgba(255, 255, 255, 0.9);
     line-height: 1.8;
+    opacity: 0.9;
     margin-bottom: 2rem;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Hero Buttons */
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
 .btn-gradient {
     background: linear-gradient(120deg, #ff8fb1, #ff5b94);
     border: none;
     color: white;
     position: relative;
-    z-index: 1;
     overflow: hidden;
     transition: all 0.3s ease;
 }
@@ -133,36 +217,34 @@ body {
 /* Hero Stats */
 .hero-stats {
     display: flex;
-    gap: 2.5rem;
-    margin-top: 3rem;
+    gap: 2rem;
 }
 
 .stat-item {
-    text-align: center;
-    padding: 1rem;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border-radius: 15px;
+    padding: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
 }
 
 .stat-number {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #fff;
     line-height: 1;
     margin-bottom: 0.5rem;
 }
 
 .stat-label {
-    color: rgba(255, 255, 255, 0.9);
     font-size: 0.9rem;
+    opacity: 0.9;
 }
 
 /* Hero Image */
-.hero-image-wrap {
+.hero-image-wrapper {
     position: relative;
-    height: 100%;
+    height: 80%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -174,48 +256,6 @@ body {
     height: auto;
     border-radius: 30px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease;
-}
-
-/* Floating Elements */
-.floating-elements {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-}
-
-.floating-circle {
-    position: absolute;
-    border-radius: 50%;
-    background: linear-gradient(120deg, #ff8fb1, #ff5b94);
-    opacity: 0.1;
-    animation: float 20s infinite ease-in-out;
-}
-
-.circle-1 {
-    width: 300px;
-    height: 300px;
-    top: -150px;
-    left: -150px;
-}
-
-.circle-2 {
-    width: 200px;
-    height: 200px;
-    top: 40%;
-    right: -100px;
-    animation-delay: -5s;
-}
-
-.circle-3 {
-    width: 150px;
-    height: 150px;
-    bottom: -75px;
-    left: 20%;
-    animation-delay: -10s;
 }
 
 /* Experience Badge */
@@ -250,10 +290,50 @@ body {
     opacity: 0.9;
 }
 
+/* Floating Elements */
+.floating-elements {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.floating-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(120deg, #ff8fb1, #ff5b94);
+    opacity: 0.1;
+    animation: float 20s infinite ease-in-out;
+}
+
+.circle-1 {
+    width: 300px;
+    height: 300px;
+    top: -150px;
+    left: -150px;
+}
+
+.circle-2 {
+    width: 200px;
+    height: 200px;
+    top: 40%;
+    right: -100px;
+    animation-delay: -5s;
+}
+
+.circle-3 {
+    width: 150px;
+    height: 150px;
+    bottom: -75px;
+    left: 20%;
+    animation-delay: -10s;
+}
+
 /* Treatment Features */
 .treatment-features {
     display: flex;
-    gap: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
     margin-top: 2rem;
 }
 
@@ -261,11 +341,10 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: white;
-}
-
-.feature-item i {
-    font-size: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    backdrop-filter: blur(5px);
 }
 
 /* ===============================================
@@ -274,6 +353,9 @@ body {
 .service-card {
     transition: transform 0.3s ease;
     height: 100%;
+    overflow: hidden;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .service-card:hover {
@@ -285,11 +367,23 @@ body {
     object-fit: cover;
 }
 
+.service-card .card-body {
+    padding: 2rem;
+}
+
+.service-card .card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
 /* ===============================================
    Promotion Section Styles
    =============================================== */
 .promotion-section .card {
     overflow: hidden;
+    border: none;
+    border-radius: 15px;
 }
 
 .promotion-section .img-fluid {
@@ -306,6 +400,9 @@ body {
 .doctors-section .rounded-circle {
     border: 5px solid rgba(255, 143, 177, 0.2);
     transition: transform 0.3s ease;
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
 }
 
 .doctors-section .card:hover .rounded-circle {
@@ -326,6 +423,8 @@ body {
    =============================================== */
 .contact-section .card {
     height: 100%;
+    border-radius: 15px;
+    overflow: hidden;
 }
 
 .contact-info .ti {
@@ -337,6 +436,82 @@ body {
     border-radius: 50%;
     background: rgba(255, 143, 177, 0.1);
     color: #ff8fb1;
+}
+
+/* Form Styles */
+.form-control, .form-select {
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #ff8fb1;
+    box-shadow: 0 0 0 0.2rem rgba(255, 143, 177, 0.25);
+}
+
+/* ===============================================
+   Footer Styles
+   =============================================== */
+.footer {
+    background: #fff;
+    border-top: 1px solid #eee;
+    padding: 2rem 0;
+}
+
+.footer .btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.footer .btn-icon:hover {
+    background: rgba(255, 143, 177, 0.1);
+    color: #ff8fb1;
+}
+
+/* ===============================================
+   Animations
+   =============================================== */
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+        transform: translate(30px, -30px) rotate(5deg);
+    }
+    66% {
+        transform: translate(-20px, 20px) rotate(-5deg);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 1s ease forwards;
+}
+
+.slide-up {
+    animation: slideUp 0.8s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ===============================================
@@ -364,7 +539,6 @@ body {
     font-size: 1.5rem;
 }
 
-/* Swiper Pagination */
 .swiper-pagination-bullet {
     width: 10px;
     height: 10px;
@@ -378,95 +552,202 @@ body {
 }
 
 /* ===============================================
-   Footer Styles
-   =============================================== */
-.footer {
-    background: #fff;
-    border-top: 1px solid #eee;
-}
-
-.footer .btn-icon {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* ===============================================
-   Animations
-   =============================================== */
-@keyframes float {
-    0%, 100% {
-        transform: translate(0, 0) rotate(0deg);
-    }
-    33% {
-        transform: translate(30px, -30px) rotate(5deg);
-    }
-    66% {
-        transform: translate(-20px, 20px) rotate(-5deg);
-    }
-}
-
-/* ===============================================
    Responsive Styles
    =============================================== */
-@media (max-width: 1200px) {
-    .hero-title {
-        font-size: 3.5rem;
+/* Desktop Styles */
+@media (min-width: 1200px) {
+    .navbar-nav .nav-link {
+        position: relative;
+        margin: 0 0.5rem;
+    }
+
+    .navbar-nav .nav-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: 0;
+        left: 50%;
+        background: #ff8fb1;
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .navbar-nav .nav-link:hover::after {
+        width: 100%;
     }
 }
 
-@media (max-width: 992px) {
-    .hero-section {
-        height: auto;
-        min-height: 100vh;
+/* Tablet Styles (ต่อ) */
+@media (max-width: 991.98px) {
+    /* ปรับ Overlay ให้เข้มขึ้น */
+    .overlay-gradient {
+        background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.2) 0%,
+            rgba(0, 0, 0, 0.7) 35%,
+            rgba(0, 0, 0, 0.85) 100%
+        );
+    }
+
+    /* ปรับปรุงการแสดงผลข้อความ */
+    .hero-text-content {
+        text-align: left;
+        padding: 0 1rem;
+    }
+
+    .hero-subtitle-top {
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        color: rgba(255, 255, 255, 0.9);
     }
 
     .hero-title {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
+        line-height: 1.3;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        margin-bottom: 1rem;
+    }
+
+    .gradient-text {
+        text-shadow: none;
+        background: linear-gradient(120deg, #ff8fb1, #ff5b94);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .hero-subtitle {
         font-size: 1.1rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        margin-bottom: 2rem;
     }
 
-    .hero-stats {
-        flex-wrap: wrap;
+    /* ปรับปรุงปุ่ม */
+    .hero-buttons {
         gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .btn-gradient {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        background: linear-gradient(120deg, #ff8fb1, #ff5b94);
+        border: none;
+        box-shadow: 0 4px 15px rgba(255, 143, 177, 0.3);
+    }
+
+    .btn-outline-light {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* ปรับปรุง Stats */
+    .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 1rem;
+        padding: 0 1rem;
     }
 
     .stat-item {
-        flex: 1 1 calc(50% - 1rem);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 1.25rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
-    .service-card .card-img-top {
-        height: 180px;
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(120deg, #fff, #ff8fb1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
     }
 
-    .experience-badge {
-        width: 100px;
-        height: 100px;
-        bottom: 20px;
-        right: 20px;
+    .text-gradient {
+        background: linear-gradient(120deg, #ff8fb1, #ff5b94);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
     }
 
-    .badge-content .years {
-        font-size: 1.5rem;
+    .stat-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+        font-weight: 500;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
 
-    .badge-content .text {
-        font-size: 0.7rem;
-    }
-
+    /* ปรับปรุง Feature Items */
     .treatment-features {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
         gap: 1rem;
+        padding: 0 1rem;
+        margin-top: 2rem;
+    }
+
+    .feature-item {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .feature-item i {
+        font-size: 1.5rem;
+        color: #ff8fb1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .feature-item span {
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 1rem;
+        font-weight: 500;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Swiper Pagination */
+    .swiper-pagination {
+        bottom: 20px !important;
+    }
+
+    .swiper-pagination-bullet {
+        width: 8px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .swiper-pagination-bullet-active {
+        background: #ff8fb1;
+        transform: scale(1.2);
     }
 }
 
-@media (max-width: 768px) {
+/* Mobile Styles */
+@media (max-width: 767.98px) {
+    .hero-content-overlay {
+        padding: 3.5rem 0;
+    }
+
     .hero-title {
         font-size: 2.5rem;
     }
@@ -482,16 +763,24 @@ body {
 
     .hero-buttons .btn {
         width: 100%;
+        margin-bottom: 0.5rem;
     }
 
-    .stat-item {
-        flex: 1 1 100%;
+    .treatment-features {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .feature-item {
+        width: 100%;
+        justify-content: center;
     }
 
     .swiper-button-next,
     .swiper-button-prev {
         width: 40px;
         height: 40px;
+        display: none;
     }
 
     .swiper-button-next:after,
@@ -502,13 +791,18 @@ body {
     .promotion-section .card-body {
         padding: 1.5rem;
     }
-    
-    .doctors-section .card {
-        margin-bottom: 2rem;
-    }
 }
 
-@media (max-width: 576px) {
+/* Small Mobile Styles */
+@media (max-width: 575.98px) {
+    .hero-section {
+        margin-top: 60px;
+    }
+
+    .hero-content-overlay {
+        padding: 3rem 0;
+    }
+
     .hero-title {
         font-size: 2rem;
     }
@@ -521,31 +815,121 @@ body {
         margin-top: 2rem;
     }
 
+    .stat-item {
+        flex: 1 1 100%;
+    }
+
     .stat-number {
         font-size: 2rem;
     }
 
     .floating-circle {
-        opacity: 0.05;
+        display: none;
     }
 
     .service-card .card-img-top {
         height: 160px;
     }
-    
+
+    .service-card .card-body {
+        padding: 1.5rem;
+    }
+
     .footer {
         text-align: center;
     }
-    
+
     .footer .d-flex {
         justify-content: center;
+    }
+
+    .footer-container {
+        flex-direction: column;
+    }
+
+    .footer .btn-icon {
+        margin: 0.5rem;
+    }
+}
+
+@media (max-width: 375px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
+    .feature-item {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Utility Classes */
+.text-gradient {
+    background: linear-gradient(120deg, #ff8fb1, #ff5b94);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.bg-gradient {
+    background: linear-gradient(120deg, #ff8fb1, #ff5b94);
+}
+
+.backdrop-blur {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ff8fb1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #ff5b94;
+}
+
+/* Focus Styles */
+:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 143, 177, 0.25);
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .btn-gradient:hover {
+        transform: none;
+    }
+
+    .service-card:hover {
+        transform: none;
+    }
+
+    .doctors-section .card:hover .rounded-circle {
+        transform: none;
     }
 }
     </style>
 
     <!-- Helpers -->
     <script src="../assets/vendor/js/helpers.js"></script>
-    <script src="../assets/vendor/js/template-customizer.js"></script>
+    <!-- <script src="../assets/vendor/js/template-customizer.js"></script> -->
     <script src="../assets/js/config.js"></script>
 </head>
 
@@ -567,50 +951,7 @@ body {
                         <?php include 'hero-section.php'; ?>
 
                         <!-- Services Section -->
-                        <section id="services" class="mb-4">
-                            <div class="text-center mb-4">
-                                <h2 class="display-6 fw-bold">บริการของเรา</h2>
-                                <p class="text-muted">เราให้บริการด้านความงามครบวงจร ด้วยมาตรฐานระดับสากล</p>
-                            </div>
-
-                            <div class="row g-4">
-                                <!-- Service Card 1 -->
-                                <div class="col-md-4">
-                                    <div class="card service-card h-100">
-                                        <img src="/api/placeholder/400/300" class="card-img-top" alt="Facial Treatment">
-                                        <div class="card-body">
-                                            <h5 class="card-title">ทรีตเมนต์ผิวหน้า</h5>
-                                            <p class="card-text">ปรนนิบัติผิวหน้าด้วยทรีตเมนต์เฉพาะบุคคล</p>
-                                            <a href="javascript:void(0)" class="btn btn-primary waves-effect">อ่านเพิ่มเติม</a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Service Card 2 -->
-                                <div class="col-md-4">
-                                    <div class="card service-card h-100">
-                                        <img src="/api/placeholder/400/300" class="card-img-top" alt="Laser Treatment">
-                                        <div class="card-body">
-                                            <h5 class="card-title">เลเซอร์ผิวหน้า</h5>
-                                            <p class="card-text">เทคโนโลยีเลเซอร์ล่าสุดเพื่อผิวกระจ่างใส</p>
-                                            <a href="javascript:void(0)" class="btn btn-primary waves-effect">อ่านเพิ่มเติม</a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Service Card 3 -->
-                                <div class="col-md-4">
-                                    <div class="card service-card h-100">
-                                        <img src="/api/placeholder/400/300" class="card-img-top" alt="Body Treatment">
-                                        <div class="card-body">
-                                            <h5 class="card-title">ทรีตเมนต์ผิวกาย</h5>
-                                            <p class="card-text">บำรุงผิวกายให้เปล่งปลั่งอย่างเป็นธรรมชาติ</p>
-                                            <a href="javascript:void(0)" class="btn btn-primary waves-effect">อ่านเพิ่มเติม</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
+                        <?php include 'service.php'; ?>
 
                         <!-- Promotion Section -->
                         <section id="promotion" class="mb-4">
@@ -872,7 +1213,6 @@ body {
 
     <!-- Custom JS -->
     <script>
-        // Form Submit Handler
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Swiper
     const swiper = new Swiper('.hero-swiper', {
@@ -888,7 +1228,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         navigation: {
             nextEl: '.swiper-button-next',
-            previousEl: '.swiper-button-prev',
+            prevEl: '.swiper-button-prev',
         },
         pagination: {
             el: '.swiper-pagination',
@@ -899,45 +1239,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Reset and play animations
                 const activeSlide = this.slides[this.activeIndex];
                 const content = activeSlide.querySelector('.hero-text-content');
-                content.style.opacity = '0';
-                content.style.transform = 'translateY(20px)';
                 
-                setTimeout(() => {
-                    content.style.transition = 'all 1s ease';
-                    content.style.opacity = '1';
-                    content.style.transform = 'translateY(0)';
-                }, 300);
+                if (content) {
+                    content.style.opacity = '0';
+                    content.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        content.style.transition = 'all 1s ease';
+                        content.style.opacity = '1';
+                        content.style.transform = 'translateY(0)';
+                    }, 300);
+                }
+            },
+            init: function() {
+                // Animate first slide
+                const firstSlide = this.slides[0];
+                const content = firstSlide.querySelector('.hero-text-content');
+                
+                if (content) {
+                    content.classList.add('fade-in');
+                }
             }
         }
     });
 
-    // Parallax effect for floating circles
+    // Add parallax effect to floating circles
     document.addEventListener('mousemove', function(e) {
-        const circles = document.querySelectorAll('.floating-circle');
-        const mouseX = e.clientX / window.innerWidth;
-        const mouseY = e.clientY / window.innerHeight;
+        if (window.innerWidth > 991) {
+            const circles = document.querySelectorAll('.floating-circle');
+            const mouseX = e.clientX / window.innerWidth;
+            const mouseY = e.clientY / window.innerHeight;
 
-        circles.forEach((circle, index) => {
-            const speed = (index + 1) * 20;
-            const x = (mouseX - 0.5) * speed;
-            const y = (mouseY - 0.5) * speed;
-            circle.style.transform = `translate(${x}px, ${y}px)`;
-        });
-    });
-
-    // Smooth reveal for stats
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('stat-reveal');
-            }
-        });
-    }, {
-        threshold: 0.5
-    });
-
-    document.querySelectorAll('.stat-item').forEach(stat => {
-        observer.observe(stat);
+            circles.forEach((circle, index) => {
+                const speed = (index + 1) * 20;
+                const x = (mouseX - 0.5) * speed;
+                const y = (mouseY - 0.5) * speed;
+                circle.style.transform = `translate(${x}px, ${y}px)`;
+            });
+        }
     });
 });
     </script>
