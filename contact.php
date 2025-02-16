@@ -20,21 +20,26 @@
     <div class="container">
         <!-- Branch Navigation -->
         <div class="branch-navigation mb-5">
-            <div class="d-flex justify-content-center flex-wrap gap-2">
-                <button class="btn btn-outline-primary active" data-branch="bangsan">
-                    <i class="fas fa-map-marker-alt me-2"></i>สาขาบางแสน
+            <div class="branch-tabs">
+                <button class="branch-tab active" data-branch="bangsan">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>สาขาบางแสน</span>
                 </button>
-                <button class="btn btn-outline-primary" data-branch="rangsit">
-                    <i class="fas fa-map-marker-alt me-2"></i>สาขารังสิต
+                <button class="branch-tab" data-branch="rangsit">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>สาขารังสิต</span>
                 </button>
-                <button class="btn btn-outline-primary" data-branch="lumlukka">
-                    <i class="fas fa-map-marker-alt me-2"></i>สาขาลำลูกกา
+                <button class="branch-tab" data-branch="lumlukka">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>สาขาลำลูกกา</span>
                 </button>
-                <button class="btn btn-outline-primary" data-branch="ramkhamhaeng">
-                    <i class="fas fa-map-marker-alt me-2"></i>สาขารามคำแหง
+                <button class="branch-tab" data-branch="ramkhamhaeng">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>สาขารามคำแหง</span>
                 </button>
-                <button class="btn btn-outline-primary" data-branch="ekkamai">
-                    <i class="fas fa-map-marker-alt me-2"></i>สาขาเอกมัย-รามอินทรา
+                <button class="branch-tab" data-branch="ekkamai">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>สาขาเอกมัย-รามอินทรา</span>
                 </button>
             </div>
         </div>
@@ -44,7 +49,7 @@
             <div class="col-lg-4">
                 <div class="branch-cards">
                     <!-- Branch Card 1 -->
-                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift">
+                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift" data-branch="bangsan">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="branch-icon me-3">
@@ -76,16 +81,13 @@
                                     <a href="https://maps.app.goo.gl/V9NzMu9PGSyQnoK18" target="_blank" class="btn btn-outline-primary w-100 mb-2">
                                         <i class="fas fa-directions me-2"></i>นำทาง
                                     </a>
-                                    <button class="btn btn-primary w-100">
-                                        <i class="fas fa-calendar-alt me-2"></i>จองคิว
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Branch Card 2 -->
-                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift">
+                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift" data-branch="rangsit">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="branch-icon me-3">
@@ -117,16 +119,13 @@
                                     <a href="https://maps.app.goo.gl/EgjnrKa88o5yCW6z6" target="_blank" class="btn btn-outline-primary w-100 mb-2">
                                         <i class="fas fa-directions me-2"></i>นำทาง
                                     </a>
-                                    <button class="btn btn-primary w-100">
-                                        <i class="fas fa-calendar-alt me-2"></i>จองคิว
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Branch Card 3 -->
-                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift">
+                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift" data-branch="lumlukka">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="branch-icon me-3">
@@ -158,16 +157,13 @@
                                     <a href="https://maps.app.goo.gl/WJFHG6iUdZhHMAwa9" target="_blank" class="btn btn-outline-primary w-100 mb-2">
                                         <i class="fas fa-directions me-2"></i>นำทาง
                                     </a>
-                                    <button class="btn btn-primary w-100">
-                                        <i class="fas fa-calendar-alt me-2"></i>จองคิว
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Branch Card 4 -->
-                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift">
+                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift" data-branch="ramkhamhaeng">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="branch-icon me-3">
@@ -199,16 +195,13 @@
                                     <a href="https://maps.app.goo.gl/HUVXsgtYgsLbrNoaA" target="_blank" class="btn btn-outline-primary w-100 mb-2">
                                         <i class="fas fa-directions me-2"></i>นำทาง
                                     </a>
-                                    <button class="btn btn-primary w-100">
-                                        <i class="fas fa-calendar-alt me-2"></i>จองคิว
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Branch Card 5 -->
-                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift">
+                    <div class="card branch-card mb-4 border-0 shadow-sm hover-lift" data-branch="ekkamai">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="branch-icon me-3">
@@ -240,9 +233,6 @@
                                     <a href="https://maps.app.goo.gl/rQWxzSWii1mny96X7" target="_blank" class="btn btn-outline-primary w-100 mb-2">
                                         <i class="fas fa-directions me-2"></i>นำทาง
                                     </a>
-                                    <button class="btn btn-primary w-100">
-                                        <i class="fas fa-calendar-alt me-2"></i>จองคิว
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -252,89 +242,18 @@
 
             <!-- Map Column -->
             <div class="col-lg-8">
-                <div class="card map-card border-0 shadow-sm" style="min-height: 600px;">
+                <div class="card map-card border-0 shadow-sm">
                     <div class="card-body p-0">
-                        <iframe 
-                            src="https://www.google.com/maps/d/embed?mid=1C7g5C6hpy86WxCxLhLcjWQTOXhLTqKk&ehbc=2E312F" 
-                            width="100%" 
-                            height="600" 
-                            style="border:0;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
+                        <div class="branch-map" id="branchMap">
+                            <!-- Map will be loaded dynamically based on selected branch -->
+                        </div>
+                        <div class="map-overlay" id="defaultMapMessage">
+                            <div class="map-message">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <p>กรุณาเลือกสาขาที่ต้องการดูแผนที่</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Appointment Form Section -->
-        <div class="appointment-section mt-5">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <h4 class="card-title text-center mb-4">จองคิวปรึกษา</h4>
-                    <form id="appointmentForm" class="row g-3">
-                        <!-- Name -->
-                        <div class="col-md-6">
-                            <label class="form-label" for="name">ชื่อ-นามสกุล</label>
-                            <input type="text" class="form-control" id="name" placeholder="กรอกชื่อ-นามสกุล">
-                        </div>
-
-                        <!-- Phone -->
-                        <div class="col-md-6">
-                            <label class="form-label" for="phone">เบอร์โทรศัพท์</label>
-                            <input type="tel" class="form-control" id="phone" placeholder="กรอกเบอร์โทรศัพท์">
-                        </div>
-
-                        <!-- Email -->
-                        <div class="col-md-6">
-                            <label class="form-label" for="email">อีเมล</label>
-                            <input type="email" class="form-control" id="email" placeholder="กรอกอีเมล">
-                        </div>
-
-                        <!-- Branch Selection -->
-                        <div class="col-md-6">
-                            <label class="form-label" for="branch">เลือกสาขา</label>
-                            <select class="form-select" id="branch">
-                                <option value="">เลือกสาขา</option>
-                                <option value="bangsan">สาขาบางแสน</option>
-                                <option value="rangsit">สาขารังสิต</option>
-                                <option value="lumlukka">สาขาลำลูกกา</option>
-                                <option value="ramkhamhaeng">สาขารามคำแหง</option>
-                                <option value="ekkamai">สาขาเอกมัย-รามอินทรา</option>
-                            </select>
-                        </div>
-
-                        <!-- Service -->
-                        <div class="col-md-6">
-                            <label class="form-label" for="service">บริการที่สนใจ</label>
-                            <select class="form-select" id="service">
-                                <option value="">เลือกบริการ</option>
-                                <option value="facial">ทรีตเมนต์ผิวหน้า</option>
-                                <option value="laser">เลเซอร์ผิวหน้า</option>
-                                <option value="body">ทรีตเมนต์ผิวกาย</option>
-                            </select>
-                        </div>
-
-                        <!-- Preferred Date -->
-                        <div class="col-md-6">
-                            <label class="form-label" for="date">วันที่ต้องการจอง</label>
-                            <input type="date" class="form-control" id="date">
-                        </div>
-
-                        <!-- Message -->
-                        <div class="col-12">
-                            <label class="form-label" for="message">ข้อความเพิ่มเติม</label>
-                            <textarea class="form-control" id="message" rows="3" placeholder="กรอกข้อความเพิ่มเติม (ถ้ามี)"></textarea>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="col-12 text-center">
-                            <button type="submit" class="btn btn-primary btn-lg px-5">
-                                <i class="fas fa-paper-plane me-2"></i>ส่งข้อมูลการจองคิว
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
