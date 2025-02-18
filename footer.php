@@ -9,7 +9,7 @@
                     <div class="footer-brand mb-4">
                         <img src="img/pr/logo.jpg" alt="D Care Clinic Logo" class="footer-logo">
                     </div>
-                    <p class="footer-about mb-4">
+                    <p class="footer-about footer-brand-text">
                         D Care Clinic ศูนย์รวมความงามครบวงจร ด้วยทีมแพทย์ผู้เชี่ยวชาญและนวัตกรรมความงามระดับโลก 
                         พร้อมดูแลคุณด้วยมาตรฐานระดับพรีเมียม
                     </p>
@@ -21,7 +21,7 @@
                 </div>
 
                 <!-- Quick Links Column -->
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 footer-links-section">
                     <h5 class="footer-title">บริการของเรา</h5>
                     <ul class="footer-links">
                         <li><a href="#services">ทรีตเมนต์ผิวหน้า</a></li>

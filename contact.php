@@ -74,7 +74,7 @@
                                 
                                 <div class="info-item mb-3">
                                     <i class="fas fa-clock text-primary me-2"></i>
-                                    <p class="mb-0">เปิดทุกวัน 10:00 - 20:00 น.</p>
+                                    <p class="mb-0">เปิดทุกวัน 13:00 - 21:00 น.</p>
                                 </div>
                                 
                                 <div class="branch-actions mt-4">
@@ -112,7 +112,7 @@
                                 
                                 <div class="info-item mb-3">
                                     <i class="fas fa-clock text-primary me-2"></i>
-                                    <p class="mb-0">เปิดทุกวัน 10:00 - 20:00 น.</p>
+                                    <p class="mb-0">เปิดทุกวัน 13:00 - 21:00 น.</p>
                                 </div>
                                 
                                 <div class="branch-actions mt-4">
@@ -150,7 +150,7 @@
                                 
                                 <div class="info-item mb-3">
                                     <i class="fas fa-clock text-primary me-2"></i>
-                                    <p class="mb-0">เปิดทุกวัน 10:00 - 20:00 น.</p>
+                                    <p class="mb-0">เปิดทุกวัน 13:00 - 21:00 น.</p>
                                 </div>
                                 
                                 <div class="branch-actions mt-4">
@@ -188,7 +188,7 @@
                                 
                                 <div class="info-item mb-3">
                                     <i class="fas fa-clock text-primary me-2"></i>
-                                    <p class="mb-0">เปิดทุกวัน 10:00 - 20:00 น.</p>
+                                    <p class="mb-0">เปิดทุกวัน 13:00 - 21:00 น.</p>
                                 </div>
                                 
                                 <div class="branch-actions mt-4">
@@ -226,7 +226,7 @@
                                 
                                 <div class="info-item mb-3">
                                     <i class="fas fa-clock text-primary me-2"></i>
-                                    <p class="mb-0">เปิดทุกวัน 10:00 - 20:00 น.</p>
+                                    <p class="mb-0">เปิดทุกวัน 13:00 - 21:00 น.</p>
                                 </div>
                                 
                                 <div class="branch-actions mt-4">

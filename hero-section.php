@@ -1,4 +1,4 @@
-<div class="hero-section">
+<div class="hero-section" id="hero-section">
     <div class="swiper hero-swiper">
         <div class="swiper-wrapper">
             <!-- Slide 1 -->

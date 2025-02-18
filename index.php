@@ -827,7 +827,7 @@ body {
 
     /* ปรับปรุง Stats */
     .hero-stats {
-        display: grid;
+/*        display: grid;*/
         grid-template-columns: repeat(1, 1fr);
         gap: 1rem;
         padding: 0 1rem;
@@ -925,17 +925,19 @@ body {
     }
 
     .hero-title {
-        font-size: 2.8rem;
+        font-size: 2.8rem;  /* ลดจาก 4rem */
+        line-height: 1.3;
+        margin-bottom: 1rem;
     }
 
     .hero-subtitle-top {
-        font-size: 0.9rem;
+        font-size: 0.9rem;  /* ลดจาก 1.1rem */
         letter-spacing: 2px;
     }
 
-    .hero-buttons {
+/*    .hero-buttons {
         flex-direction: column;
-    }
+    }*/
 
     .hero-buttons .btn {
         width: 100%;
@@ -990,6 +992,7 @@ body {
 
     .hero-subtitle {
         font-size: 1rem;
+        line-height: 1.6;
     }
 
     .hero-stats {
@@ -1001,7 +1004,7 @@ body {
     }
 
     .stat-number {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
 
     .floating-circle {
@@ -1039,7 +1042,7 @@ body {
     }
 
     .hero-subtitle {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
 
     .stat-number {
@@ -1634,7 +1637,7 @@ body {
     align-items: center;
     gap: 10px;
     padding: 10px 15px;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.1);
     border-radius: 10px;
     transition: all 0.3s ease;
 }

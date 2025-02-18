@@ -18,11 +18,12 @@
                 aria-label="Close"></button>
                 
         <div class="navbar-nav align-items-lg-center ms-auto">
-            <a class="nav-item nav-link active" href="#home">ค้นหา</a>
-            <a class="nav-item nav-link" href="#services">บริการ</a>
-            <a class="nav-item nav-link" href="#promotion">โปรโมชั่น</a>
-            <a class="nav-item nav-link" href="#doctors">แพทย์ผู้เชี่ยวชาญ</a>
-            <a class="nav-item nav-link" href="#contact">ติดต่อเรา</a>
+            <a class="nav-item nav-link" href="index.php#home">หน้าแรก</a>
+            <a class="nav-item nav-link" href="index.php#services">บริการ</a>
+            <a class="nav-item nav-link" href="index.php#promotion">โปรโมชั่น</a>
+            <a class="nav-item nav-link" href="articles.php">บทความ</a>
+            <a class="nav-item nav-link" href="index.php#doctors">แพทย์ผู้เชี่ยวชาญ</a>
+            <a class="nav-item nav-link" href="index.php#contact">ติดต่อเรา</a>
             <a class="nav-item nav-link login-btn ms-lg-3" href="login.php">
                 <i class="fas fa-user me-2"></i>เข้าสู่ระบบ
             </a>

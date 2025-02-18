@@ -1,0 +1,208 @@
+/* Global Styles */
+body {
+    font-family: 'Prompt', sans-serif;
+}
+
+/* ===============================================
+   Navbar Styles
+   =============================================== */
+.layout-navbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1050;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand {
+    position: relative;
+    z-index: 1051;
+}
+
+.app-brand-logo {
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.app-brand-text {
+    color: #333;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.navbar-toggler {
+    padding: 0.5rem;
+    margin-right: 1rem;
+    border-radius: 8px;
+    background: rgba(147, 51, 234, 0.1);
+    transition: all 0.3s ease;
+}
+
+.navbar-toggler:hover {
+    background: rgba(147, 51, 234, 0.2);
+}
+
+.navbar-toggler:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.25);
+}
+
+.navbar-toggler[aria-expanded="true"] {
+    background-color: rgba(147, 51, 234, 0.2);
+}
+
+.navbar-toggler[aria-expanded="true"] i {
+    transform: rotate(90deg);
+}
+
+.navbar-toggler i {
+    font-size: 1.5rem;
+    color: #333;
+    transition: transform 0.3s ease;
+}
+
+.navbar-nav .nav-link {
+    color: #666;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ff8fb1, #ff5b94);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.navbar-nav .nav-link:hover {
+    color: #ff5b94;
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 100%;
+}
+
+.login-btn {
+    background: linear-gradient(120deg, #ff8fb1, #ff5b94);
+    color: white !important;
+    border-radius: 50px;
+    padding: 0.5rem 1.5rem !important;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 91, 148, 0.3);
+}
+
+/* Mobile Styles */
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        position: absolute;
+        top: 100%;  /* แสดงถัดจาก navbar */
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        padding: 1rem;
+        border-radius: 0 0 16px 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-20px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .navbar-collapse.show {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Close Button Styles */
+    .btn-close {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        z-index: 1051;
+        display: none;
+    }
+    .navbar-nav {
+        padding: 0.5rem 0;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 0.8rem 1.5rem;
+        text-align: center;
+    }
+
+    .navbar-collapse.show .btn-close {
+        display: block;
+    }
+
+    /* Toggle Button Styles */
+    .navbar-toggler {
+        z-index: 1052;
+    }
+
+    .navbar-toggler[aria-expanded="true"] {
+        color: #ff5b94;
+    }
+
+    .navbar-toggler[aria-expanded="true"] i {
+        transform: rotate(90deg);
+    }
+
+    .login-btn {
+        margin: 0.5rem 1.5rem;
+        width: auto;
+        text-align: center;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.navbar-nav .nav-link {
+    animation: fadeIn 0.3s ease forwards;
+    animation-delay: calc(var(--item-index) * 0.1s);
+}
+
+/* Desktop Styles */
+@media (min-width: 1200px) {
+    .navbar-nav .nav-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: 0;
+        left: 50%;
+        background: #ff8fb1;
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .navbar-nav .nav-link:hover::after {
+        width: 100%;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .btn-gradient:hover {
+        transform: none;
+    }
+}
