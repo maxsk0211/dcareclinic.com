@@ -1,3 +1,7 @@
+<?php 
+session_start();
+require 'dbcon.php';
+ ?>
 <!DOCTYPE html>
 <html lang="th" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default" data-assets-path="../assets/" data-template="horizontal-menu-template-no-customizer-starter">
 <head>

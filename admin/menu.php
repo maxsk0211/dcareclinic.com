@@ -234,18 +234,30 @@
             </li>
             <?php } ?>
 
-<!--             <li class="menu-item">
-                <a href="manage-rooms.php" class="menu-link">
-                    <i class="menu-icon tf-icons ri-calendar-todo-fill"></i>
-                    <div data-i18n="จัดการคิว">จัดการห้อง</div>
+          <?php if (checkPagePermission('frontend-management.php')) { ?>
+          <li class="menu-item">
+            <a href="javascript:void(0)" class="menu-link menu-toggle">
+              <i class="menu-icon ri-global-line"></i>
+              <div data-i18n="Dashboards">จัดการข้อมูลเว็บไซต์หลัก</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="frontend-categories.php" class="menu-link">
+                  <i class="menu-icon tf-icons ri-folder-fill"></i>
+                  <div data-i18n="eCommerce">หมวดหมู่บริการ</div>
                 </a>
-            </li> -->
-<!--             <li class="menu-item">
-              <a href="page-2.html" class="menu-link">
-                <i class="menu-icon tf-icons ri-file-line"></i>
-                <div data-i18n="Page 2">Page 2</div>
-              </a>
-            </li> -->
+              </li>
+              <li class="menu-item">
+                <a href="frontend-services.php" class="menu-link">
+                  <i class="menu-icon tf-icons ri-service-line"></i>
+                  <div data-i18n="CRM">บริการที่แสดงบนเว็บไซต์</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <?php } ?>
+
+
           </ul>
         </div>
       </aside>  

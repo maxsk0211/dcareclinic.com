@@ -218,11 +218,12 @@ function formatHN($id) {
 
         <!-- Layout container -->
         <div class="layout-page">
+             <?php include 'menu.php'; ?>
           <!-- Content wrapper -->
           <div class="content-wrapper">
             <!-- Menu -->
 
-            <?php include 'menu.php'; ?>
+           
 
             <!-- / Menu -->
 
