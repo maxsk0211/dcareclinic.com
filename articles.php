@@ -300,8 +300,109 @@
                                     </div>
                                 </article>
                             </div>
-                        </div>
+                            <div class="col-lg-4 col-md-6">
+                                <article class="card article-card">
+                                    <div class="article-image-wrapper">
+                                        <img src="img/pr/3/1.png" class="article-image" alt="ผิวที่ต้องการทรีตเมนต์">
+                                        <span class="article-category">การดูแลผิวหน้า</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="article-meta">
+                                            <span><i class="fas fa-calendar"></i> 18 กุมภาพันธ์ 2025</span>
+                                            <span><i class="fas fa-user"></i> Dr. สมหญิง</span>
+                                        </div>
+                                        <h3 class="article-title">
+                                            วิธีเลือกคลินิกความงามอย่างชาญฉลาด: 7 สิ่งที่ต้องพิจารณา
+                                        </h3>
+                                        <p class="article-excerpt">
+                                            การเลือกคลินิกความงามที่เหมาะสมเป็นก้าวสำคัญในการดูแลผิวพรรณของคุณ การตัดสินใจที่ถูกต้องไม่เพียงช่วยให้คุณได้รับผลลัพธ์ที่ต้องการ...
+                                        </p>
+                                        <a href="article-detail3.php" class="read-more">
+                                            อ่านเพิ่มเติม <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                        <div class="article-stats">
+                                            <div class="stat-item">
+                                                <i class="fas fa-eye"></i>
+                                                <span>2.5K views</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <i class="fas fa-share-alt"></i>
+                                                <span>Share</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <article class="card article-card">
+                                    <div class="article-image-wrapper">
+                                        <img src="img/pr/3/1.png" class="article-image" alt="ผิวที่ต้องการทรีตเมนต์">
+                                        <span class="article-category">การดูแลผิวหน้า</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="article-meta">
+                                            <span><i class="fas fa-calendar"></i> 18 กุมภาพันธ์ 2025</span>
+                                            <span><i class="fas fa-user"></i> Dr. สมหญิง</span>
+                                        </div>
+                                        <h3 class="article-title">
+                                            เส้นทางสู่ผิวสวย: แผนการดูแลผิวตามช่วงวัย
+                                        </h3>
+                                        <p class="article-excerpt">
+                                            ผิวพรรณของเราเปลี่ยนแปลงไปตามช่วงวัย การดูแลผิวที่ถูกต้องและเหมาะสมกับอายุ
+                                            จึงเป็นกุญแจสำคัญสู่ผิวสวยสุขภาพดีที่ยั่งยืน มาทำความเข้าใจการดูแลผิวที่เหมาะสม
+                                            สำหรับแต่ละช่วงวัยกัน...
+                                        </p>
+                                        <a href="article-detail4.php" class="read-more">
+                                            อ่านเพิ่มเติม <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                        <div class="article-stats">
+                                            <div class="stat-item">
+                                                <i class="fas fa-eye"></i>
+                                                <span>2.5K views</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <i class="fas fa-share-alt"></i>
+                                                <span>Share</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <article class="card article-card">
+                                    <div class="article-image-wrapper">
+                                        <img src="img/pr/3/1.png" class="article-image" alt="ผิวที่ต้องการทรีตเมนต์">
+                                        <span class="article-category">การดูแลผิวหน้า</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="article-meta">
+                                            <span><i class="fas fa-calendar"></i> 18 กุมภาพันธ์ 2025</span>
+                                            <span><i class="fas fa-user"></i> Dr. สมหญิง</span>
+                                        </div>
+                                        <h3 class="article-title">
+                                           ทำความรู้จักกับเลเซอร์บำบัดผิว: ทางเลือกที่เหมาะกับคุณ
+                                        </h3>
+                                        <p class="article-excerpt">
+                                            การเลือกคลินิกความงามที่เหมาะสมเป็นก้าวสำคัญในการดูแลผิวพรรณของคุณ การตัดสินใจที่ถูกต้องไม่เพียงช่วยให้คุณได้รับผลลัพธ์ที่ต้องการ...
+                                        </p>
+                                        <a href="article-detail5.php" class="read-more">
+                                            อ่านเพิ่มเติม <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                        <div class="article-stats">
+                                            <div class="stat-item">
+                                                <i class="fas fa-eye"></i>
+                                                <span>2.5K views</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <i class="fas fa-share-alt"></i>
+                                                <span>Share</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
 
+                        </div>
                     </div>
 
                     <!-- Footer -->
