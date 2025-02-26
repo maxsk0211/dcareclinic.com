@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>จัดการบริการบนเว็บไซต์หลัก | dcareclinic.com</title>
+    <title>จัดการคอร์สบนเว็บไซต์หลัก | dcareclinic.com</title>
 
     <meta name="description" content="" />
 
@@ -106,28 +106,31 @@
                 <div class="card-header border-bottom">
                   <div class="d-flex justify-content-between align-items-center">
                     <div>
-                      <h5 class="card-title mb-0">บริการที่แสดงบนเว็บไซต์หลัก</h5>
-                      <small class="text-muted">จัดการบริการที่แสดงให้ลูกค้าเห็นบนหน้าเว็บไซต์หลัก</small>
+                      <h5 class="card-title mb-0 text-white">คอร์สที่แสดงบนเว็บไซต์หลัก</h5>
+                      <small class=" text-white">จัดการคอร์สที่แสดงให้ลูกค้าเห็นบนหน้าเว็บไซต์หลัก</small>
                     </div>
-                    <div class="d-flex gap-2">
-                      <a href="frontend-categories.php" class="btn btn-outline-primary">
+                    <div class="d-flex gap-2 ">
+                      <a href="frontend-categories.php" class="btn btn-warning">
                         <i class="ri-folder-line me-1"></i> จัดการหมวดหมู่
                       </a>
                       <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                        <i class="ri-add-line me-1"></i> เพิ่มบริการ
+                        <i class="ri-add-line me-1"></i> เพิ่มคอร์ส
                       </button>
                     </div>
                   </div>
                 </div>
                 
                 <!-- แก้ไขส่วนช่องค้นหาและตัวกรอง -->
+                <br>
                 <div class="card-body border-bottom">
                   <div class="row g-3">
+                    
                     <div class="col-md-4">
-                      <label class="form-label">ค้นหาบริการ</label>
+                      
+                      <label class="form-label">ค้นหาคอร์ส</label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="ri-search-line"></i></span>
-                        <input type="text" class="form-control" id="searchService" placeholder="ชื่อบริการ...">
+                        <input type="text" class="form-control" id="searchService" placeholder="ชื่อคอร์ส...">
                       </div>
                     </div>
                     <div class="col-md-3">
@@ -155,10 +158,10 @@
                       </select>
                     </div>
                     <div class="col-md-2">
-                      <label class="form-label">บริการแนะนำ</label>
+                      <label class="form-label">คอร์สแนะนำ</label>
                       <select class="form-select" id="filterFeatured">
                         <option value="">ทั้งหมด</option>
-                        <option value="1">บริการแนะนำ</option>
+                        <option value="1">คอร์สแนะนำ</option>
                         <option value="0">ทั่วไป</option>
                       </select>
                     </div>
@@ -178,8 +181,8 @@
                               </div>
                             </div>
                             <div class="ms-3">
-                              <h5 class="mb-0" id="totalServices">0</h5>
-                              <small>บริการทั้งหมด</small>
+                              <h5 class="mb-0 text-white" id="totalServices">0</h5>
+                              <small class="text-white">คอร์สทั้งหมด</small>
                             </div>
                           </div>
                         </div>
@@ -196,7 +199,7 @@
                             </div>
                             <div class="ms-3">
                               <h5 class="mb-0" id="activeServices">0</h5>
-                              <small>บริการที่แสดงอยู่</small>
+                              <small>คอร์สที่แสดงอยู่</small>
                             </div>
                           </div>
                         </div>
@@ -213,7 +216,7 @@
                             </div>
                             <div class="ms-3">
                               <h5 class="mb-0" id="featuredServices">0</h5>
-                              <small>บริการแนะนำ</small>
+                              <small>คอร์สแนะนำ</small>
                             </div>
                           </div>
                         </div>
@@ -239,12 +242,13 @@
                   </div>
                 </div>
 
+              <div class="card-body">
                 <div class="card-datatable table-responsive">
                 <table id="servicesTable" class="table table-hover border-top">
                   <thead class="table-light">
                     <tr>
                       <th width="60" class="text-center">รูปภาพ</th>
-                      <th>ชื่อบริการ</th>
+                      <th>ชื่อคอร์ส</th>
                       <th>หมวดหมู่</th>
                       <th width="100" class="text-end">ราคา (บาท)</th>
                       <th width="150" class="text-center">สถานะ</th>
@@ -271,7 +275,7 @@
                         if ($row['status'] == 1) $activeCount++;
                         if ($row['is_featured'] == 1) $featuredCount++;
                         
-                        // ใช้ราคาที่กำหนดในบริการหน้าเว็บหลัก หรือราคาจากคอร์ส
+                        // ใช้ราคาที่กำหนดในคอร์สหน้าเว็บหลัก หรือราคาจากคอร์ส
                         $price = $row['custom_price'] ?? $row['course_price'];
                         $originalPrice = $row['custom_original_price'] ?? null;
                         
@@ -307,7 +311,7 @@
                           <?php } ?>
                           
                           <?php if ($row['is_featured'] == 1) { ?>
-                            <span class="badge bg-warning">บริการแนะนำ</span>
+                            <span class="badge bg-warning">คอร์สแนะนำ</span>
                           <?php } ?>
                         </div>
                       </td>
@@ -316,7 +320,7 @@
                           <button type="button" class="btn btn-sm btn-primary quick-view-btn" data-id="<?php echo $row['id']; ?>" data-bs-toggle="tooltip" title="ดูรายละเอียด">
                             <i class="ri-eye-line"></i>
                           </button>
-                          <button type="button" class="btn btn-sm btn-warning edit-btn" data-id="<?php echo $row['id']; ?>" data-bs-toggle="tooltip" title="แก้ไขบริการ">
+                          <button type="button" class="btn btn-sm btn-warning edit-btn" data-id="<?php echo $row['id']; ?>" data-bs-toggle="tooltip" title="แก้ไขคอร์ส">
                             <i class="ri-edit-line"></i>
                           </button>
                           <div class="btn-group">
@@ -326,18 +330,18 @@
                             <ul class="dropdown-menu">
                               <li>
                                 <a class="dropdown-item toggle-status-btn" href="javascript:void(0);" data-id="<?php echo $row['id']; ?>" data-current="<?php echo $row['status']; ?>">
-                                  <?php echo ($row['status'] == 1) ? '<i class="ri-eye-off-line me-2"></i>ซ่อนบริการ' : '<i class="ri-eye-line me-2"></i>แสดงบริการ'; ?>
+                                  <?php echo ($row['status'] == 1) ? '<i class="ri-eye-off-line me-2"></i>ซ่อนคอร์ส' : '<i class="ri-eye-line me-2"></i>แสดงคอร์ส'; ?>
                                 </a>
                               </li>
                               <li>
                                 <a class="dropdown-item toggle-featured-btn" href="javascript:void(0);" data-id="<?php echo $row['id']; ?>" data-current="<?php echo $row['is_featured']; ?>">
-                                  <?php echo ($row['is_featured'] == 1) ? '<i class="ri-star-line me-2"></i>ยกเลิกการแนะนำ' : '<i class="ri-star-fill me-2"></i>ตั้งเป็นบริการแนะนำ'; ?>
+                                  <?php echo ($row['is_featured'] == 1) ? '<i class="ri-star-line me-2"></i>ยกเลิกการแนะนำ' : '<i class="ri-star-fill me-2"></i>ตั้งเป็นคอร์สแนะนำ'; ?>
                                 </a>
                               </li>
                               <li><hr class="dropdown-divider"></li>
                               <li>
                                 <a class="dropdown-item text-danger delete-btn" href="javascript:void(0);" data-id="<?php echo $row['id']; ?>">
-                                  <i class="ri-delete-bin-line me-2"></i>ลบบริการ
+                                  <i class="ri-delete-bin-line me-2"></i>ลบคอร์ส
                                 </a>
                               </li>
                             </ul>
@@ -352,8 +356,8 @@
                     <tr>
                       <td colspan="6" class="text-center py-3">
                         <img src="../assets/img/illustrations/page-misc-empty-state.png" alt="No data" class="mb-2" width="80">
-                        <p class="mb-0">ไม่พบข้อมูลบริการ</p>
-                        <small class="text-muted">เริ่มสร้างบริการใหม่โดยคลิกที่ปุ่ม "เพิ่มบริการ"</small>
+                        <p class="mb-0">ไม่พบข้อมูลคอร์ส</p>
+                        <small class="text-muted">เริ่มสร้างคอร์สใหม่โดยคลิกที่ปุ่ม "เพิ่มคอร์ส"</small>
                       </td>
                     </tr>
                     <?php
@@ -361,6 +365,8 @@
                     ?>
                   </tbody>
                 </table>
+                </div>
+
               </div>
             </div>
             <!-- / Content -->
@@ -371,7 +377,7 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header border-bottom">
-        <h5 class="modal-title" id="imagePreviewTitle">รูปภาพบริการ</h5>
+        <h5 class="modal-title" id="imagePreviewTitle">รูปภาพคอร์ส</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body text-center">
@@ -384,12 +390,12 @@
   </div>
 </div>
 
-<!-- Modal สำหรับดูข้อมูลรายละเอียดบริการแบบเร็ว -->
+<!-- Modal สำหรับดูข้อมูลรายละเอียดคอร์สแบบเร็ว -->
 <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header border-bottom">
-        <h5 class="modal-title">รายละเอียดบริการ</h5>
+        <h5 class="modal-title">รายละเอียดคอร์ส</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="quickViewContent">
@@ -402,7 +408,7 @@
       </div>
       <div class="modal-footer border-top">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-        <button type="button" class="btn btn-primary" id="quickViewEditBtn">แก้ไขบริการ</button>
+        <button type="button" class="btn btn-primary" id="quickViewEditBtn">แก้ไขคอร์ส</button>
       </div>
     </div>
   </div>
@@ -412,7 +418,7 @@
   <div class="modal-dialog modal-lg">
     <form class="modal-content" id="addServiceForm">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title"><i class="ri-add-line me-2"></i>เพิ่มบริการใหม่</h5>
+        <h5 class="modal-title"><i class="ri-add-line me-2"></i>เพิ่มคอร์สใหม่</h5>
         <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -494,7 +500,7 @@
           <div class="col-md-6 mb-3">
             <label class="form-label">ข้อความป้ายกำกับ</label>
             <input type="text" class="form-control" name="badge_text" placeholder="เช่น ขายดี, แนะนำ" maxlength="20">
-            <small class="text-muted">ป้ายที่จะแสดงมุมบนขวาของบริการ</small>
+            <small class="text-muted">ป้ายที่จะแสดงมุมบนขวาของคอร์ส</small>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">ระยะเวลาต่อครั้ง (นาที)</label>
@@ -535,7 +541,7 @@
 Deep Cleansing ทำความสะอาดล้ำลึก
 Gentle Exfoliation ผลัดเซลล์ผิวอ่อนโยน
 Face Massage นวดหน้าด้วยเทคนิคเฉพาะ"></textarea>
-            <small class="text-muted">จะแสดงเป็นรายการบนหน้าบริการ</small>
+            <small class="text-muted">จะแสดงเป็นรายการบนหน้าคอร์ส</small>
           </div>
           <div class="col-12 mb-3">
             <label class="form-label">รูปภาพ</label>
@@ -552,7 +558,7 @@ Face Massage นวดหน้าด้วยเทคนิคเฉพาะ"
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
         <button type="submit" class="btn btn-primary">
           <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
-          บันทึกบริการ
+          บันทึกคอร์ส
         </button>
       </div>
     </form>
@@ -564,7 +570,7 @@ Face Massage นวดหน้าด้วยเทคนิคเฉพาะ"
   <div class="modal-dialog modal-lg">
     <form class="modal-content" id="editServiceForm">
       <div class="modal-header bg-warning">
-        <h5 class="modal-title"><i class="ri-edit-line me-2"></i>แก้ไขบริการ</h5>
+        <h5 class="modal-title"><i class="ri-edit-line me-2"></i>แก้ไขคอร์ส</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -694,7 +700,7 @@ $(document).ready(function() {
     ],
     pageLength: 10,
     ordering: true,
-    order: [[1, 'asc']], // เรียงตามชื่อบริการเริ่มต้น
+    order: [[1, 'asc']], // เรียงตามชื่อคอร์สเริ่มต้น
     responsive: true,
     columnDefs: [
       { orderable: false, targets: [0, 5] } // ไม่ให้เรียงตามคอลัมน์รูปภาพและปุ่มจัดการ
@@ -722,7 +728,7 @@ $(document).ready(function() {
           showRow = false;
         }
         
-        // กรองตามการเป็นบริการแนะนำ
+        // กรองตามการเป็นคอร์สแนะนำ
         if (featured !== '' && $row.data('featured') != featured) {
           showRow = false;
         }
@@ -752,12 +758,12 @@ $(document).ready(function() {
     const imgSrc = $(this).attr('src');
     const serviceName = $(this).attr('alt');
     
-    $('#imagePreviewTitle').text('รูปภาพบริการ: ' + serviceName);
+    $('#imagePreviewTitle').text('รูปภาพคอร์ส: ' + serviceName);
     $('#largeImage').attr('src', imgSrc);
     $('#imagePreviewModal').modal('show');
   });
   
-  // แสดงหรือซ่อนบริการแบบรวดเร็ว
+  // แสดงหรือซ่อนคอร์สแบบรวดเร็ว
   $('.toggle-status-btn').click(function() {
     const id = $(this).data('id');
     const currentStatus = $(this).data('current');
@@ -766,8 +772,8 @@ $(document).ready(function() {
     
     // แสดง SweetAlert2 เพื่อยืนยันการเปลี่ยนสถานะ
     Swal.fire({
-      title: `${statusLabel}บริการนี้?`,
-      text: currentStatus == 1 ? "บริการนี้จะไม่แสดงบนเว็บไซต์หลัก" : "บริการนี้จะแสดงบนเว็บไซต์หลัก",
+      title: `${statusLabel}คอร์สนี้?`,
+      text: currentStatus == 1 ? "คอร์สนี้จะไม่แสดงบนเว็บไซต์หลัก" : "คอร์สนี้จะแสดงบนเว็บไซต์หลัก",
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'ใช่, เปลี่ยนสถานะ',
@@ -830,16 +836,16 @@ $(document).ready(function() {
     });
   });
   
-  // เปลี่ยนสถานะบริการแนะนำแบบรวดเร็ว
+  // เปลี่ยนสถานะคอร์สแนะนำแบบรวดเร็ว
   $('.toggle-featured-btn').click(function() {
     const id = $(this).data('id');
     const currentFeatured = $(this).data('current');
     const newFeatured = currentFeatured == 1 ? 0 : 1;
-    const featuredLabel = newFeatured == 1 ? 'ตั้งเป็นบริการแนะนำ' : 'ยกเลิกการแนะนำ';
+    const featuredLabel = newFeatured == 1 ? 'ตั้งเป็นคอร์สแนะนำ' : 'ยกเลิกการแนะนำ';
     
     Swal.fire({
       title: `${featuredLabel}?`,
-      text: currentFeatured == 1 ? "บริการนี้จะไม่แสดงเป็นบริการแนะนำบนเว็บไซต์หลัก" : "บริการนี้จะแสดงเป็นบริการแนะนำบนเว็บไซต์หลัก",
+      text: currentFeatured == 1 ? "คอร์สนี้จะไม่แสดงเป็นคอร์สแนะนำบนเว็บไซต์หลัก" : "คอร์สนี้จะแสดงเป็นคอร์สแนะนำบนเว็บไซต์หลัก",
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'ใช่, ดำเนินการ',
@@ -902,14 +908,14 @@ $(document).ready(function() {
     });
   });
   
-  // ดูรายละเอียดบริการแบบเร็ว
+  // ดูรายละเอียดคอร์สแบบเร็ว
   $('.quick-view-btn').click(function() {
     const id = $(this).data('id');
     
     // ตั้งค่า ID สำหรับปุ่มแก้ไขในโหมดดูเร็ว
     $('#quickViewEditBtn').data('id', id);
     
-    // โหลดข้อมูลบริการผ่าน AJAX
+    // โหลดข้อมูลคอร์สผ่าน AJAX
     $.ajax({
       url: 'api/frontend-service-api.php?action=quick_view',
       type: 'GET',
@@ -1025,7 +1031,7 @@ $(document).ready(function() {
   $('.edit-btn').click(function() {
     const id = $(this).data('id');
     
-    // โหลดข้อมูลบริการผ่าน AJAX
+    // โหลดข้อมูลคอร์สผ่าน AJAX
     $.ajax({
       url: 'api/frontend-service-api.php?action=get',
       type: 'GET',
@@ -1183,7 +1189,7 @@ $('#add_course_id').change(function() {
   });
 });
 
-// ฟังก์ชันสำหรับการส่งฟอร์มเพิ่มบริการ
+// ฟังก์ชันสำหรับการส่งฟอร์มเพิ่มคอร์ส
 $('#addServiceForm').submit(function(e) {
   e.preventDefault();
   
@@ -1264,7 +1270,7 @@ $('#addServiceForm').submit(function(e) {
   });
 });
 
-// ฟังก์ชันสำหรับการส่งฟอร์มแก้ไขบริการ
+// ฟังก์ชันสำหรับการส่งฟอร์มแก้ไขคอร์ส
 $('#editServiceForm').submit(function(e) {
   e.preventDefault();
   
@@ -1277,8 +1283,10 @@ $('#editServiceForm').submit(function(e) {
   // สร้าง FormData สำหรับส่งข้อมูลรวมไฟล์
   const formData = new FormData(this);
   
-  // แปลงค่าชุดการแสดงผลที่ใช้ checkbox
-  if (!$('#edit_status_active').prop('checked')) {
+  // แก้ไขค่า status ให้ถูกต้อง
+  if (document.getElementById('edit_status_active').checked) {
+    formData.set('status', '1');
+  } else {
     formData.set('status', '0');
   }
   

@@ -18,7 +18,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>จัดการบริการบนเว็บไซต์หลัก | dcareclinic.com</title>
+    <title>จัดการคอร์สบนเว็บไซต์หลัก | dcareclinic.com</title>
 
     <meta name="description" content="" />
 
@@ -103,7 +103,7 @@
               <!-- Categories List -->
               <div class="card">
                 <div class="card-header border-bottom d-flex justify-content-between">
-                  <h5 class="card-title mb-0 text-white">หมวดหมู่บริการบนเว็บไซต์หลัก</h5>
+                  <h5 class="card-title mb-0 text-white">หมวดหมู่คอร์สบนเว็บไซต์หลัก</h5>
                   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                     <i class="ri-add-line me-1"></i> เพิ่มหมวดหมู่
                   </button>
@@ -192,7 +192,7 @@
               <div class="modal-dialog">
                 <form class="modal-content" id="addCategoryForm">
                   <div class="modal-header">
-                    <h5 class="modal-title">เพิ่มหมวดหมู่บริการใหม่</h5>
+                    <h5 class="modal-title">เพิ่มหมวดหมู่คอร์สใหม่</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
                   <div class="modal-body">
@@ -254,7 +254,7 @@
               <div class="modal-dialog">
                 <form class="modal-content" id="editCategoryForm">
                   <div class="modal-header">
-                    <h5 class="modal-title">แก้ไขหมวดหมู่บริการ</h5>
+                    <h5 class="modal-title">แก้ไขหมวดหมู่คอร์ส</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
                   <div class="modal-body">
@@ -553,7 +553,7 @@
           
           Swal.fire({
             title: 'คุณแน่ใจหรือไม่?',
-            text: "การลบหมวดหมู่นี้จะมีผลกับบริการที่อยู่ในหมวดหมู่นี้",
+            text: "การลบหมวดหมู่นี้จะมีผลกับคอร์สที่อยู่ในหมวดหมู่นี้",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'ใช่, ลบเลย',

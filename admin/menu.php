@@ -241,16 +241,16 @@
               <div data-i18n="Dashboards">จัดการข้อมูลเว็บไซต์หลัก</div>
             </a>
             <ul class="menu-sub">
-              <li class="menu-item">
+<!--               <li class="menu-item">
                 <a href="frontend-categories.php" class="menu-link">
                   <i class="menu-icon tf-icons ri-folder-fill"></i>
                   <div data-i18n="eCommerce">หมวดหมู่บริการ</div>
                 </a>
-              </li>
+              </li> -->
               <li class="menu-item">
                 <a href="frontend-services.php" class="menu-link">
                   <i class="menu-icon tf-icons ri-service-line"></i>
-                  <div data-i18n="CRM">บริการที่แสดงบนเว็บไซต์</div>
+                  <div data-i18n="CRM">คอร์สที่แสดงบนเว็บไซต์</div>
                 </a>
               </li>
             </ul>
