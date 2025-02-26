@@ -253,6 +253,12 @@
                   <div data-i18n="CRM">คอร์สที่แสดงบนเว็บไซต์</div>
                 </a>
               </li>
+              <li class="menu-item">
+                <a href="frontend-promotions.php" class="menu-link">
+                  <i class="menu-icon tf-icons ri-price-tag-3-line"></i>
+                  <div data-i18n="CRM">โปรโมชั่นบนเว็บไซต์</div>
+                </a>
+              </li>
             </ul>
           </li>
           <?php } ?>
