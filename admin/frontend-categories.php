@@ -103,7 +103,7 @@
               <!-- Categories List -->
               <div class="card">
                 <div class="card-header border-bottom d-flex justify-content-between">
-                  <h5 class="card-title mb-0">หมวดหมู่บริการบนเว็บไซต์หลัก</h5>
+                  <h5 class="card-title mb-0 text-white">หมวดหมู่บริการบนเว็บไซต์หลัก</h5>
                   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                     <i class="ri-add-line me-1"></i> เพิ่มหมวดหมู่
                   </button>
