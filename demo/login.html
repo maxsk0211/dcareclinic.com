@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th" class="light-style customizer-hide">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>ระบบคลังสินค้าขนาดย่อม | เข้าสู่ระบบ</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.0/dist/boxicons.js">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/7.2.3/css/flag-icons.min.css">
+
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" class="template-customizer-core-css">
+  <link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" class="template-customizer-theme-css">
+  <link rel="stylesheet" href="../assets/css/demo.css">
+
+  <!-- Vendors CSS -->
+  <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css">
+  <link rel="stylesheet" href="../assets/vendor/libs/typeahead-js/typeahead.css">
+  <link rel="stylesheet" href="../assets/vendor/libs/animate-css/animate.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="../assets/vendor/css/pages/page-auth.css">
+
+  <!-- Helpers -->
+  <script src="../assets/vendor/js/helpers.js"></script>
+  <script src="../assets/js/config.js"></script>
+</head>
+
+<body>
+  <!-- Content -->
+  <div class="authentication-wrapper authentication-cover">
+    <div class="authentication-inner row m-0">
+      <!-- Left Side (Banner) -->
+      <div class="d-none d-lg-flex col-lg-4 align-items-center p-0">
+        <div class="w-100 d-flex justify-content-center">
+          <img src="img/1.png" class="img-fluid" alt="ระบบคลังสินค้า" width="500">
+        </div>
+      </div>
+
+      <!-- Login -->
+      <div class="d-flex col-12 col-lg-8 align-items-center p-sm-5 p-4">
+        <div class="w-px-400 mx-auto">
+          <!-- Logo -->
+          <div class="app-brand mb-4">
+            <a href="index.html" class="app-brand-link gap-2">
+              <span class="app-brand-logo demo">
+                <svg width="26px" height="26px" viewBox="0 0 26 26" version="1.1">
+                  <polygon points="7.5 2 7.5 5 4.5 5 4.5 22 17 22 17 19 22 19 22 5 17 5 17 2" fill="#696cff" />
+                  <polygon points="13 15 10 12 13 9 16 12" fill="#696cff" opacity="0.7" />
+                </svg>
+              </span>
+              <span class="app-brand-text demo text-body fw-bold ms-1">คลังสินค้าขนาดย่อม</span>
+            </a>
+          </div>
+          <!-- /Logo -->
+          <h4 class="mb-2">ยินดีต้อนรับสู่ระบบคลังสินค้าขนาดย่อม 👋</h4>
+          <p class="mb-4">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+
+          <form id="formAuthentication" class="mb-3" action="dashboard.html" method="GET">
+            <div class="mb-3">
+              <label for="email" class="form-label">ชื่อผู้ใช้ หรือ อีเมล</label>
+              <input type="text" class="form-control" id="email" name="email-username" placeholder="กรอกชื่อผู้ใช้หรืออีเมล" autofocus>
+            </div>
+            <div class="mb-3 form-password-toggle">
+              <div class="d-flex justify-content-between">
+                <label class="form-label" for="password">รหัสผ่าน</label>
+                <a href="#">
+                  <small>ลืมรหัสผ่าน?</small>
+                </a>
+              </div>
+              <div class="input-group input-group-merge">
+                <input type="password" id="password" class="form-control" name="password" placeholder="············" aria-describedby="password">
+                <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="remember-me">
+                <label class="form-check-label" for="remember-me">จดจำการเข้าสู่ระบบ</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="user-type" class="form-label">ประเภทผู้ใช้งาน</label>
+              <select id="user-type" class="form-select">
+                <option value="user">ผู้ใช้งานทั่วไป</option>
+                <option value="admin">ผู้บริหาร</option>
+              </select>
+            </div>
+            <button class="btn btn-primary d-grid w-100" type="submit">เข้าสู่ระบบ</button>
+          </form>
+
+          <p class="text-center">
+            <span>ยังไม่มีบัญชีผู้ใช้?</span>
+            <a href="#">
+              <span>สร้างบัญชี</span>
+            </a>
+          </p>
+
+          <div class="divider my-4">
+            <div class="divider-text">หรือ</div>
+          </div>
+
+          <div class="d-flex justify-content-center gap-2">
+            <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-outline-facebook">
+              <i class="tf-icons bx bxl-facebook"></i>
+            </a>
+            <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-outline-google-plus">
+              <i class="tf-icons bx bxl-google-plus"></i>
+            </a>
+            <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-outline-twitter">
+              <i class="tf-icons bx bxl-twitter"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JS -->
+  <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+  <script src="../assets/vendor/libs/popper/popper.js"></script>
+  <script src="../assets/vendor/js/bootstrap.js"></script>
+  <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="../assets/vendor/libs/hammer/hammer.js"></script>
+  <script src="../assets/vendor/js/menu.js"></script>
+
+  <!-- Main JS -->
+  <script src="../assets/js/main.js"></script>
+
+  <!-- Page JS -->
+  <!-- <script src="../assets/js/pages/auth.js"></script> -->
+</body>
+</html>

@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="th" class="light-style layout-navbar-fixed layout-menu-fixed">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>เบิก-คืนเครื่องมือ | ระบบคลังสินค้าขนาดย่อม</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.0/dist/boxicons.js">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/7.2.3/css/flag-icons.min.css">
+
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="../assets/vendor/css/rtl/core.css" class="template-customizer-core-css">
+  <link rel="stylesheet" href="../assets/vendor/css/rtl/theme-default.css" class="template-customizer-theme-css">
+  <link rel="stylesheet" href="../assets/css/demo.css">
+
+  <!-- Vendors CSS -->
+  <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css">
+  <link rel="stylesheet" href="../assets/vendor/libs/typeahead-js/typeahead.css">
+  <link rel="stylesheet" href="../assets/vendor/libs/select2/select2.css">
+  <link rel="stylesheet" href="../assets/vendor/libs/flatpickr/flatpickr.css">
+  <link rel="stylesheet" href="../assets/vendor/libs/sweetalert2/sweetalert2.css">
+  <link rel="stylesheet" href="../assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css">
+  <link rel="stylesheet" href="../assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css">
+
+  <!-- Page CSS -->
+
+  <!-- Helpers -->
+  <script src="../assets/vendor/js/helpers.js"></script>
+  <script src="../assets/js/config.js"></script>
+</head>
+
+<body>
+  <!-- Layout wrapper -->
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+      
+      <!-- Menu -->
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+        <div class="app-brand demo">
+          <a href="dashboard.html" class="app-brand-link">
+            <span class="app-brand-logo demo">
+              <svg width="26px" height="26px" viewBox="0 0 26 26" version="1.1">
+                <polygon points="7.5 2 7.5 5 4.5 5 4.5 22 17 22 17 19 22 19 22 5 17 5 17 2" fill="#696cff" />
+                <polygon points="13 15 10 12 13 9 16 12" fill="#696cff" opacity="0.7" />
+              </svg>
+            </span>
+            <span class="app-brand-text demo menu-text fw-bold ms-2">คลังสินค้า</span>
+          </a>
+
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="bx menu-toggle-icon d-none d-xl-block fs-4"></i>
+            <i class="bx bx-x d-block d-xl-none bx-sm"></i>
+          </a>
+        </div>
+
+        <div class="menu-divider mt-0"></div>
+
+        <div class="menu-inner-shadow"></div>
+
+        <ul class="menu-inner py-1">
+          <!-- Dashboard -->
+          <li class="menu-item">
+            <a href="dashboard.html" class="menu-link">
+              <i class="menu-icon tf-icons bx bx-home-circle"></i>
+              <div data-i18n="หน้าหลัก">หน้าหลัก</div>
+            </a>
+          </li>
+
+          <!-- วัสดุ -->
+          <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">จัดการวัสดุและเครื่องมือ</span>
+          </li>
+
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-package"></i>
+              <div data-i18n="วัสดุสิ้นเปลือง">วัสดุสิ้นเปลือง</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="consumable-list.html" class="menu-link">
+                  <div data-i18n="รายการวัสดุ">รายการวัสดุ</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="consumable-add.html" class="menu-link">
+                  <div data-i18n="เพิ่มวัสดุใหม่">เพิ่มวัสดุใหม่</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="consumable-withdraw.html" class="menu-link">
+                  <div data-i18n="เบิกวัสดุ">เบิกวัสดุ</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-cube-alt"></i>
+              <div data-i18n="วัสดุคงทน">วัสดุคงทน</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="durable-list.html" class="menu-link">
+                  <div data-i18n="รายการวัสดุ">รายการวัสดุ</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="durable-add.html" class="menu-link">
+                  <div data-i18n="เพิ่มวัสดุใหม่">เพิ่มวัสดุใหม่</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="durable-withdraw.html" class="menu-link">
+                  <div data-i18n="เบิก-คืนวัสดุ">เบิก-คืนวัสดุ</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="menu-item active open">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-wrench"></i>
+              <div data-i18n="เครื่องมือ">เครื่องมือ</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="tools-list.html" class="menu-link">
+                  <div data-i18n="รายการเครื่องมือ">รายการเครื่องมือ</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="tools-add.html" class="menu-link">
+                  <div data-i18n="เพิ่มเครื่องมือใหม่">เพิ่มเครื่องมือใหม่</div>
+                </a>
+              </li>
+              <li class="menu-item active">
+                <a href="tools-withdraw.html" class="menu-link">
+                  <div data-i18n="เบิก-คืนเครื่องมือ">เบิก-คืนเครื่องมือ</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- รถ -->
+          <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">จัดการรถ</span>
+          </li>
+
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-car"></i>
+              <div data-i18n="ยานพาหนะ">ยานพาหนะ</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="vehicle-list.html" class="menu-link">
+                  <div data-i18n="รายการรถ">รายการรถ</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="vehicle-add.html" class="menu-link">
+                  <div data-i18n="เพิ่มรถใหม่">เพิ่มรถใหม่</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="vehicle-repair.html" class="menu-link">
+                  <div data-i18n="บันทึกการซ่อม">บันทึกการซ่อม</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- รายงาน -->
+          <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">รายงาน</span>
+          </li>
+
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-line-chart"></i>
+              <div data-i18n="รายงานต่างๆ">รายงานต่างๆ</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="report-monthly-tools.html" class="menu-link">
+                  <div data-i18n="รายงานเครื่องมือประจำเดือน">รายงานเครื่องมือประจำเดือน</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="report-vehicle-cost.html" class="menu-link">
+                  <div data-i18n="รายงานค่าใช้จ่ายรถ">รายงานค่าใช้จ่ายรถ</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="report-executive.html" class="menu-link">
+                  <div data-i18n="รายงานสำหรับผู้บริหาร">รายงานสำหรับผู้บริหาร</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- ผู้ใช้งาน (เฉพาะผู้บริหาร) -->
+          <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">ระบบจัดการ</span>
+          </li>
+
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-user"></i>
+              <div data-i18n="ผู้ใช้งาน">ผู้ใช้งาน</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="user-list.html" class="menu-link">
+                  <div data-i18n="รายชื่อผู้ใช้">รายชื่อผู้ใช้</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="user-add.html" class="menu-link">
+                  <div data-i18n="เพิ่มผู้ใช้ใหม่">เพิ่มผู้ใช้ใหม่</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </aside>
+      <!-- / Menu -->
+
+      <!-- Layout container -->
+      <div class="layout-page">
+        <!-- Navbar -->
+        <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+          <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+            <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+              <i class="bx bx-menu bx-sm"></i>
+            </a>
+          </div>
+
+          <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+            <!-- Search -->
+            <div class="navbar-nav align-items-center">
+              <div class="nav-item navbar-search-wrapper mb-0">
+                <a class="nav-item nav-link search-toggler px-0" href="javascript:void(0);">
+                  <i class="bx bx-search-alt bx-sm"></i>
+                  <span class="d-none d-md-inline-block text-muted">ค้นหา (Ctrl+/)</span>
+                </a>
+              </div>
+            </div>
+            <!-- /Search -->
+
+            <ul class="navbar-nav flex-row align-items-center ms-auto">
+              <!-- User -->
+              <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <div class="avatar avatar-online">
+                    <img src="../assets/img/avatars/1.png" alt class="rounded-circle">
+                  </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="account-settings.html">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="avatar avatar-online">
+                            <img src="../assets/img/avatars/1.png" alt class="rounded-circle">
+                          </div>
+                        </div>
+                        <div class="flex-grow-1">
+                          <span class="fw-semibold d-block">สมชาย มีสุข</span>
+                          <small class="text-muted">ผู้บริหาร</small>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <div class="dropdown-divider"></div>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="account-settings.html">
+                      <i class="bx bx-user me-2"></i>
+                      <span class="align-middle">ข้อมูลส่วนตัว</span>
+                    </a>
+                  </li>
+                  <li>
+                    <div class="dropdown-divider"></div>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="login.html">
+                      <i class="bx bx-power-off me-2"></i>
+                      <span class="align-middle">ออกจากระบบ</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <!--/ User -->
+            </ul>
+          </div>
+        </nav>
+        <!-- / Navbar -->
+
+        <!-- Content wrapper -->
+        <div class="content-wrapper">
+          <!-- Content -->
+          <div class="container-xxl flex-grow-1 container-p-y">
+            <h4 class="fw-bold py-3 mb-4">
+              <span class="text-muted fw-light">เครื่องมือ /</span> เบิก-คืนเครื่องมือ
+            </h4>
+
+            <!-- Tab Navigation -->
+            <div class="row">
+              <div class="col-md-12">
+                <ul class="nav nav-pills mb-3 nav-fill" role="tablist">
+                  <li class="nav-item">
+                    <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#withdraw-tab" aria-controls="withdraw-tab" aria-selected="true">
+                      <i class="bx bx-log-out-circle me-1"></i> เบิกเครื่องมือ
+                    </button>
+                  </li>
+                  <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#return-tab" aria-controls="return-tab" aria-selected="false">
+                      <i class="bx bx-log-in-circle me-1"></i> คืนเครื่องมือ
+                    </button>
+                  </li>
+                  <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#history-tab" aria-controls="history-tab" aria-selected="false">
+                      <i class="bx bx-history me-1"></i> ประวัติการเบิก-คืน
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="tab-content">
+              <!-- Withdraw Tools Tab -->
+              <div class="tab-pane fade show active" id="withdraw-tab" role="tabpanel">
+                <div class="card mb-4">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">เบิกเครื่องมือ</h5>
+                    <small class="text-muted float-end">* หมายถึงข้อมูลที่จำเป็นต้องกรอก</small>
+                  </div>
+                  <div class="card-body">
+                    <form id="withdrawForm">
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="withdrawal-date">วันที่เบิก *</label>
+                        <div class="col-sm-4">
+                          <input type="text" class="form-control flatpickr-date" id="withdrawal-date" placeholder="DD/MM/YYYY" value="28/05/2567" required>
+                        </div>
+                        <label class="col-sm-2 col-form-label" for="withdrawal-project">โครงการ *</label>
+                        <div class="col-sm-4">
+                          <select id="withdrawal-project" class="select2 form-select" data-allow-clear="true" required>
+                            <option value="">--- เลือกโครงการ ---</option>
+                            <option value="1">โครงการก่อสร้างรั้ว</option>
+                            <option value="2">โครงการปรับปรุงอาคาร A</option>
+                            <option value="3">โครงการซ่อมแซมห้องประชุม</option>
+                            <option value="4">โครงการระบบไฟฟ้า</option>
+                            <option value="5">โครงการปรับปรุงภูมิทัศน์</option>
+                            <option value="new">+ เพิ่มโครงการใหม่</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="withdrawal-requester">ผู้เบิก *</label>
+                        <div class="col-sm-4">
+                          <select id="withdrawal-requester" class="select2 form-select" required>
+                            <option value="1" selected>สมชาย มีสุข (ตัวคุณ)</option>
+                            <option value="2">สมหญิง รักดี</option>
+                            <option value="3">ชาติชาย ใจเย็น</option>
+                            <option value="4">ณัฐพงษ์ รุ่งเรือง</option>
+                            <option value="5">มานะ สมบัติ</option>
+                          </select>
+                        </div>
+                        <label class="col-sm-2 col-form-label" for="expected-return-date">วันที่คาดว่าจะคืน *</label>
+                        <div class="col-sm-4">
+                          <input type="text" class="form-control flatpickr-date" id="expected-return-date" placeholder="DD/MM/YYYY" required>
+                        </div>
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="withdrawal-purpose">วัตถุประสงค์</label>
+                        <div class="col-sm-10">
+                          <textarea id="withdrawal-purpose" class="form-control" placeholder="ระบุวัตถุประสงค์ในการเบิกเครื่องมือ" rows="2"></textarea>
+                        </div>
+                      </div>
+
+                      <!-- Tool Selection -->
+                      <div class="mb-4">
+                        <div class="card">
+                          <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">เลือกเครื่องมือที่ต้องการเบิก</h6>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addToolModal">
+                              <i class="bx bx-plus me-1"></i> เพิ่มเครื่องมือ
+                            </button>
+                          </div>
+                          <div class="table-responsive">
+                            <table class="table table-hover">
+                              <thead>
+                                <tr>
+                                  <th style="width: 60px;">#</th>
+                                  <th style="width: 120px;">รหัสเครื่องมือ</th>
+                                  <th>ชื่อเครื่องมือ</th>
+                                  <th>ยี่ห้อ/รุ่น</th>
+                                  <th>สถานะ</th>
+                                  <th style="width: 80px;">จัดการ</th>
+                                </tr>
+                              </thead>
+                              <tbody id="selectedToolsTable">
+                                <tr id="emptyToolRow">
+                                  <td colspan="6" class="text-center py-3">ยังไม่มีรายการเครื่องมือที่เลือก กรุณาคลิก "เพิ่มเครื่องมือ" เพื่อเลือกเครื่องมือที่ต้องการเบิก</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="withdrawal-note">หมายเหตุ</label>
+                        <div class="col-sm-10">
+                          <textarea id="withdrawal-note" class="form-control" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)" rows="2"></textarea>
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="withdrawal-attachments">เอกสารแนบ</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" type="file" id="withdrawal-attachments" multiple>
+                          <div class="form-text">สามารถแนบไฟล์ได้หลายไฟล์ (ไฟล์ PDF, JPEG, PNG ขนาดไม่เกิน 5MB ต่อไฟล์)</div>
+                        </div>
+                      </div>
+
+                      <div class="row justify-content-end">
+                        <div class="col-sm-10">
+                          <button type="button" class="btn btn-outline-secondary me-2" onclick="window.location.href='tools-list.html'">ยกเลิก</button>
+                          <button type="button" class="btn btn-primary" onclick="confirmWithdrawal()">บันทึกการเบิก</button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Return Tools Tab -->
+              <div class="tab-pane fade" id="return-tab" role="tabpanel">
+                <div class="card mb-4">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">คืนเครื่องมือ</h5>
+                    <small class="text-muted float-end">* หมายถึงข้อมูลที่จำเป็นต้องกรอก</small>
+                  </div>
+                  <div class="card-body">
+                    <form id="returnForm">
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="return-date">วันที่คืน *</label>
+                        <div class="col-sm-4">
+                          <input type="text" class="form-control flatpickr-date" id="return-date" placeholder="DD/MM/YYYY" value="28/05/2567" required>
+                        </div>
+                        <label class="col-sm-2 col-form-label" for="returner">ผู้คืน *</label>
+                        <div class="col-sm-4">
+                          <select id="returner" class="select2 form-select" required>
+                            <option value="1" selected>สมชาย มีสุข (ตัวคุณ)</option>
+                            <option value="2">สมหญิง รักดี</option>
+                            <option value="3">ชาติชาย ใจเย็น</option>
+                            <option value="4">ณัฐพงษ์ รุ่งเรือง</option>
+                            <option value="5">มานะ สมบัติ</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <!-- Borrowed Tools List -->
+                      <div class="mb-4">
+                        <div class="card">
+                          <div class="card-header">
+                            <h6 class="mb-0">เครื่องมือที่ยังไม่ได้คืน</h6>
+                          </div>
+                          <div class="table-responsive">
+                            <table class="table table-hover">
+                              <thead>
+                                <tr>
+                                  <th style="width: 50px;"></th>
+                                  <th style="width: 60px;">#</th>
+                                  <th style="width: 120px;">รหัสเครื่องมือ</th>
+                                  <th>ชื่อเครื่องมือ</th>
+                                  <th>ผู้เบิก</th>
+                                  <th>วันที่เบิก</th>
+                                  <th>กำหนดคืน</th>
+                                  <th>สถานะ</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td>
+                                    <input class="form-check-input" type="checkbox" id="tool-1" value="T002">
+                                  </td>
+                                  <td>1</td>
+                                  <td>T002</td>
+                                  <td>สว่านไฟฟ้า</td>
+                                  <td>สมใจ ดีมาก</td>
+                                  <td>15/05/2567</td>
+                                  <td>30/05/2567</td>
+                                  <td><span class="badge bg-label-warning">กำลังใช้งาน</span></td>
+                                </tr>
+                                <tr>
+                                  <td>
+                                    <input class="form-check-input" type="checkbox" id="tool-2" value="T008">
+                                  </td>
+                                  <td>2</td>
+                                  <td>T008</td>
+                                  <td>เครื่องเจียร์</td>
+                                  <td>ชาติชาย ใจเย็น</td>
+                                  <td>20/05/2567</td>
+                                  <td>29/05/2567</td>
+                                  <td><span class="badge bg-label-warning">กำลังใช้งาน</span></td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="tool-condition">สภาพเครื่องมือ *</label>
+                        <div class="col-sm-4">
+                          <select id="tool-condition" class="form-select" required>
+                            <option value="good">สภาพดี</option>
+                            <option value="normal">สภาพปกติ</option>
+                            <option value="damaged">ชำรุดเล็กน้อย</option>
+                            <option value="broken">ชำรุดมาก</option>
+                          </select>
+                        </div>
+                        <label class="col-sm-2 col-form-label" for="damage-details">รายละเอียดความเสียหาย</label>
+                        <div class="col-sm-4">
+                          <textarea id="damage-details" class="form-control" placeholder="กรณีมีความเสียหาย" rows="2"></textarea>
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="return-note">หมายเหตุ</label>
+                        <div class="col-sm-10">
+                          <textarea id="return-note" class="form-control" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)" rows="2"></textarea>
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="return-attachments">รูปภาพ/เอกสารแนบ</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" type="file" id="return-attachments" multiple>
+                          <div class="form-text">แนบรูปภาพหรือเอกสารเกี่ยวกับสภาพเครื่องมือขณะคืน (ไฟล์ PDF, JPEG, PNG ขนาดไม่เกิน 5MB ต่อไฟล์)</div>
+                        </div>
+                      </div>
+
+                      <div class="row justify-content-end">
+                        <div class="col-sm-10">
+                          <button type="button" class="btn btn-outline-secondary me-2" onclick="window.location.href='tools-list.html'">ยกเลิก</button>
+                          <button type="button" class="btn btn-primary" onclick="confirmReturn()">บันทึกการคืน</button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- History Tab -->
+              <div class="tab-pane fade" id="history-tab" role="tabpanel">
+                <div class="card mb-4">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">ประวัติการเบิก-คืนเครื่องมือ</h5>
+                    <div class="d-flex">
+                      <button type="button" class="btn btn-outline-secondary me-2">
+                        <i class="bx bx-filter-alt me-1"></i> กรอง
+                      </button>
+                      <button type="button" class="btn btn-outline-primary">
+                        <i class="bx bx-export me-1"></i> ส่งออก
+                      </button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row mb-4">
+                      <div class="col-md-3 col-sm-6 mb-3">
+                        <label for="history-type" class="form-label">ประเภทรายการ</label>
+                        <select id="history-type" class="select2 form-select">
+                          <option value="all" selected>ทั้งหมด</option>
+                          <option value="withdraw">เบิก</option>
+                          <option value="return">คืน</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3 col-sm-6 mb-3">
+                        <label for="history-project" class="form-label">โครงการ</label>
+                        <select id="history-project" class="select2 form-select">
+                          <option value="all" selected>ทั้งหมด</option>
+                          <option value="1">โครงการก่อสร้างรั้ว</option>
+                          <option value="2">โครงการปรับปรุงอาคาร A</option>
+                          <option value="3">โครงการซ่อมแซมห้องประชุม</option>
+                          <option value="4">โครงการระบบไฟฟ้า</option>
+                          <option value="5">โครงการปรับปรุงภูมิทัศน์</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3 col-sm-6 mb-3">
+                        <label for="history-date-range" class="form-label">ช่วงวันที่</label>
+                        <input type="text" class="form-control" id="history-date-range" placeholder="วันที่เริ่มต้น - วันที่สิ้นสุด">
+                      </div>
+                      <div class="col-md-3 col-sm-6 mb-3">
+                        <label for="history-user" class="form-label">ผู้ทำรายการ</label>
+                        <select id="history-user" class="select2 form-select">
+                          <option value="all" selected>ทั้งหมด</option>
+                          <option value="1">สมชาย มีสุข</option>
+                          <option value="2">สมหญิง รักดี</option>
+                          <option value="3">ชาติชาย ใจเย็น</option>
+                          <option value="4">ณัฐพงษ์ รุ่งเรือง</option>
+                          <option value="5">มานะ สมบัติ</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="table-responsive">
+                      <table class="table table-bordered table-hover">
+                        <thead>
+                          <tr>
+                            <th>เลขที่</th>
+                            <th>วันที่ทำรายการ</th>
+                            <th>ประเภท</th>
+                            <th>รหัสเครื่องมือ</th>
+                            <th>ชื่อเครื่องมือ</th>
+                            <th>ผู้ทำรายการ</th>
+                            <th>โครงการ</th>
+                            <th>กำหนดคืน</th>
+                            <th>วันที่คืน</th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>TW039</td>
+                            <td>20/05/2567</td>
+                            <td><span class="badge bg-label-primary">เบิก</span></td>
+                            <td>T008</td>
+                            <td>เครื่องเจียร์</td>
+                            <td>ชาติชาย ใจเย็น</td>
+                            <td>โครงการปรับปรุงอาคาร A</td>
+                            <td>29/05/2567</td>
+                            <td>-</td>
+                            <td><span class="badge bg-label-warning">กำลังใช้งาน</span></td>
+                            <td>
+                              <div class="dropdown">
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                  <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                  <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="bx bx-detail me-1"></i> รายละเอียด
+                                  </a>
+                                  <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="bx bx-printer me-1"></i> พิมพ์
+                                  </a>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>TW038</td>
+                            <td>15/05/2567</td>
+                            <td><span class="badge bg-label-primary">เบิก</span></td>
+                            <td>T002</td>
+                            <td>สว่านไฟฟ้า</td>
+                            <td>สมใจ ดีมาก</td>
+                            <td>โครงการซ่อมแซมห้องประชุม</td>
+                            <td>30/05/2567</td>
+                            <td>-</td>
+                            <td><span class="badge bg-label-warning">กำลังใช้งาน</span></td>
+                            <td>
+                              <div class="dropdown">
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                  <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                  <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="bx bx-detail me-1"></i> รายละเอียด
+                                  </a>
+                                  <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="bx bx-printer me-1"></i> พิมพ์
+                                  </a>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>TR021</td>
+                            <td>10/05/2567</td>
+                            <td><span class="badge bg-label-success">คืน</span></td>
+                            <td>T001</td>
+                            <td>ค้อนเจาะคอนกรีต</td>
+                            <td>สมชาย มีสุข</td>
+                            <td>โครงการก่อสร้างรั้ว</td>
+                            <td>15/05/2567</td>
+                            <td>10/05/2567</td>
+                            <td><span class="badge bg-label-success">พร้อมใช้งาน</span></td>
+                            <td>
+                              <div class="dropdown">
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                  <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                  <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="bx bx-detail me-1"></i> รายละเอียด
+                                  </a>
+                                  <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="bx bx-printer me-1"></i> พิมพ์
+                                  </a>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>TW037</td>
+                            <td>01/05/2567</td>
+                            <td><span class="badge bg-label-primary">เบิก</span></td>
+                            <td>T001</td>
+                            <td>ค้อนเจาะคอนกรีต</td>
+                            <td>สมชาย มีสุข</td>
+                            <td>โครงการก่อสร้างรั้ว</td>
+                            <td>15/05/2567</td>
+                            <td>10/05/2567</td>
+                            <td><span class="badge bg-label-success">คืนแล้ว</span></td>
+                            <td>
+                              <div class="dropdown">
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                  <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                  <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="bx bx-detail me-1"></i> รายละเอียด
+                                  </a>
+                                  <a class="dropdown-item" href="javascript:void(0);">
+                                    <i class="bx bx-printer me-1"></i> พิมพ์
+                                  </a>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                      <div class="d-flex align-items-center">
+                        <label for="rowPerPage" class="me-2">แสดง</label>
+                        <select class="form-select form-select-sm" id="rowPerPage" style="width: 70px;">
+                          <option value="10" selected>10</option>
+                          <option value="25">25</option>
+                          <option value="50">50</option>
+                          <option value="100">100</option>
+                        </select>
+                        <span class="ms-2">รายการ</span>
+                      </div>
+                      <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0">
+                          <li class="page-item prev">
+                            <a class="page-link" href="javascript:void(0);"><i class="tf-icon bx bx-chevrons-left"></i></a>
+                          </li>
+                          <li class="page-item active">
+                            <a class="page-link" href="javascript:void(0);">1</a>
+                          </li>
+                          <li class="page-item">
+                            <a class="page-link" href="javascript:void(0);">2</a>
+                          </li>
+                          <li class="page-item next">
+                            <a class="page-link" href="javascript:void(0);"><i class="tf-icon bx bx-chevrons-right"></i></a>
+                          </li>
+                        </ul>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <!-- / Content -->
+
+          <!-- Footer -->
+          <footer class="content-footer footer bg-footer-theme">
+            <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+              <div class="mb-2 mb-md-0">
+                © <script>
+                  document.write(new Date().getFullYear())
+                </script>
+                , ระบบคลังสินค้าขนาดย่อม v1.0
+              </div>
+              <div>
+                <a href="#" class="footer-link me-4">หน้าหลัก</a>
+                <a href="#" class="footer-link me-4">เกี่ยวกับเรา</a>
+                <a href="#" class="footer-link me-4">ช่วยเหลือ</a>
+                <a href="#" class="footer-link">ติดต่อเรา</a>
+              </div>
+            </div>
+          </footer>
+          <!-- / Footer -->
+
+          <div class="content-backdrop fade"></div>
+        </div>
+        <!-- Content wrapper -->
+      </div>
+      <!-- / Layout page -->
+    </div>
+
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
+  </div>
+  <!-- / Layout wrapper -->
+
+  <!-- Add Tool Modal -->
+  <div class="modal fade" id="addToolModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addToolModalTitle">เลือกเครื่องมือ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-12">
+              <div class="input-group">
+                <span class="input-group-text"><i class="bx bx-search"></i></span>
+                <input type="text" class="form-control" id="searchTool" placeholder="ค้นหาตามรหัส, ชื่อเครื่องมือ...">
+                <button type="button" class="btn btn-primary">ค้นหา</button>
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <select id="toolTypeFilter" class="form-select">
+                <option value="all" selected>ทุกประเภท</option>
+                <option value="electric">เครื่องมือไฟฟ้า</option>
+                <option value="manual">เครื่องมือช่าง</option>
+                <option value="construction">เครื่องมือก่อสร้าง</option>
+                <option value="welding">เครื่องมือเชื่อม</option>
+                <option value="measurement">เครื่องมือวัด</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select id="statusFilter" class="form-select">
+                <option value="available" selected>พร้อมใช้งาน</option>
+                <option value="all">ทุกสถานะ</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px;"></th>
+                  <th style="width: 120px;">รหัสเครื่องมือ</th>
+                  <th>ชื่อเครื่องมือ</th>
+                  <th>ประเภท</th>
+                  <th>ยี่ห้อ/รุ่น</th>
+                  <th>สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <input class="form-check-input" type="checkbox" id="select-tool-1" value="T001">
+                  </td>
+                  <td>T001</td>
+                  <td>ค้อนเจาะคอนกรีต</td>
+                  <td>เครื่องมือไฟฟ้า</td>
+                  <td>Bosch GBH 2-26</td>
+                  <td><span class="badge bg-label-success">พร้อมใช้งาน</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input class="form-check-input" type="checkbox" id="select-tool-3" value="T003">
+                  </td>
+                  <td>T003</td>
+                  <td>เครื่องเชื่อมไฟฟ้า</td>
+                  <td>เครื่องมือเชื่อม</td>
+                  <td>Panasonic KX-350</td>
+                  <td><span class="badge bg-label-success">พร้อมใช้งาน</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input class="form-check-input" type="checkbox" id="select-tool-5" value="T005">
+                  </td>
+                  <td>T005</td>
+                  <td>เลื่อยวงเดือน</td>
+                  <td>เครื่องมือไฟฟ้า</td>
+                  <td>Makita 5800NB</td>
+                  <td><span class="badge bg-label-success">พร้อมใช้งาน</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input class="form-check-input" type="checkbox" id="select-tool-6" value="T006">
+                  </td>
+                  <td>T006</td>
+                  <td>ชุดประแจแหวน</td>
+                  <td>เครื่องมือช่าง</td>
+                  <td>KING TONY 12 ชิ้น</td>
+                  <td><span class="badge bg-label-success">พร้อมใช้งาน</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary" onclick="addSelectedTools()">เพิ่มเครื่องมือที่เลือก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmModalTitle">ยืนยันการเบิกเครื่องมือ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>คุณต้องการยืนยันการเบิกเครื่องมือตามรายการที่เลือกใช่หรือไม่?</p>
+          <p>หลังจากยืนยันแล้ว ระบบจะบันทึกรายการเบิกและเปลี่ยนสถานะเครื่องมือเป็น "กำลังใช้งาน"</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary" onclick="submitWithdrawal()">ยืนยัน</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Return Confirmation Modal -->
+  <div class="modal fade" id="confirmReturnModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmReturnModalTitle">ยืนยันการคืนเครื่องมือ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>คุณต้องการยืนยันการคืนเครื่องมือตามรายการที่เลือกใช่หรือไม่?</p>
+          <p>หลังจากยืนยันแล้ว ระบบจะบันทึกรายการคืนและเปลี่ยนสถานะเครื่องมือเป็น "พร้อมใช้งาน"</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary" onclick="submitReturn()">ยืนยัน</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="successModalTitle">ดำเนินการสำเร็จ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div class="mb-3">
+            <i class="bx bx-check-circle text-success" style="font-size: 5rem;"></i>
+          </div>
+          <h5 id="successMessage">บันทึกรายการเรียบร้อยแล้ว</h5>
+          <p id="successDetail">เลขที่รายการ: <span id="transactionNumber">TW040</span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#printModal">พิมพ์ใบเบิก</button>
+          <button type="button" class="btn btn-primary" onclick="window.location.reload()">ตกลง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JS -->
+  <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+  <script src="../assets/vendor/libs/popper/popper.js"></script>
+  <script src="../assets/vendor/js/bootstrap.js"></script>
+  <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="../assets/vendor/libs/hammer/hammer.js"></script>
+  <script src="../assets/vendor/js/menu.js"></script>
+
+  <!-- Vendors JS -->
+  <script src="../assets/vendor/libs/select2/select2.js"></script>
+  <script src="../assets/vendor/libs/flatpickr/flatpickr.js"></script>
+  <script src="../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+  <script src="../assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+
+  <!-- Main JS -->
+  <script src="../assets/js/main.js"></script>
+
+  <!-- Page JS -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize Select2
+      $('.select2').select2();
+      
+      // Initialize Flatpickr (Date picker)
+      flatpickr("#withdrawal-date, #return-date", {
+        dateFormat: "d/m/Y",
+        defaultDate: "today"
+      });
+      
+      // Set expected return date to 7 days from now by default
+      const today = new Date();
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
+      
+      flatpickr("#expected-return-date", {
+        dateFormat: "d/m/Y",
+        defaultDate: nextWeek
+      });
+      
+      // Initialize date range picker for history tab
+      flatpickr("#history-date-range", {
+        mode: "range",
+        dateFormat: "d/m/Y"
+      });
+      
+      // Handle "New Project" option
+      $('#withdrawal-project').on('change', function() {
+        if ($(this).val() === 'new') {
+          // You can show a modal or prompt for new project name
+          const newProjectName = prompt("กรุณากรอกชื่อโครงการใหม่:");
+          if (newProjectName) {
+            // Add new option
+            const newOption = new Option(newProjectName, '6', true, true);
+            $('#withdrawal-project').append(newOption).trigger('change');
+          } else {
+            // If cancelled, revert to "Select Project"
+            $(this).val('').trigger('change');
+          }
+        }
+      });
+    });
+    
+    // Selected tools for withdrawal
+    let selectedTools = [];
+    
+    // Function to add selected tools from modal
+    function addSelectedTools() {
+      const checkboxes = document.querySelectorAll('#addToolModal input[type="checkbox"]:checked');
+      
+      checkboxes.forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        const toolId = checkbox.value;
+        const toolName = row.cells[2].textContent;
+        const toolBrand = row.cells[4].textContent;
+        const toolStatus = row.cells[5].innerHTML;
+        
+        // Check if tool is already selected
+        if (!selectedTools.find(tool => tool.id === toolId)) {
+          selectedTools.push({
+            id: toolId,
+            name: toolName,
+            brand: toolBrand,
+            status: toolStatus
+          });
+        }
+      });
+      
+      updateSelectedToolsTable();
+      $('#addToolModal').modal('hide');
+    }
+    
+    // Function to update selected tools table
+    function updateSelectedToolsTable() {
+      const tableBody = document.getElementById('selectedToolsTable');
+      const emptyRow = document.getElementById('emptyToolRow');
+      
+      // Show/hide empty row message
+      if (selectedTools.length > 0) {
+        emptyRow.style.display = 'none';
+      } else {
+        emptyRow.style.display = '';
+        return;
+      }
+      
+      // Clear table body first (except for empty row)
+      while (tableBody.firstChild) {
+        tableBody.removeChild(tableBody.firstChild);
+      }
+      tableBody.appendChild(emptyRow);
+      
+      // Add selected tools to table
+      selectedTools.forEach((tool, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${tool.id}</td>
+          <td>${tool.name}</td>
+          <td>${tool.brand}</td>
+          <td>${tool.status}</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSelectedTool('${tool.id}')">
+              <i class="bx bx-trash"></i>
+            </button>
+          </td>
+        `;
+        
+        tableBody.appendChild(row);
+      });
+    }
+    
+    // Function to remove selected tool
+    function removeSelectedTool(toolId) {
+      selectedTools = selectedTools.filter(tool => tool.id !== toolId);
+      updateSelectedToolsTable();
+    }
+    
+    // Function to confirm withdrawal
+    function confirmWithdrawal() {
+      // Check if there are selected tools
+      if (selectedTools.length === 0) {
+        Swal.fire({
+          title: 'ไม่พบเครื่องมือที่เลือก',
+          text: 'กรุณาเลือกเครื่องมือที่ต้องการเบิกอย่างน้อย 1 รายการ',
+          icon: 'warning'
+        });
+        return;
+      }
+      
+      // Check required fields
+      const form = document.getElementById('withdrawForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      
+      // Show confirmation modal
+      $('#confirmModal').modal('show');
+    }
+    
+    // Function to submit withdrawal form
+    function submitWithdrawal() {
+      $('#confirmModal').modal('hide');
+      
+      // Success message
+      $('#successModalTitle').text('เบิกเครื่องมือสำเร็จ');
+      $('#successMessage').text('บันทึกการเบิกเครื่องมือเรียบร้อยแล้ว');
+      $('#successDetail').html('เลขที่เบิก: <span id="transactionNumber">TW040</span>');
+      $('#successModal').modal('show');
+    }
+    
+    // Function to confirm return
+    function confirmReturn() {
+      // Check if any tools are selected
+      const checkboxes = document.querySelectorAll('#return-tab input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) {
+        Swal.fire({
+          title: 'ไม่พบเครื่องมือที่เลือก',
+          text: 'กรุณาเลือกเครื่องมือที่ต้องการคืนอย่างน้อย 1 รายการ',
+          icon: 'warning'
+        });
+        return;
+      }
+      
+      // Check required fields
+      const form = document.getElementById('returnForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      
+      // Show confirmation modal
+      $('#confirmReturnModal').modal('show');
+    }
+    
+    // Function to submit return form
+    function submitReturn() {
+      $('#confirmReturnModal').modal('hide');
+      
+      // Success message
+      $('#successModalTitle').text('คืนเครื่องมือสำเร็จ');
+      $('#successMessage').text('บันทึกการคืนเครื่องมือเรียบร้อยแล้ว');
+      $('#successDetail').html('เลขที่คืน: <span id="transactionNumber">TR022</span>');
+      $('#successModal').modal('show');
+    }
+  </script>
+</body>
+</html>
