@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-  <title>เพิ่มเครื่องมือใหม่ | ระบบคลังสินค้าขนาดย่อม</title>
+  <title>เพิ่มวัสดุคงทนใหม่ | ระบบคลังสินค้าขนาดย่อม</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico">
@@ -104,7 +104,7 @@
             </ul>
           </li>
 
-          <li class="menu-item">
+          <li class="menu-item active open">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
               <i class="menu-icon tf-icons bx bx-cube-alt"></i>
               <div data-i18n="วัสดุคงทน">วัสดุคงทน</div>
@@ -115,7 +115,7 @@
                   <div data-i18n="รายการวัสดุ">รายการวัสดุ</div>
                 </a>
               </li>
-              <li class="menu-item">
+              <li class="menu-item active">
                 <a href="durable-add.html" class="menu-link">
                   <div data-i18n="เพิ่มวัสดุใหม่">เพิ่มวัสดุใหม่</div>
                 </a>
@@ -128,7 +128,7 @@
             </ul>
           </li>
 
-          <li class="menu-item active open">
+          <li class="menu-item">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
               <i class="menu-icon tf-icons bx bx-wrench"></i>
               <div data-i18n="เครื่องมือ">เครื่องมือ</div>
@@ -139,7 +139,7 @@
                   <div data-i18n="รายการเครื่องมือ">รายการเครื่องมือ</div>
                 </a>
               </li>
-              <li class="menu-item active">
+              <li class="menu-item">
                 <a href="tools-add.html" class="menu-link">
                   <div data-i18n="เพิ่มเครื่องมือใหม่">เพิ่มเครื่องมือใหม่</div>
                 </a>
@@ -314,7 +314,7 @@
           <!-- Content -->
           <div class="container-xxl flex-grow-1 container-p-y">
             <h4 class="fw-bold py-3 mb-4">
-              <span class="text-muted fw-light">เครื่องมือ /</span> เพิ่มเครื่องมือใหม่
+              <span class="text-muted fw-light">วัสดุคงทน /</span> เพิ่มวัสดุใหม่
             </h4>
 
             <!-- Basic Layout -->
@@ -322,27 +322,28 @@
               <div class="col-xl">
                 <div class="card mb-4">
                   <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">เพิ่มเครื่องมือใหม่</h5>
+                    <h5 class="mb-0">เพิ่มวัสดุคงทนใหม่</h5>
                     <small class="text-muted float-end">* หมายถึงข้อมูลที่จำเป็นต้องกรอก</small>
                   </div>
                   <div class="card-body">
-                    <form id="toolForm">
+                    <form id="durableForm">
+                      <!-- ข้อมูลทั่วไป -->
                       <div class="mb-4">
-                        <h6 class="fw-semibold">ข้อมูลทั่วไป</h6>
+                        <h6 class="fw-semibold">ข้อมูลทั่วไปของวัสดุ</h6>
                         <hr class="my-2">
                       </div>
                       <div class="row mb-3">
-                        <label class="col-sm-2 col-form-label" for="tool-id">รหัสเครื่องมือ *</label>
+                        <label class="col-sm-2 col-form-label" for="durable-id">รหัสวัสดุ *</label>
                         <div class="col-sm-4">
                           <div class="input-group">
-                            <span class="input-group-text">T</span>
-                            <input type="text" class="form-control" id="tool-id" placeholder="001" required>
+                            <span class="input-group-text">D</span>
+                            <input type="text" class="form-control" id="durable-id" placeholder="001" required>
                           </div>
-                          <div class="form-text">รหัสจะถูกกำหนดเป็น T + ตัวเลข เช่น T001</div>
+                          <div class="form-text">รหัสจะถูกกำหนดเป็น D + ตัวเลข เช่น D001</div>
                         </div>
-                        <label class="col-sm-2 col-form-label" for="tool-status">สถานะ *</label>
+                        <label class="col-sm-2 col-form-label" for="durable-status">สถานะ *</label>
                         <div class="col-sm-4">
-                          <select id="tool-status" class="form-select" required>
+                          <select id="durable-status" class="form-select" required>
                             <option value="available" selected>พร้อมใช้งาน</option>
                             <option value="inuse">กำลังใช้งาน</option>
                             <option value="repair">ส่งซ่อม</option>
@@ -351,40 +352,73 @@
                         </div>
                       </div>
                       <div class="row mb-3">
-                        <label class="col-sm-2 col-form-label" for="tool-name">ชื่อเครื่องมือ *</label>
+                        <label class="col-sm-2 col-form-label" for="durable-name">ชื่อวัสดุ *</label>
                         <div class="col-sm-10">
-                          <input type="text" class="form-control" id="tool-name" placeholder="ระบุชื่อเครื่องมือ" required>
+                          <input type="text" class="form-control" id="durable-name" placeholder="ระบุชื่อวัสดุ" required>
                         </div>
                       </div>
                       <div class="row mb-3">
-                        <label class="col-sm-2 col-form-label" for="tool-type">ประเภทเครื่องมือ *</label>
+                        <label class="col-sm-2 col-form-label" for="durable-type">ประเภทวัสดุ *</label>
                         <div class="col-sm-4">
-                          <select id="tool-type" class="select2 form-select" data-allow-clear="true" required>
-                            <option value="">--- เลือกประเภทเครื่องมือ ---</option>
-                            <option value="electric">เครื่องมือไฟฟ้า</option>
-                            <option value="manual">เครื่องมือช่าง</option>
-                            <option value="construction">เครื่องมือก่อสร้าง</option>
-                            <option value="welding">เครื่องมือเชื่อม</option>
-                            <option value="measurement">เครื่องมือวัด</option>
+                          <select id="durable-type" class="select2 form-select" data-allow-clear="true" required>
+                            <option value="">--- เลือกประเภทวัสดุ ---</option>
+                            <option value="office">เฟอร์นิเจอร์สำนักงาน</option>
+                            <option value="electronics">อุปกรณ์อิเล็กทรอนิกส์</option>
+                            <option value="machinery">เครื่องจักรกล</option>
+                            <option value="computer">คอมพิวเตอร์และอุปกรณ์</option>
+                            <option value="meeting">อุปกรณ์ห้องประชุม</option>
+                            <option value="comm">อุปกรณ์สื่อสาร</option>
                             <option value="other">อื่นๆ</option>
                           </select>
                         </div>
-                        <label class="col-sm-2 col-form-label" for="tool-brand">ยี่ห้อ</label>
+                        <label class="col-sm-2 col-form-label" for="durable-brand">ยี่ห้อ</label>
                         <div class="col-sm-4">
-                          <input type="text" class="form-control" id="tool-brand" placeholder="ยี่ห้อเครื่องมือ">
+                          <input type="text" class="form-control" id="durable-brand" placeholder="ยี่ห้อของวัสดุ">
                         </div>
                       </div>
                       <div class="row mb-3">
-                        <label class="col-sm-2 col-form-label" for="tool-model">รุ่น</label>
+                        <label class="col-sm-2 col-form-label" for="durable-model">รุ่น</label>
                         <div class="col-sm-4">
-                          <input type="text" class="form-control" id="tool-model" placeholder="รุ่นเครื่องมือ">
+                          <input type="text" class="form-control" id="durable-model" placeholder="รุ่นของวัสดุ">
                         </div>
-                        <label class="col-sm-2 col-form-label" for="tool-serial">หมายเลขซีเรียล</label>
+                        <label class="col-sm-2 col-form-label" for="durable-serial">หมายเลขซีเรียล</label>
                         <div class="col-sm-4">
-                          <input type="text" class="form-control" id="tool-serial" placeholder="หมายเลขซีเรียล">
+                          <input type="text" class="form-control" id="durable-serial" placeholder="หมายเลขซีเรียล">
                         </div>
                       </div>
-                      
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="durable-unit">หน่วยนับ *</label>
+                        <div class="col-sm-4">
+                          <select id="durable-unit" class="select2 form-select" data-allow-clear="true" required>
+                            <option value="">--- เลือกหน่วยนับ ---</option>
+                            <option value="unit">หน่วย</option>
+                            <option value="piece">ชิ้น</option>
+                            <option value="set">ชุด</option>
+                            <option value="machine">เครื่อง</option>
+                            <option value="table">ตัว</option>
+                            <option value="chair">ตัว</option>
+                            <option value="other">อื่นๆ</option>
+                          </select>
+                        </div>
+                        <label class="col-sm-2 col-form-label" for="department">แผนก/ฝ่าย</label>
+                        <div class="col-sm-4">
+                          <select id="department" class="form-select">
+                            <option value="">--- เลือกแผนก/ฝ่าย ---</option>
+                            <option value="admin">ธุรการ</option>
+                            <option value="hr">ทรัพยากรบุคคล</option>
+                            <option value="finance">การเงิน</option>
+                            <option value="it">ไอที</option>
+                            <option value="logistics">โลจิสติกส์</option>
+                            <option value="warehouse">คลังสินค้า</option>
+                            <option value="production">การผลิต</option>
+                            <option value="engineering">วิศวกรรม</option>
+                            <option value="maintenance">ซ่อมบำรุง</option>
+                            <option value="general">ส่วนกลาง</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <!-- ข้อมูลการจัดซื้อและราคา -->
                       <div class="mb-4 mt-4">
                         <h6 class="fw-semibold">ข้อมูลการจัดซื้อและราคา</h6>
                         <hr class="my-2">
@@ -394,10 +428,10 @@
                         <div class="col-sm-4">
                           <input type="text" class="form-control flatpickr-date" id="purchase-date" placeholder="DD/MM/YYYY">
                         </div>
-                        <label class="col-sm-2 col-form-label" for="tool-price">ราคา *</label>
+                        <label class="col-sm-2 col-form-label" for="durable-price">ราคา *</label>
                         <div class="col-sm-4">
                           <div class="input-group">
-                            <input type="number" class="form-control" id="tool-price" placeholder="0.00" min="0" step="0.01" required>
+                            <input type="number" class="form-control" id="durable-price" placeholder="0.00" min="0" step="0.01" required>
                             <span class="input-group-text">บาท</span>
                           </div>
                         </div>
@@ -429,10 +463,51 @@
                           <input type="text" class="form-control" id="invoice-number" placeholder="เลขที่ใบเสร็จ/ใบกำกับภาษี">
                         </div>
                       </div>
-                      
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="budget-source">แหล่งงบประมาณ</label>
+                        <div class="col-sm-4">
+                          <select id="budget-source" class="form-select">
+                            <option value="">--- เลือกแหล่งงบประมาณ ---</option>
+                            <option value="company">งบประมาณบริษัท</option>
+                            <option value="department">งบประมาณแผนก</option>
+                            <option value="project">งบประมาณโครงการ</option>
+                            <option value="donation">รับบริจาค</option>
+                            <option value="other">อื่นๆ</option>
+                          </select>
+                        </div>
+                        <label class="col-sm-2 col-form-label" for="purchase-method">วิธีการจัดซื้อ</label>
+                        <div class="col-sm-4">
+                          <select id="purchase-method" class="form-select">
+                            <option value="">--- เลือกวิธีการจัดซื้อ ---</option>
+                            <option value="direct">ซื้อตรง</option>
+                            <option value="bidding">ประกวดราคา</option>
+                            <option value="special">วิธีพิเศษ</option>
+                            <option value="emergency">วิธีกรณีฉุกเฉิน</option>
+                            <option value="other">อื่นๆ</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <!-- ข้อมูลการใช้งานและการบำรุงรักษา -->
                       <div class="mb-4 mt-4">
                         <h6 class="fw-semibold">ข้อมูลการใช้งานและการบำรุงรักษา</h6>
                         <hr class="my-2">
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label" for="useful-life">อายุการใช้งาน</label>
+                        <div class="col-sm-4">
+                          <div class="input-group">
+                            <input type="number" class="form-control" id="useful-life" placeholder="0" min="0">
+                            <span class="input-group-text">ปี</span>
+                          </div>
+                        </div>
+                        <label class="col-sm-2 col-form-label" for="depreciation-rate">อัตราค่าเสื่อม</label>
+                        <div class="col-sm-4">
+                          <div class="input-group">
+                            <input type="number" class="form-control" id="depreciation-rate" placeholder="0" min="0" max="100">
+                            <span class="input-group-text">%</span>
+                          </div>
+                        </div>
                       </div>
                       <div class="row mb-3">
                         <label class="col-sm-2 col-form-label" for="maintenance-cycle">รอบการบำรุงรักษา</label>
@@ -454,11 +529,11 @@
                       <div class="row mb-3">
                         <label class="col-sm-2 col-form-label" for="specification">ข้อมูลจำเพาะ</label>
                         <div class="col-sm-4">
-                          <input type="text" class="form-control" id="specification" placeholder="เช่น กำลังไฟ, แรงดัน, ขนาด">
+                          <input type="text" class="form-control" id="specification" placeholder="เช่น ขนาด, สี, วัสดุ">
                         </div>
                         <label class="col-sm-2 col-form-label" for="location">สถานที่จัดเก็บ</label>
                         <div class="col-sm-4">
-                          <input type="text" class="form-control" id="location" placeholder="เช่น ตู้เก็บเครื่องมือ A, ห้องเก็บของชั้น 2">
+                          <input type="text" class="form-control" id="location" placeholder="เช่น ห้องประชุม A, ชั้น 2 ฝ่ายบัญชี">
                         </div>
                       </div>
                       <div class="row mb-3">
@@ -473,38 +548,36 @@
                             <option value="5">มานะ สมบัติ</option>
                           </select>
                         </div>
-                        <label class="col-sm-2 col-form-label" for="department">แผนก/ฝ่าย</label>
-                        <div class="col-sm-4">
-                          <select id="department" class="form-select">
-                            <option value="">--- เลือกแผนก/ฝ่าย ---</option>
-                            <option value="maintenance">ซ่อมบำรุง</option>
-                            <option value="engineering">วิศวกรรม</option>
-                            <option value="facility">อาคารสถานที่</option>
-                            <option value="production">การผลิต</option>
-                            <option value="admin">ธุรการ</option>
-                          </select>
+                        <label class="col-sm-2 col-form-label" for="is-returnable">ต้องคืนหลังใช้งาน</label>
+                        <div class="col-sm-4 d-flex align-items-center">
+                          <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is-returnable" checked>
+                            <label class="form-check-label" for="is-returnable">ใช่</label>
+                          </div>
+                          <div class="form-text ms-3">วัสดุคงทนต้องมีการคืนหลังเสร็จสิ้นการใช้งาน</div>
                         </div>
                       </div>
-                      
+
+                      <!-- ข้อมูลเพิ่มเติมและไฟล์แนบ -->
                       <div class="mb-4 mt-4">
                         <h6 class="fw-semibold">ข้อมูลเพิ่มเติมและไฟล์แนบ</h6>
                         <hr class="my-2">
                       </div>
                       <div class="row mb-3">
-                        <label class="col-sm-2 col-form-label" for="tool-notes">หมายเหตุ</label>
+                        <label class="col-sm-2 col-form-label" for="durable-notes">หมายเหตุ</label>
                         <div class="col-sm-10">
-                          <textarea id="tool-notes" class="form-control" placeholder="รายละเอียดเพิ่มเติมของเครื่องมือ" rows="3"></textarea>
+                          <textarea id="durable-notes" class="form-control" placeholder="รายละเอียดเพิ่มเติมของวัสดุ" rows="3"></textarea>
                         </div>
                       </div>
                       <div class="row mb-3">
-                        <label class="col-sm-2 col-form-label" for="tool-tags">แท็ก</label>
+                        <label class="col-sm-2 col-form-label" for="durable-tags">แท็ก</label>
                         <div class="col-sm-10">
-                          <input id="tool-tags" class="form-control" name="tool-tags" value="">
+                          <input id="durable-tags" class="form-control" name="durable-tags" value="">
                           <div class="form-text">ใส่แท็กและกด Enter เพื่อเพิ่ม</div>
                         </div>
                       </div>
                       <div class="row mb-3">
-                        <label class="col-sm-2 col-form-label" for="tool-images">รูปภาพ</label>
+                        <label class="col-sm-2 col-form-label" for="durable-images">รูปภาพ</label>
                         <div class="col-sm-10">
                           <div action="/upload" class="dropzone needsclick" id="dropzone-image">
                             <div class="dz-message needsclick">
@@ -523,7 +596,7 @@
                       </div>
                       <div class="row justify-content-end">
                         <div class="col-sm-10">
-                          <button type="button" class="btn btn-outline-secondary me-2" onclick="window.location.href='tools-list.html'">ยกเลิก</button>
+                          <button type="button" class="btn btn-outline-secondary me-2" onclick="window.location.href='durable-list.html'">ยกเลิก</button>
                           <button type="submit" class="btn btn-primary">บันทึก</button>
                         </div>
                       </div>
@@ -602,15 +675,15 @@
       });
       
       // Initialize Tagify
-      const toolTagsInput = document.getElementById('tool-tags');
-      if (toolTagsInput) {
-        new Tagify(toolTagsInput, {
+      const durableTagsInput = document.getElementById('durable-tags');
+      if (durableTagsInput) {
+        new Tagify(durableTagsInput, {
           maxTags: 10,
           dropdown: {
             enabled: 0,
             maxItems: 5
           },
-          whitelist: ["ทดแทนได้", "ไม่ทดแทน", "ใช้คู่กับT002", "ความเสี่ยงสูง", "ต้องมีใบอนุญาต"]
+          whitelist: ["สำนักงาน", "IT", "ประชุม", "ส่วนกลาง", "เช่า", "ซ่อมแซมแล้ว", "มือสอง"]
         });
       }
       
@@ -625,21 +698,21 @@
       });
       
       // Form submission
-      const toolForm = document.getElementById('toolForm');
-      if (toolForm) {
-        toolForm.addEventListener('submit', function(e) {
+      const durableForm = document.getElementById('durableForm');
+      if (durableForm) {
+        durableForm.addEventListener('submit', function(e) {
           e.preventDefault();
           
           // Basic validation
-          if (!toolForm.checkValidity()) {
+          if (!durableForm.checkValidity()) {
             e.stopPropagation();
             alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
             return;
           }
           
           // Success - Here you would normally send the data to your server
-          alert('บันทึกข้อมูลเครื่องมือใหม่เรียบร้อยแล้ว');
-          window.location.href = 'tools-list.html';
+          alert('บันทึกข้อมูลวัสดุคงทนใหม่เรียบร้อยแล้ว');
+          window.location.href = 'durable-list.html';
         });
       }
       
@@ -655,7 +728,8 @@
         const warrantyUnit = warrantyUnitSelect.value;
         
         if (purchaseDate && warrantyPeriod) {
-          const date = new Date(purchaseDate.split('/').reverse().join('-'));
+          const parts = purchaseDate.split('/');
+          const date = new Date(parts[2], parts[1] - 1, parts[0]);
           
           if (warrantyUnit === 'days') {
             date.setDate(date.getDate() + parseInt(warrantyPeriod));
@@ -690,7 +764,8 @@
         const maintenanceUnit = maintenanceUnitSelect.value;
         
         if (purchaseDate && maintenanceCycle) {
-          const date = new Date(purchaseDate.split('/').reverse().join('-'));
+          const parts = purchaseDate.split('/');
+          const date = new Date(parts[2], parts[1] - 1, parts[0]);
           
           if (maintenanceUnit === 'days') {
             date.setDate(date.getDate() + parseInt(maintenanceCycle));
@@ -712,6 +787,23 @@
         purchaseDateInput.addEventListener('change', calculateNextMaintenance);
         maintenanceCycleInput.addEventListener('input', calculateNextMaintenance);
         maintenanceUnitSelect.addEventListener('change', calculateNextMaintenance);
+      }
+      
+      // Calculate depreciation automatically
+      const usefulLifeInput = document.getElementById('useful-life');
+      const depreciationRateInput = document.getElementById('depreciation-rate');
+      
+      function calculateDepreciation() {
+        const usefulLife = usefulLifeInput.value;
+        
+        if (usefulLife && usefulLife > 0) {
+          const depreciationRate = (100 / usefulLife).toFixed(2);
+          depreciationRateInput.value = depreciationRate;
+        }
+      }
+      
+      if (usefulLifeInput) {
+        usefulLifeInput.addEventListener('input', calculateDepreciation);
       }
     });
   </script>
