@@ -36,6 +36,15 @@
   <!-- Helpers -->
   <script src="../assets/vendor/js/helpers.js"></script>
   <script src="../assets/js/config.js"></script>
+  <style type="text/css">
+    .menu-item.open .menu-sub-arrow {
+      transform: rotate(180deg);
+    }
+
+    .menu-sub-arrow {
+      transition: transform 0.2s ease-in-out;
+    }
+  </style>
 </head>
 
 <body>
@@ -56,10 +65,10 @@
             <span class="app-brand-text demo menu-text fw-bold ms-2">คลังสินค้า</span>
           </a>
 
-          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-            <i class="bx menu-toggle-icon d-none d-xl-block fs-4"></i>
-            <i class="bx bx-x d-block d-xl-none bx-sm"></i>
-          </a>
+        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+          <i class="bx bx-menu menu-toggle-icon d-none d-xl-block fs-4"></i>
+          <i class="bx bx-x d-block d-xl-none bx-sm"></i>
+        </a>
         </div>
 
         <div class="menu-divider mt-0"></div>
@@ -84,6 +93,7 @@
             <a href="javascript:void(0);" class="menu-link menu-toggle">
               <i class="menu-icon tf-icons bx bx-package"></i>
               <div data-i18n="วัสดุสิ้นเปลือง">วัสดุสิ้นเปลือง</div>
+               <i class="menu-sub-arrow tf-icons bx bx-chevron-down ms-auto"></i>
             </a>
             <ul class="menu-sub">
               <li class="menu-item">
