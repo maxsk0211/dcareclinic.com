@@ -13,29 +13,48 @@
 
     <!-- Doctors Grid -->
     <div class="row g-4">
-        <!-- Doctor 1 -->
+        <?php
+        // ดึงข้อมูลแพทย์จากฐานข้อมูล
+        $sql = "SELECT * FROM frontend_doctors WHERE status = 1 ORDER BY display_order ASC, first_name ASC";
+        $result = $conn->query($sql);
+        
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                // กำหนดรูปภาพ
+                $imgPath = $row['image_path'] ?? 'doctor.jpg';
+                $imgUrl = "img/doctors/{$imgPath}";
+                
+                // แปลงข้อความที่มีการขึ้นบรรทัดใหม่ให้เป็น array
+                $achievements = explode("\n", $row['achievements'] ?? '');
+                $additional_features = explode("\n", $row['additional_features'] ?? '');
+        ?>
+        <!-- Doctor Card -->
         <div class="col-lg-4 col-md-6">
             <div class="doctor-card">
                 <div class="doctor-card-inner">
                     <!-- Front Side -->
                     <div class="doctor-card-front">
                         <div class="doctor-image-wrapper">
-                            <img src="img/pr/pic10.png" class="doctor-image" alt="Dr. สมหญิง รักษาดี">
+                            <img src="<?php echo $imgUrl; ?>" class="doctor-image" alt="<?php echo $row['title'] . $row['first_name'] . ' ' . $row['last_name']; ?>">
                             <div class="certification-badge">
                                 <i class="fas fa-certificate"></i>
-                                Certified Expert
+                                <?php echo $row['certification'] ?? 'Certified Expert'; ?>
                             </div>
                         </div>
                         <div class="doctor-info">
-                            <h5 class="doctor-name text-black">พญ. สมหญิง รักษาดี</h5>
-                            <p class="doctor-specialty text-black">ผู้เชี่ยวชาญด้านเลเซอร์และผิวพรรณ</p>
+                            <h5 class="doctor-name text-black"><?php echo $row['title'] . $row['first_name'] . ' ' . $row['last_name']; ?></h5>
+                            <p class="doctor-specialty text-black"><?php echo $row['specialty']; ?></p>
                             <div class="doctor-credentials">
+                                <?php if ($row['education']) { ?>
                                 <span class="credential-item text-black">
-                                    <i class="fas fa-graduation-cap"></i> จุฬาลงกรณ์มหาวิทยาลัย
+                                    <i class="fas fa-graduation-cap"></i> <?php echo $row['education']; ?>
                                 </span>
+                                <?php } ?>
+                                <?php if ($row['certification']) { ?>
                                 <span class="credential-item text-black">
-                                    <i class="fas fa-star"></i> Board Certified
+                                    <i class="fas fa-star"></i> <?php echo $row['certification']; ?>
                                 </span>
+                                <?php } ?>
                             </div>
                         </div>
                     </div>
@@ -44,107 +63,48 @@
                     <div class="doctor-card-back">
                         <div class="achievements">
                             <h6 class="achievement-title">ผลงานและความเชี่ยวชาญ</h6>
+                            <?php if (!empty($achievements) && $achievements[0] !== '') { ?>
                             <ul class="achievement-list">
+                                <?php foreach ($achievements as $achievement) { 
+                                    if (trim($achievement) !== '') { ?>
                                 <li class="text-black">
                                     <i class="fas fa-check-circle"></i>
-                                    ประสบการณ์การรักษามากกว่า 10,000 เคส
+                                    <?php echo trim($achievement); ?>
                                 </li>
-                                <li class="text-black">
-                                    <i class="fas fa-check-circle"></i>
-                                    วิทยากรด้านความงามระดับนานาชาติ
-                                </li>
-                                <li class="text-black">
-                                    <i class="fas fa-check-circle"></i>
-                                    ผู้เชี่ยวชาญด้านเทคโนโลยีเลเซอร์รุ่นใหม่
-                                </li>
+                                <?php } } ?>
                             </ul>
-                            <div class="certification-list">
-                                <img src="img/pr/pic9.png" alt="Certification 1" class="cert-logo">
-                                <img src="img/pr/pic9.png" alt="Certification 2" class="cert-logo">
-                                <img src="img/pr/pic9.png" alt="Certification 3" class="cert-logo">
-                            </div>
-                        </div>
-                        <div class="social-links">
-                            <a href="#" class="social-link">
-                                <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a href="#" class="social-link">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                            <a href="#" class="social-link">
-                                <i class="fab fa-linkedin-in"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                            <?php } ?>
+                            
+                            <?php if (!empty($additional_features) && $additional_features[0] !== '') { ?>
+                            <h6 class="achievement-title mt-4">ความเชี่ยวชาญพิเศษ</h6>
+                            <ul class="achievement-list">
+                                <?php foreach ($additional_features as $feature) { 
+                                    if (trim($feature) !== '') { ?>
+                                <li class="text-black">
+                                    <i class="fas fa-check-circle"></i>
+                                    <?php echo trim($feature); ?>
+                                </li>
+                                <?php } } ?>
+                            </ul>
+                            <?php } ?>
 
-        <!-- Doctor 2 -->
-        <div class="col-lg-4 col-md-6">
-            <div class="doctor-card">
-                <div class="doctor-card-inner">
-                    <!-- Front Side -->
-                    <div class="doctor-card-front">
-                        <div class="doctor-image-wrapper">
-                            <img src="img/pr/pic10.png" class="doctor-image" alt="Dr. สมศรี มั่นใจ">
-                            <div class="certification-badge">
-                                <i class="fas fa-certificate"></i>
-                                Certified Expert
-                            </div>
-                        </div>
-                        <div class="doctor-info">
-                            <h5 class="doctor-name text-black">พญ. สมศรี มั่นใจ</h5>
-                            <p class="doctor-specialty text-black">ผู้เชี่ยวชาญด้านผิวพรรณและแอนตี้เอจจิ้ง</p>
-                            <div class="doctor-credentials">
-                                <span class="credential-item text-black">
-                                    <i class="fas fa-graduation-cap"></i> มหาวิทยาลัยมหิดล
-                                </span>
-                                <span class="credential-item text-black">
-                                    <i class="fas fa-star"></i> Board Certified
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Back Side -->
-                    <div class="doctor-card-back">
-                        <div class="achievements">
-                            <h6 class="achievement-title ">ผลงานและความเชี่ยวชาญ</h6>
-                            <ul class="achievement-list ">
-                                <li class="text-black">
-                                    <i class="fas fa-check-circle"></i>
-                                    ผู้เชี่ยวชาญด้านการชะลอวัยระดับนานาชาติ
-                                </li>
-                                <li class="text-black">
-                                    <i class="fas fa-check-circle"></i>
-                                    นวัตกรรมการรักษาผิวแนวใหม่
-                                </li>
-                                <li class="text-black">
-                                    <i class="fas fa-check-circle"></i>
-                                    ที่ปรึกษาด้านความงามให้กับคลินิกชั้นนำ
-                                </li>
-                            </ul>
-                            <div class="certification-list">
-                                <img src="img/pr/pic9.png" alt="Certification 1" class="cert-logo">
-                                <img src="img/pr/pic9.png" alt="Certification 2" class="cert-logo">
-                                <img src="img/pr/pic9.png" alt="Certification 3" class="cert-logo">
-                            </div>
-                        </div>
-                        <div class="social-links">
-                            <a href="#" class="social-link">
-                                <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a href="#" class="social-link">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                            <a href="#" class="social-link">
-                                <i class="fab fa-linkedin-in"></i>
-                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <?php
+            }
+        } else {
+            // ถ้าไม่มีข้อมูลแพทย์
+            echo '<div class="col-12 text-center py-5">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle fs-3 mb-3 d-block"></i>
+                        <h4>ยังไม่มีข้อมูลแพทย์</h4>
+                        <p class="mb-0">ขออภัยในความไม่สะดวก เรากำลังอัพเดทข้อมูลแพทย์ผู้เชี่ยวชาญของเรา</p>
+                    </div>
+                </div>';
+        }
+        ?>
     </div>
 </section>

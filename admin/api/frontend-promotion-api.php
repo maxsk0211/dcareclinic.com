@@ -77,7 +77,7 @@ switch ($action) {
 		$stmt = $conn->prepare("INSERT INTO frontend_promotions (course_id, title, description, original_price, promotion_price, discount_percent, badge_text, start_date, end_date, features, image_path, display_order, is_featured, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 		// แก้ไขให้มี type definition 14 ตัวอักษร ตรงกับจำนวนตัวแปร
-		$stmt->bind_param("issdddssssiiii", $course_id, $title, $description, $original_price, $promotion_price, $discount_percent, $badge_text, $start_date, $end_date, $features, $image_path, $display_order, $is_featured, $status);
+		$stmt->bind_param("issdddsssssiii", $course_id, $title, $description, $original_price, $promotion_price, $discount_percent, $badge_text, $start_date, $end_date, $features, $image_path, $display_order, $is_featured, $status);
         
         if ($stmt->execute()) {
             $response = ['success' => true, 'message' => 'เพิ่มโปรโมชั่นเรียบร้อยแล้ว', 'id' => $stmt->insert_id];

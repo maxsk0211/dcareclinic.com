@@ -259,6 +259,12 @@
                   <div data-i18n="CRM">โปรโมชั่นบนเว็บไซต์</div>
                 </a>
               </li>
+              <li class="menu-item">
+                <a href="frontend-doctors.php" class="menu-link">
+                  <i class="menu-icon tf-icons ri-user-star-line"></i>
+                  <div data-i18n="CRM">ข้อมูลแพทย์บนเว็บไซต์</div>
+                </a>
+              </li>
             </ul>
           </li>
           <?php } ?>
