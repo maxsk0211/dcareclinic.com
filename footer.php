@@ -13,11 +13,6 @@
                         D Care Clinic ศูนย์รวมความงามครบวงจร ด้วยทีมแพทย์ผู้เชี่ยวชาญและนวัตกรรมความงามระดับโลก 
                         พร้อมดูแลคุณด้วยมาตรฐานระดับพรีเมียม
                     </p>
-                    <div class="certification-badges">
-                        <img src="img/pr/pic9.png" alt="Medical Certification" class="cert-badge">
-                        <img src="img/pr/pic9.png" alt="Quality Assurance" class="cert-badge">
-                        <img src="img/pr/pic9.png" alt="Safety Standard" class="cert-badge">
-                    </div>
                 </div>
 
                 <!-- Quick Links Column -->
@@ -41,14 +36,14 @@
                             <i class="fas fa-phone-alt"></i>
                             <div class="contact-info">
                                 <span class="label">สายด่วนจองคิว</span>
-                                <a href="tel:0812345678" class="value">081-234-5678</a>
+                                <a href="tel:0812345678" class="value">099-287-1289</a>
                             </div>
                         </div>
                         <div class="contact-item">
                             <i class="fas fa-clock"></i>
                             <div class="contact-info">
                                 <span class="label">เวลาทำการ</span>
-                                <span class="value">เปิดทุกวัน 10:00 - 20:00 น.</span>
+                                <span class="value">เปิดทุกวัน 13:00 - 21:00 น.</span>
                             </div>
                         </div>
                         <div class="contact-item">
@@ -69,16 +64,14 @@
         <div class="container-xxl">
             <div class="footer-bottom-content">
                 <div class="copyright">
-                    © 2024 D Care Clinic. All rights reserved.
+                    © 2025 D Care Clinic. All rights reserved.
                 </div>
                 <div class="social-links">
-                    <a href="#" class="social-link" aria-label="Facebook">
+                    <a href="https://www.facebook.com/DCareBeautyHealthy" target="_blank" class="social-link" aria-label="Facebook">
                         <i class="fab fa-facebook-f"></i>
                     </a>
-                    <a href="#" class="social-link" aria-label="Instagram">
-                        <i class="fab fa-instagram"></i>
-                    </a>
-                    <a href="#" class="social-link" aria-label="Line">
+
+                    <a href="https://line.me/R/ti/p/@bsl3458m" target="_blank" class="social-link" aria-label="Line">
                         <i class="fab fa-line"></i>
                     </a>
                 </div>

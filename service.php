@@ -142,6 +142,7 @@
       </div>
     </div>
   </div>
+
   <?php
     }
   } else {
@@ -149,6 +150,10 @@
   }
   ?>
 </div>
+<div class="d-grid gap-2 mt-4">
+  <a href="https://dcareclinic.com/packages.php" class=" btn btn-primary">ดูทั้งหมเ</a>
+</div>
+
 <!-- เพิ่มข้อมูลจำนวนบริการในแต่ละหมวดหมู่สำหรับการ debug -->
 <div id="category-data" class="d-none" 
      data-counts='<?php echo json_encode($category_counts); ?>'></div>

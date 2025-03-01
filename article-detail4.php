@@ -433,7 +433,7 @@
                         <!-- Article Content -->
                         <div class="container">
                             <div class="article-featured-image">
-                                <img src="img/pr/3/1.png" alt="ผิวที่ต้องการทรีตเมนต์">
+                                <img src="img/pr/4/1.png" alt="ผิวที่ต้องการทรีตเมนต์">
                             </div>
 
                             <div class="row justify-content-center">

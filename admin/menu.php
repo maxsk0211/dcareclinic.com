@@ -241,12 +241,12 @@
               <div data-i18n="Dashboards">จัดการข้อมูลเว็บไซต์หลัก</div>
             </a>
             <ul class="menu-sub">
-<!--               <li class="menu-item">
-                <a href="frontend-categories.php" class="menu-link">
-                  <i class="menu-icon tf-icons ri-folder-fill"></i>
-                  <div data-i18n="eCommerce">หมวดหมู่บริการ</div>
-                </a>
-              </li> -->
+            <li class="menu-item">
+              <a href="frontend-hero-slides.php" class="menu-link">
+                <i class="menu-icon tf-icons ri-slideshow-line"></i>
+                <div data-i18n="CRM">Hero Slides หน้าแรก</div>
+              </a>
+            </li>
               <li class="menu-item">
                 <a href="frontend-services.php" class="menu-link">
                   <i class="menu-icon tf-icons ri-service-line"></i>

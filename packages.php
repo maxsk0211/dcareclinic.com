@@ -1,3 +1,97 @@
+<?php
+// เชื่อมต่อฐานข้อมูล
+require_once 'dbcon.php';
+
+// ดึงข้อมูลหมวดหมู่สำหรับตัวกรอง
+$sql_categories = "SELECT * FROM frontend_categories WHERE status = 1 ORDER BY display_order ASC, name ASC";
+$result_categories = $conn->query($sql_categories);
+$categories = [];
+if ($result_categories && $result_categories->num_rows > 0) {
+    while ($row = $result_categories->fetch_assoc()) {
+        $categories[] = $row;
+    }
+}
+
+// ดึงข้อมูลบริการทั้งหมดที่อยู่ในสถานะเปิดใช้งาน
+$sql_services = "SELECT fs.*, c.course_name, c.course_pic, c.course_detail, c.course_price, 
+                 fc.name as category_name, fc.slug as category_slug
+                 FROM frontend_services fs
+                 JOIN course c ON fs.course_id = c.course_id
+                 JOIN frontend_categories fc ON fs.frontend_category_id = fc.id
+                 WHERE fs.status = 1
+                 ORDER BY fs.is_featured DESC, fs.display_order ASC";
+$result_services = $conn->query($sql_services);
+$services = [];
+if ($result_services && $result_services->num_rows > 0) {
+    while ($row = $result_services->fetch_assoc()) {
+        // กำหนดรูปภาพ
+        $row['image_url'] = !empty($row['image_path']) ? "img/course/{$row['image_path']}" : "img/course/{$row['course_pic']}";
+        // กำหนดราคาที่แสดง
+        $row['display_price'] = !empty($row['custom_price']) ? $row['custom_price'] : $row['course_price'];
+        // กำหนดราคาเดิมถ้ามี
+        $row['display_original_price'] = !empty($row['custom_original_price']) ? $row['custom_original_price'] : null;
+        // คำนวณส่วนลด
+        $row['discount_percent'] = null;
+        if ($row['display_original_price'] && $row['display_price'] && $row['display_original_price'] > $row['display_price']) {
+            $row['discount_percent'] = round(($row['display_original_price'] - $row['display_price']) / $row['display_original_price'] * 100);
+        }
+        // แปลงคุณสมบัติเพิ่มเติมเป็น array
+        $row['features_array'] = !empty($row['additional_features']) ? explode("\n", $row['additional_features']) : [];
+        
+        $services[] = $row;
+    }
+}
+
+// ดึงข้อมูลโปรโมชั่นพิเศษ
+$today = date('Y-m-d');
+$sql_promotions = "SELECT fp.*, c.course_name, c.course_pic, c.course_detail 
+                   FROM frontend_promotions fp
+                   JOIN course c ON fp.course_id = c.course_id
+                   WHERE fp.status = 1 
+                   AND fp.start_date <= '$today' 
+                   AND fp.end_date >= '$today'
+                   ORDER BY fp.is_featured DESC, fp.display_order ASC";
+$result_promotions = $conn->query($sql_promotions);
+$promotions = [];
+$featured_promotion = null; // สำหรับเก็บโปรโมชั่นแนะนำ
+if ($result_promotions && $result_promotions->num_rows > 0) {
+    while ($row = $result_promotions->fetch_assoc()) {
+        // กำหนดรูปภาพ
+        $row['image_url'] = !empty($row['image_path']) ? "img/promotion/{$row['image_path']}" : "img/course/{$row['course_pic']}";
+        // แปลงคุณสมบัติเพิ่มเติมเป็น array
+        $row['features_array'] = !empty($row['features']) ? explode("\n", $row['features']) : [];
+        // คำนวณเวลาที่เหลือ
+        $end_date = strtotime($row['end_date']);
+        $now = time();
+        $days_remaining = floor(($end_date - $now) / (60 * 60 * 24));
+        $row['days_remaining'] = max(0, $days_remaining);
+        
+        // เก็บโปรโมชั่นแนะนำตัวแรกไว้แสดงในส่วน Featured
+        if ($row['is_featured'] == 1 && $featured_promotion === null) {
+            $featured_promotion = $row;
+        } else {
+            $promotions[] = $row;
+        }
+    }
+}
+
+// ดึงโปรโมชั่นที่กำลังจะมาถึง
+$sql_upcoming = "SELECT * FROM frontend_promotions 
+                WHERE status = 1 
+                AND start_date > '$today'
+                ORDER BY start_date ASC
+                LIMIT 1";
+$result_upcoming = $conn->query($sql_upcoming);
+$upcoming_promotion = null;
+if ($result_upcoming && $result_upcoming->num_rows > 0) {
+    $upcoming_promotion = $result_upcoming->fetch_assoc();
+    // คำนวณวันที่เหลือก่อนเริ่ม
+    $start_date = strtotime($upcoming_promotion['start_date']);
+    $now = time();
+    $days_until_start = floor(($start_date - $now) / (60 * 60 * 24));
+    $upcoming_promotion['days_until_start'] = max(1, $days_until_start);
+}
+?>
 <!DOCTYPE html>
 <html lang="th" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default" data-assets-path="../assets/" data-template="horizontal-menu-template-no-customizer-starter">
 <head>
@@ -1131,16 +1225,14 @@
                         <div class="container">
                             <div class="filter-container">
                                 <div class="category-filter">
-                                    <button class="filter-btn active">ทั้งหมด</button>
-                                    <button class="filter-btn">ทรีตเมนต์ผิวหน้า</button>
-                                    <button class="filter-btn">เลเซอร์</button>
-                                    <button class="filter-btn">แอนตี้เอจจิ้ง</button>
-                                    <button class="filter-btn">ทรีตเมนต์ผิวกาย</button>
-                                    <button class="filter-btn">แพ็คเกจพิเศษ</button>
+                                    <button class="filter-btn active" data-category="all">ทั้งหมด</button>
+                                    <?php foreach ($categories as $category): ?>
+                                    <button class="filter-btn" data-category="<?php echo $category['slug']; ?>"><?php echo $category['name']; ?></button>
+                                    <?php endforeach; ?>
                                 </div>
                                 <div class="price-toggle-wrapper">
-                                    <div class="price-toggle-option active">รายครั้ง</div>
-                                    <div class="price-toggle-option">คอร์ส (ประหยัดกว่า)</div>
+                                    <div class="price-toggle-option active" data-price-mode="single">รายครั้ง</div>
+                                    <div class="price-toggle-option" data-price-mode="course">คอร์ส (ประหยัดกว่า)</div>
                                 </div>
                             </div>
                         </div>
@@ -1150,379 +1242,104 @@
                     <section class="packages-grid">
                         <div class="container">
                             <div class="row g-4">
-                                <!-- Package Card 1 -->
-                                <div class="col-lg-4 col-md-6" data-category="facial">
-                                    <div class="package-card">
-                                        <div class="package-badge">ขายดี</div>
-                                        <div class="package-image">
-                                            <img src="/api/placeholder/600/400" alt="Basic Facial Treatment">
-                                        </div>
-                                        <div class="package-content">
-                                            <h3 class="package-title">Basic Facial Treatment</h3>
-                                            <p class="package-description">
-                                                ทรีตเมนต์พื้นฐานสำหรับการทำความสะอาดและฟื้นฟูผิวหน้า
-                                            </p>
-                                            <div class="package-meta">
-                                                <div class="package-duration">
-                                                    <i class="fas fa-clock"></i>
-                                                    <span>60 นาที</span>
-                                                </div>
-                                                <div class="package-rating">
-                                                    <div class="stars">
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star-half-alt"></i>
+                                <!-- Package Cards -->
+                                <?php if (count($services) > 0): ?>
+                                    <?php foreach ($services as $service): ?>
+                                    <div class="col-lg-4 col-md-6" data-category="<?php echo $service['category_slug']; ?>">
+                                        <div class="package-card">
+                                            <?php if (!empty($service['badge_text'])): ?>
+                                            <div class="package-badge"><?php echo $service['badge_text']; ?></div>
+                                            <?php endif; ?>
+                                            <div class="package-image">
+                                                <img src="<?php echo $service['image_url']; ?>" alt="<?php echo $service['course_name']; ?>">
+                                            </div>
+                                            <div class="package-content">
+                                                <h3 class="package-title"><?php echo $service['course_name']; ?></h3>
+                                                <p class="package-description">
+                                                    <?php echo !empty($service['custom_description']) ? $service['custom_description'] : substr($service['course_detail'], 0, 120) . '...'; ?>
+                                                </p>
+                                                <div class="package-meta">
+                                                    <?php if (!empty($service['session_duration'])): ?>
+                                                    <div class="package-duration">
+                                                        <i class="fas fa-clock"></i>
+                                                        <span><?php echo $service['session_duration']; ?> นาที</span>
                                                     </div>
-                                                    <span class="rating-count">(128)</span>
+                                                    <?php endif; ?>
+                                                    <div class="package-rating">
+                                                        <div class="stars">
+                                                            <i class="fas fa-star"></i>
+                                                            <i class="fas fa-star"></i>
+                                                            <i class="fas fa-star"></i>
+                                                            <i class="fas fa-star"></i>
+                                                            <i class="fas fa-star-half-alt"></i>
+                                                        </div>
+                                                        <span class="rating-count">(<?php echo rand(50, 300); ?>)</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="package-pricing">
-                                                <div class="price-tag">
-                                                    <div class="original-price">2,500฿</div>
-                                                    <div class="current-price">1,900฿</div>
-                                                    <div class="discount-badge">-24%</div>
+                                                <div class="package-pricing">
+                                                    <div class="price-tag">
+                                                        <?php if ($service['display_original_price']): ?>
+                                                        <div class="original-price"><?php echo number_format($service['display_original_price']); ?>฿</div>
+                                                        <?php endif; ?>
+                                                        <div class="current-price"><?php echo number_format($service['display_price']); ?>฿</div>
+                                                        <?php if ($service['discount_percent']): ?>
+                                                        <div class="discount-badge">-<?php echo $service['discount_percent']; ?>%</div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div class="price-note single-price">ต่อครั้ง</div>
+                                                    <div class="price-note course-price" style="display:none;">
+                                                        คอร์ส <?php echo $service['course_amount'] ?? 5; ?> ครั้ง 
+                                                        (ประหยัด <?php echo number_format(($service['display_original_price'] - $service['display_price']) * 5); ?>฿)
+                                                    </div>
                                                 </div>
-                                                <div class="price-note">ต่อครั้ง (ประหยัด 600฿)</div>
-                                            </div>
-                                            <div class="package-features">
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Deep Cleansing ทำความสะอาดผิวอย่างล้ำลึก</span>
+                                                <div class="package-features">
+                                                    <?php if (count($service['features_array']) > 0): ?>
+                                                        <?php foreach (array_slice($service['features_array'], 0, 3) as $feature): ?>
+                                                        <div class="feature-item">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            <span><?php echo trim($feature); ?></span>
+                                                        </div>
+                                                        <?php endforeach; ?>
+                                                    <?php else: ?>
+                                                        <div class="feature-item">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            <span>บริการโดยแพทย์ผู้เชี่ยวชาญ</span>
+                                                        </div>
+                                                        <div class="feature-item">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            <span>ใช้เครื่องมือและอุปกรณ์คุณภาพสูง</span>
+                                                        </div>
+                                                        <div class="feature-item">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            <span>รับประกันความพึงพอใจ</span>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Gentle Exfoliation ผลัดเซลล์ผิวอย่างอ่อนโยน</span>
+                                                <div class="package-actions">
+                                                    <a class="btn-book-now shimmer" href="https://line.me/R/ti/p/@bsl3458m" target="_blank"> 
+                                                        <i class="fas fa-calendar-check me-2"></i>จองเลย
+                                                    </a>
+<!--                                                     <button class="btn-details">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </button> -->
                                                 </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Face Massage นวดหน้าด้วยเทคนิคเฉพาะ</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-actions">
-                                                <button class="btn-book-now shimmer">
-                                                    <i class="fas fa-calendar-check me-2"></i>จองเลย
-                                                </button>
-                                                <button class="btn-details">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- Package Card 2 -->
-                                <div class="col-lg-4 col-md-6" data-category="facial">
-                                    <div class="package-card">
-                                        <div class="package-badge">แนะนำ</div>
-                                        <div class="package-image">
-                                            <img src="/api/placeholder/600/400" alt="Premium Facial Treatment">
-                                        </div>
-                                        <div class="package-content">
-                                            <h3 class="package-title">Premium Facial Treatment</h3>
-                                            <p class="package-description">
-                                                ทรีตเมนต์ระดับพรีเมียมปรับสภาพผิวและแก้ไขปัญหาผิวเฉพาะจุด
-                                            </p>
-                                            <div class="package-meta">
-                                                <div class="package-duration">
-                                                    <i class="fas fa-clock"></i>
-                                                    <span>90 นาที</span>
-                                                </div>
-                                                <div class="package-rating">
-                                                    <div class="stars">
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                    </div>
-                                                    <span class="rating-count">(245)</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-pricing">
-                                                <div class="price-tag">
-                                                    <div class="original-price">3,500฿</div>
-                                                    <div class="current-price">2,900฿</div>
-                                                    <div class="discount-badge">-17%</div>
-                                                </div>
-                                                <div class="price-note">ต่อครั้ง (ประหยัด 600฿)</div>
-                                            </div>
-                                            <div class="package-features">
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Advanced Cleansing ทำความสะอาดล้ำลึกพิเศษ</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Professional Exfoliation ผลัดเซลล์ผิวระดับมืออาชีพ</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Ultrasonic Technology เทคโนโลยีอัลตร้าโซนิค</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-actions">
-                                                <button class="btn-book-now shimmer">
-                                                    <i class="fas fa-calendar-check me-2"></i>จองเลย
-                                                </button>
-                                                <button class="btn-details">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="col-12 text-center py-5">
+                                        <img src="/api/placeholder/200/200" alt="No services" class="mb-3">
+                                        <h3>ไม่พบข้อมูลบริการ</h3>
+                                        <p class="text-muted">ขออภัย ขณะนี้ไม่มีบริการที่แสดงในระบบ กรุณาตรวจสอบอีกครั้งในภายหลัง</p>
                                     </div>
-                                </div>
-
-                                <!-- Package Card 3 -->
-                                <div class="col-lg-4 col-md-6" data-category="laser">
-                                    <div class="package-card">
-                                        <div class="package-image">
-                                            <img src="/api/placeholder/600/400" alt="Laser Treatment">
-                                        </div>
-                                        <div class="package-content">
-                                            <h3 class="package-title">Laser Treatment</h3>
-                                            <p class="package-description">
-                                                เลเซอร์บำบัดผิวที่ช่วยลดเลือนริ้วรอย จุดด่างดำ และปรับสภาพผิว
-                                            </p>
-                                            <div class="package-meta">
-                                                <div class="package-duration">
-                                                    <i class="fas fa-clock"></i>
-                                                    <span>60 นาที</span>
-                                                </div>
-                                                <div class="package-rating">
-                                                    <div class="stars">
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star-half-alt"></i>
-                                                    </div>
-                                                    <span class="rating-count">(197)</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-pricing">
-                                                <div class="price-tag">
-                                                    <div class="original-price">4,500฿</div>
-                                                    <div class="current-price">3,900฿</div>
-                                                    <div class="discount-badge">-13%</div>
-                                                </div>
-                                                <div class="price-note">ต่อครั้ง (ประหยัด 600฿)</div>
-                                            </div>
-                                            <div class="package-features">
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Laser Technology เทคโนโลยีเลเซอร์ล่าสุด</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Skin Analysis วิเคราะห์สภาพผิวก่อนทำ</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Targeted Treatment รักษาเฉพาะจุด</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-actions">
-                                                <button class="btn-book-now shimmer">
-                                                    <i class="fas fa-calendar-check me-2"></i>จองเลย
-                                                </button>
-                                                <button class="btn-details">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Package Card 4 -->
-                                <div class="col-lg-4 col-md-6" data-category="anti-aging">
-                                    <div class="package-card">
-                                        <div class="package-badge">พรีเมียม</div>
-                                        <div class="package-image">
-                                            <img src="/api/placeholder/600/400" alt="Anti-Aging Treatment">
-                                        </div>
-                                        <div class="package-content">
-                                            <h3 class="package-title">Anti-Aging Treatment</h3>
-                                            <p class="package-description">
-                                                แพ็คเกจชะลอวัยด้วยเทคโนโลยีและนวัตกรรมล่าสุด
-                                            </p>
-                                            <div class="package-meta">
-                                                <div class="package-duration">
-                                                    <i class="fas fa-clock"></i>
-                                                    <span>90 นาที</span>
-                                                </div>
-                                                <div class="package-rating">
-                                                    <div class="stars">
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                    </div>
-                                                    <span class="rating-count">(162)</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-pricing">
-                                                <div class="price-tag">
-                                                    <div class="original-price">6,500฿</div>
-                                                    <div class="current-price">5,500฿</div>
-                                                    <div class="discount-badge">-15%</div>
-                                                </div>
-                                                <div class="price-note">ต่อครั้ง (ประหยัด 1,000฿)</div>
-                                            </div>
-                                            <div class="package-features">
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>HIFU Technology เทคโนโลยี HIFU</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Radio Frequency เทคโนโลยี RF</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Collagen Boost กระตุ้นคอลลาเจน</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-actions">
-                                                <button class="btn-book-now shimmer">
-                                                    <i class="fas fa-calendar-check me-2"></i>จองเลย
-                                                </button>
-                                                <button class="btn-details">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Package Card 5 -->
-                                <div class="col-lg-4 col-md-6" data-category="brightening">
-                                    <div class="package-card">
-                                        <div class="package-image">
-                                            <img src="/api/placeholder/600/400" alt="Brightening Treatment">
-                                        </div>
-                                        <div class="package-content">
-                                            <h3 class="package-title">Brightening Treatment</h3>
-                                            <p class="package-description">
-                                                ทรีตเมนต์ผิวขาวกระจ่างใส ลดเลือนฝ้า กระ และจุดด่างดำ
-                                            </p>
-                                            <div class="package-meta">
-                                                <div class="package-duration">
-                                                    <i class="fas fa-clock"></i>
-                                                    <span>75 นาที</span>
-                                                </div>
-                                                <div class="package-rating">
-                                                    <div class="stars">
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                    </div>
-                                                    <span class="rating-count">(206)</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-pricing">
-                                                <div class="price-tag">
-                                                    <div class="original-price">4,000฿</div>
-                                                    <div class="current-price">3,500฿</div>
-                                                    <div class="discount-badge">-13%</div>
-                                                </div>
-                                                <div class="price-note">ต่อครั้ง (ประหยัด 500฿)</div>
-                                            </div>
-                                            <div class="package-features">
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Vitamin C Infusion วิตามินซีเข้มข้น</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Whitening Booster ตัวเร่งผิวขาว</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Intensive Mask มาส์กเข้มข้น</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-actions">
-                                                <button class="btn-book-now shimmer">
-                                                    <i class="fas fa-calendar-check me-2"></i>จองเลย
-                                                </button>
-                                                <button class="btn-details">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Package Card 6 -->
-                                <div class="col-lg-4 col-md-6" data-category="body">
-                                    <div class="package-card">
-                                        <div class="package-image">
-                                            <img src="/api/placeholder/600/400" alt="Body Treatment">
-                                        </div>
-                                        <div class="package-content">
-                                            <h3 class="package-title">Body Treatment</h3>
-                                            <p class="package-description">
-                                                ทรีตเมนต์ผิวกายเพื่อผิวเนียนนุ่ม กระชับ และเปล่งปลั่ง
-                                            </p>
-                                            <div class="package-meta">
-                                                <div class="package-duration">
-                                                    <i class="fas fa-clock"></i>
-                                                    <span>120 นาที</span>
-                                                </div>
-                                                <div class="package-rating">
-                                                    <div class="stars">
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star"></i>
-                                                        <i class="fas fa-star-half-alt"></i>
-                                                    </div>
-                                                    <span class="rating-count">(184)</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-pricing">
-                                                <div class="price-tag">
-                                                    <div class="original-price">5,000฿</div>
-                                                    <div class="current-price">4,200฿</div>
-                                                    <div class="discount-badge">-16%</div>
-                                                </div>
-                                                <div class="price-note">ต่อครั้ง (ประหยัด 800฿)</div>
-                                            </div>
-                                            <div class="package-features">
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Body Scrub ขัดผิวทั้งตัว</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Body Wrap พอกผิวด้วยสารสกัดพิเศษ</span>
-                                                </div>
-                                                <div class="feature-item">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    <span>Slimming Massage นวดกระชับสัดส่วน</span>
-                                                </div>
-                                            </div>
-                                            <div class="package-actions">
-                                                <button class="btn-book-now shimmer">
-                                                    <i class="fas fa-calendar-check me-2"></i>จองเลย
-                                                </button>
-                                                <button class="btn-details">
-                                                    <i class="fas fa-info-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </section>
 
                     <!-- Special Offers Section -->
+                    <?php if ($featured_promotion || !empty($promotions)): ?>
                     <section class="special-offers">
                         <div class="container">
                             <div class="special-offers-content">
@@ -1534,22 +1351,24 @@
                                     </p>
                                 </div>
 
+                                <?php if ($featured_promotion): ?>
                                 <div class="row">
                                     <div class="col-lg-12">
                                         <div class="featured-offer">
                                             <div class="row g-0">
                                                 <div class="col-lg-7">
                                                     <div class="featured-content">
-                                                        <div class="featured-label">Exclusive Deal</div>
-                                                        <h3 class="featured-title">Premium Beauty Package</h3>
+                                                        <div class="featured-label">
+                                                            <?php echo !empty($featured_promotion['badge_text']) ? $featured_promotion['badge_text'] : 'Exclusive Deal'; ?>
+                                                        </div>
+                                                        <h3 class="featured-title"><?php echo $featured_promotion['title']; ?></h3>
                                                         <p class="featured-description">
-                                                            แพ็คเกจความงามระดับพรีเมียมที่รวมทรีตเมนต์ยอดนิยมไว้ในแพ็คเกจเดียว
-                                                            ครบทุกขั้นตอนการดูแลผิวหน้าและผิวกาย พร้อมผลิตภัณฑ์บำรุงผิวมูลค่ากว่า 2,500 บาท
+                                                            <?php echo !empty($featured_promotion['description']) ? $featured_promotion['description'] : $featured_promotion['course_detail']; ?>
                                                         </p>
 
                                                         <div class="offer-timer">
                                                             <div class="timer-item">
-                                                                <div class="timer-number" id="days">15</div>
+                                                                <div class="timer-number" id="days"><?php echo $featured_promotion['days_remaining']; ?></div>
                                                                 <div class="timer-label">วัน</div>
                                                             </div>
                                                             <div class="timer-item">
@@ -1567,149 +1386,150 @@
                                                         </div>
 
                                                         <div class="featured-pricing">
-                                                            <div class="featured-original">28,000฿</div>
-                                                            <div class="featured-current">18,900฿</div>
-                                                            <div class="featured-discount">ประหยัด 33%</div>
+                                                            <?php if ($featured_promotion['original_price']): ?>
+                                                            <div class="featured-original"><?php echo number_format($featured_promotion['original_price']); ?>฿</div>
+                                                            <?php endif; ?>
+                                                            <div class="featured-current"><?php echo number_format($featured_promotion['promotion_price']); ?>฿</div>
+                                                            <?php if ($featured_promotion['discount_percent']): ?>
+                                                            <div class="featured-discount">ประหยัด <?php echo $featured_promotion['discount_percent']; ?>%</div>
+                                                            <?php elseif ($featured_promotion['original_price'] && $featured_promotion['promotion_price']): ?>
+                                                            <div class="featured-discount">
+                                                                ประหยัด <?php echo round(($featured_promotion['original_price'] - $featured_promotion['promotion_price']) / $featured_promotion['original_price'] * 100); ?>%
+                                                            </div>
+                                                            <?php endif; ?>
                                                         </div>
 
                                                         <div class="featured-features">
+                                                            <?php 
+                                                            if (count($featured_promotion['features_array']) > 0):
+                                                                foreach ($featured_promotion['features_array'] as $index => $feature):
+                                                                    if ($index >= 4) break; // แสดงไม่เกิน 4 รายการ
+                                                            ?>
+                                                            <div class="featured-feature">
+                                                                <i class="fas fa-<?php echo $index % 4 === 0 ? 'gem' : ($index % 4 === 1 ? 'spa' : ($index % 4 === 2 ? 'air-freshener' : 'gift')); ?>"></i>
+                                                                <div class="feature-text">
+                                                                    <h4><?php echo trim($feature); ?></h4>
+                                                                    <p>คุณสมบัติพิเศษสำหรับโปรโมชั่นนี้</p>
+                                                                </div>
+                                                            </div>
+                                                            <?php
+                                                                endforeach; 
+                                                            else:
+                                                            ?>
                                                             <div class="featured-feature">
                                                                 <i class="fas fa-gem"></i>
                                                                 <div class="feature-text">
-                                                                    <h4>Premium Facial 3 ครั้ง</h4>
-                                                                    <p>ทรีตเมนต์ผิวหน้าระดับพรีเมียม 3 ครั้ง</p>
+                                                                    <h4>บริการระดับพรีเมียม</h4>
+                                                                    <p>ดูแลโดยทีมแพทย์ผู้เชี่ยวชาญ</p>
                                                                 </div>
                                                             </div>
                                                             <div class="featured-feature">
-                                                                <i class="fas fa-laser"></i>
+                                                                <i class="fas fa-calendar-check"></i>
                                                                 <div class="feature-text">
-                                                                    <h4>Laser Treatment 2 ครั้ง</h4>
-                                                                    <p>ทรีตเมนต์เลเซอร์ 2 ครั้ง ตามสภาพผิว</p>
+                                                                    <h4>จองง่าย สะดวกรวดเร็ว</h4>
+                                                                    <p>ไม่ต้องรอคิวนาน</p>
                                                                 </div>
                                                             </div>
                                                             <div class="featured-feature">
-                                                                <i class="fas fa-air-freshener"></i>
+                                                                <i class="fas fa-award"></i>
                                                                 <div class="feature-text">
-                                                                    <h4>Body Treatment 1 ครั้ง</h4>
-                                                                    <p>ทรีตเมนต์ผิวกาย 1 ครั้ง</p>
+                                                                    <h4>รับประกันผลลัพธ์</h4>
+                                                                    <p>มั่นใจในคุณภาพการบริการ</p>
                                                                 </div>
                                                             </div>
                                                             <div class="featured-feature">
                                                                 <i class="fas fa-gift"></i>
                                                                 <div class="feature-text">
-                                                                    <h4>ชุดผลิตภัณฑ์บำรุงผิว</h4>
-                                                                    <p>ชุดผลิตภัณฑ์บำรุงผิวมูลค่า 2,500 บาท</p>
+                                                                    <h4>รับของแถมพิเศษ</h4>
+                                                                    <p>เมื่อจองในช่วงโปรโมชั่น</p>
                                                                 </div>
                                                             </div>
+                                                            <?php endif; ?>
                                                         </div>
 
                                                         <div class="featured-action">
-                                                            <button class="btn-get-offer">
-                                                                <i class="fas fa-tag me-2"></i>รับข้อเสนอพิเศษ
-                                                            </button>
+                                                            <a class="btn-get-offer" href="https://line.me/R/ti/p/@bsl3458m" target="_blank">
+                                                                <i class="fas fa-tag me-2"></i>aเสนอพิเศษ
+                                                            </a>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-5">
                                                     <div class="featured-image">
-                                                        <img src="/api/placeholder/600/800" alt="Premium Beauty Package">
+                                                        <img src="<?php echo $featured_promotion['image_url']; ?>" alt="<?php echo $featured_promotion['title']; ?>">
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
+                                <?php if (!empty($promotions)): ?>
                                 <div class="more-offers">
                                     <div class="more-offers-grid">
-                                        <!-- Mini Offer 1 -->
+                                        <?php foreach ($promotions as $promotion): ?>
                                         <div class="mini-offer">
                                             <div class="mini-offer-image">
-                                                <img src="/api/placeholder/300/300" alt="Facial Package">
+                                                <img src="<?php echo $promotion['image_url']; ?>" alt="<?php echo $promotion['title']; ?>">
                                             </div>
                                             <div class="mini-offer-content">
-                                                <h4 class="mini-offer-title">Facial Package Deal</h4>
+                                                <h4 class="mini-offer-title"><?php echo $promotion['title']; ?></h4>
                                                 <div class="mini-offer-price">
-                                                    <div class="mini-old-price">12,500฿</div>
-                                                    <div class="mini-new-price">8,900฿</div>
-                                                    <div class="mini-discount">-29%</div>
+                                                    <?php if ($promotion['original_price']): ?>
+                                                    <span class="mini-old-price"><?php echo number_format($promotion['original_price']); ?>฿</span>
+                                                    <?php endif; ?>
+                                                    <span class="mini-new-price"><?php echo number_format($promotion['promotion_price']); ?>฿</span>
+                                                    <?php 
+                                                    $discount = 0;
+                                                    if ($promotion['discount_percent']) {
+                                                        $discount = $promotion['discount_percent'];
+                                                    } elseif ($promotion['original_price'] && $promotion['promotion_price']) {
+                                                        $discount = round(($promotion['original_price'] - $promotion['promotion_price']) / $promotion['original_price'] * 100);
+                                                    }
+                                                    if ($discount > 0):
+                                                    ?>
+                                                    <span class="mini-discount">-<?php echo $discount; ?>%</span>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="mini-features">
+                                                    <?php 
+                                                    $features = $promotion['features_array'];
+                                                    $max_features = 2; // แสดงไม่เกิน 2 รายการในแบบ mini
+                                                    
+                                                    if (count($features) > 0):
+                                                        foreach (array_slice($features, 0, $max_features) as $feature):
+                                                    ?>
                                                     <div class="mini-feature-item">
                                                         <i class="fas fa-check-circle"></i>
-                                                        <span>Premium Facial 5 ครั้ง</span>
+                                                        <span><?php echo trim($feature); ?></span>
                                                     </div>
-                                                    <div class="mini-feature-item">
-                                                        <i class="fas fa-check-circle"></i>
-                                                        <span>ฟรี! Hydrating Mask 1 ครั้ง</span>
+                                                    <?php 
+                                                        endforeach; 
+                                                    endif;
+                                                    
+                                                    // แสดงวันหมดอายุ
+                                                    if ($promotion['days_remaining'] > 0):
+                                                    ?>
+                                                    <div class="mini-feature-item text-danger">
+                                                        <i class="fas fa-clock"></i>
+                                                        <span>เหลือเวลาอีก <?php echo $promotion['days_remaining']; ?> วัน</span>
                                                     </div>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="mini-offer-action">
                                                     <button class="btn-view-details">ดูรายละเอียด</button>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <!-- Mini Offer 2 -->
-                                        <div class="mini-offer">
-                                            <div class="mini-offer-image">
-                                                <img src="/api/placeholder/300/300" alt="Laser Package">
-                                            </div>
-                                            <div class="mini-offer-content">
-                                                <h4 class="mini-offer-title">Laser Special Deal</h4>
-                                                <div class="mini-offer-price">
-                                                    <div class="mini-old-price">18,000฿</div>
-                                                    <div class="mini-new-price">12,900฿</div>
-                                                    <div class="mini-discount">-28%</div>
-                                                </div>
-                                                <div class="mini-features">
-                                                    <div class="mini-feature-item">
-                                                        <i class="fas fa-check-circle"></i>
-                                                        <span>Laser Treatment 5 ครั้ง</span>
-                                                    </div>
-                                                    <div class="mini-feature-item">
-                                                        <i class="fas fa-check-circle"></i>
-                                                        <span>ฟรี! Sun Protection SPF 50+</span>
-                                                    </div>
-                                                </div>
-                                                <div class="mini-offer-action">
-                                                    <button class="btn-view-details">ดูรายละเอียด</button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Mini Offer 3 -->
-                                        <div class="mini-offer">
-                                            <div class="mini-offer-image">
-                                                <img src="/api/placeholder/300/300" alt="Anti-Aging Package">
-                                            </div>
-                                            <div class="mini-offer-content">
-                                                <h4 class="mini-offer-title">Anti-Aging Package</h4>
-                                                <div class="mini-offer-price">
-                                                    <div class="mini-old-price">25,000฿</div>
-                                                    <div class="mini-new-price">19,900฿</div>
-                                                    <div class="mini-discount">-20%</div>
-                                                </div>
-                                                <div class="mini-features">
-                                                    <div class="mini-feature-item">
-                                                        <i class="fas fa-check-circle"></i>
-                                                        <span>HIFU Treatment 3 ครั้ง</span>
-                                                    </div>
-                                                    <div class="mini-feature-item">
-                                                        <i class="fas fa-check-circle"></i>
-                                                        <span>RF Treatment 2 ครั้ง</span>
-                                                    </div>
-                                                </div>
-                                                <div class="mini-offer-action">
-                                                    <button class="btn-view-details">ดูรายละเอียด</button>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </section>
+                    <?php endif; ?>
 
                     <!-- CTA Section -->
                     <section class="cta-section">
@@ -1720,9 +1540,9 @@
                                     ปรึกษาผู้เชี่ยวชาญเพื่อรับคำแนะนำและวางแผนการดูแลผิวที่เหมาะกับคุณ
                                     พร้อมรับสิทธิพิเศษมากมาย
                                 </p>
-                                <button class="btn-cta">
+                                <a class="btn-cta" href="https://line.me/R/ti/p/@bsl3458m" target="_blank">
                                     <i class="fas fa-calendar-alt me-2"></i>จองปรึกษาฟรี
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </section>
@@ -1748,10 +1568,10 @@
                 // Add active class to clicked button
                 this.classList.add('active');
                 
-                const category = this.textContent.toLowerCase();
+                const category = this.dataset.category;
                 const cards = document.querySelectorAll('.col-lg-4[data-category]');
                 
-                if (category === 'ทั้งหมด') {
+                if (category === 'all') {
                     cards.forEach(card => {
                         card.style.display = 'block';
                     });
@@ -1773,38 +1593,55 @@
                 document.querySelectorAll('.price-toggle-option').forEach(o => o.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Logic for toggling between single and course prices
-                const isCourse = this.textContent.includes('คอร์ส');
-                const cards = document.querySelectorAll('.package-card');
+                // Toggle between single and course prices
+                const priceMode = this.dataset.priceMode;
+                const singlePriceNotes = document.querySelectorAll('.single-price');
+                const coursePriceNotes = document.querySelectorAll('.course-price');
                 
-                cards.forEach(card => {
-                    const currentPrice = card.querySelector('.current-price');
-                    const originalPrice = card.querySelector('.original-price');
-                    const priceNote = card.querySelector('.price-note');
+                if (priceMode === 'course') {
+                    // Switch to course pricing
+                    singlePriceNotes.forEach(note => note.style.display = 'none');
+                    coursePriceNotes.forEach(note => note.style.display = 'block');
                     
-                    if (isCourse) {
-                        // Switch to course pricing (example: 20% discount)
-                        const singlePrice = parseInt(currentPrice.textContent.replace('฿', '').replace(',', ''));
-                        const coursePrice = Math.round(singlePrice * 0.8 * 5); // 20% discount for 5 sessions
-                        const originalCoursePrice = parseInt(originalPrice.textContent.replace('฿', '').replace(',', '')) * 5;
+                    // Adjust prices
+                    document.querySelectorAll('.package-card').forEach(card => {
+                        const currentPrice = card.querySelector('.current-price');
+                        const originalPrice = card.querySelector('.original-price');
                         
-                        currentPrice.textContent = coursePrice.toLocaleString() + '฿';
-                        originalPrice.textContent = originalCoursePrice.toLocaleString() + '฿';
-                        priceNote.textContent = 'คอร์ส 5 ครั้ง (ประหยัด ' + Math.round(originalCoursePrice - coursePrice).toLocaleString() + '฿)';
-                    } else {
-                        // Back to single session pricing (simplified - in real app would need to store original values)
-                        location.reload(); // Simple way to reset prices
-                    }
-                });
+                        if (currentPrice) {
+                            // Get the current price as number
+                            const currentPriceValue = parseInt(currentPrice.textContent.replace(/[^\d]/g, ''));
+                            // Calculate course price (5 sessions with 20% discount)
+                            const coursePrice = Math.round(currentPriceValue * 5 * 0.8);
+                            // Update price display
+                            currentPrice.textContent = new Intl.NumberFormat('th-TH').format(coursePrice) + '฿';
+                            
+                            // Update original price if exists
+                            if (originalPrice) {
+                                const originalPriceValue = parseInt(originalPrice.textContent.replace(/[^\d]/g, ''));
+                                originalPrice.textContent = new Intl.NumberFormat('th-TH').format(originalPriceValue * 5) + '฿';
+                            }
+                        }
+                    });
+                } else {
+                    // Switch back to single pricing
+                    singlePriceNotes.forEach(note => note.style.display = 'block');
+                    coursePriceNotes.forEach(note => note.style.display = 'none');
+                    
+                    // Reload the page to reset prices (simpler than storing original values)
+                    location.reload();
+                }
             });
         });
 
         // Countdown Timer
         function updateCountdown() {
-            // Set the target date (15 days from now for demo)
+            <?php if ($featured_promotion): ?>
+            // Set the target date (remaining days from PHP)
+            const remainingDays = <?php echo $featured_promotion['days_remaining']; ?>;
             const now = new Date();
             const target = new Date();
-            target.setDate(target.getDate() + 15);
+            target.setDate(target.getDate() + remainingDays);
             
             const diff = target - now;
             
@@ -1817,11 +1654,14 @@
             document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
             document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
             document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            <?php endif; ?>
         }
         
         // Update countdown every second
         setInterval(updateCountdown, 1000);
         updateCountdown();
+
+
 
         // Intersection Observer for Animation
         document.addEventListener('DOMContentLoaded', function() {

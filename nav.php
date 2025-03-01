@@ -18,8 +18,9 @@
                 aria-label="Close"></button>
                 
         <div class="navbar-nav align-items-lg-center ms-auto">
-            <a class="nav-item nav-link" href="index.php#home">หน้าแรก</a>
+            <a class="nav-item nav-link" href="index.php#hero-section">หน้าแรก</a>
             <a class="nav-item nav-link" href="index.php#services">บริการ</a>
+            <a class="nav-item nav-link" href="https://dcareclinic.com/packages.php">แพ็คเกจ</a>
             <a class="nav-item nav-link" href="index.php#promotion">โปรโมชั่น</a>
             <a class="nav-item nav-link" href="articles.php">บทความ</a>
             <a class="nav-item nav-link" href="index.php#doctors">แพทย์ผู้เชี่ยวชาญ</a>

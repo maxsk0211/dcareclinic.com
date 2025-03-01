@@ -435,7 +435,7 @@
                                         </p>
 
                                         <div class="image-container">
-                                            <img src="/api/placeholder/1200/600" alt="การเลือกคลินิกความงาม">
+                                            <img src="img/pr/3/3.jpg" alt="การเลือกคลินิกความงาม">
                                             <div class="image-caption">
                                                 การเลือกคลินิกความงามที่ได้มาตรฐานช่วยให้คุณมั่นใจในความปลอดภัยและประสิทธิภาพของการรักษา
                                             </div>
@@ -458,7 +458,7 @@
                                                         </p>
                                                     </div>
                                                     <div class="image-container">
-                                                        <img src="/api/placeholder/800/400" alt="ใบอนุญาตและมาตรฐานการรับรอง">
+                                                        <img src="img/pr/3/2.jpg" alt="ใบอนุญาตและมาตรฐานการรับรอง">
                                                         <div class="image-caption">
                                                             ตัวอย่างใบอนุญาตและการรับรองมาตรฐานที่สำคัญ
                                                         </div>
@@ -603,13 +603,33 @@
                                                             <span>การติดตามผลในระยะยาว</span>
                                                         </li>
                                                     </ul>
-
-                                                    <div class="image-container">
-                                                        <img src="/api/placeholder/1200/600" alt="ตัวอย่างผลงานการรักษา">
-                                                        <div class="image-caption">
-                                                            ตัวอย่างผลงานการรักษาที่มีการบันทึกอย่างเป็นระบบ
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="image-container">
+                                                                <img src="https://scontent.furt3-1.fna.fbcdn.net/v/t39.30808-6/474268050_1517171979229705_5406256017015401074_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHAgnH9vd_xm9yGTK4mha3lVYAC5lypccVVgALmXKlxxbnwUj9dVl4uaI7stsOoVi08SAGc5W9b8wwT1mhjolmk&_nc_ohc=2akjegg6gocQ7kNvgHz1y7U&_nc_oc=AdgDrgj31h9HzZ0DS8TR5mvO0fmVO4WTe3MNkuvvtxKruo93nD_UTvixZgXMsovUqiM&_nc_zt=23&_nc_ht=scontent.furt3-1.fna&_nc_gid=AYwsOIrLMhqDS7dAcAMMQtc&oh=00_AYDmNV7dbqq8sddUHzObIfqJv5GrYeMke4NJKVUAnMjmQg&oe=67C9064A" alt="ตัวอย่างผลงานการรักษา">
+                                                                <div class="image-caption">
+                                                                    ตัวอย่างผลงานการรักษาที่มีการบันทึกอย่างเป็นระบบ
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="image-container">
+                                                                <img src="https://scontent.furt3-1.fna.fbcdn.net/v/t39.30808-6/474455169_1517172185896351_4611108244787825308_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeGFD4D66O5FsrARr1zj7mZBRTTseCNbQgxFNOx4I1tCDLnrtZlR3V2Unkk0tCTIJgk5tJY5RojkNbEMfV0ZhKEv&_nc_ohc=LQ25mtve3PwQ7kNvgFmTxgr&_nc_oc=AdhGTqEu0o87meY-5eiR-2oghrzT5UnI0BB0Acbl1EArHUCohiBN6it45m6X3XTxccQ&_nc_zt=23&_nc_ht=scontent.furt3-1.fna&_nc_gid=A4IBm7Z7_QM7uBnAnlUIOIZ&oh=00_AYB2m-H4Nm8lcRSIU0GSFCeh1XMJ7tXHeghFgtCXFYxXTg&oe=67C8E449" alt="ตัวอย่างผลงานการรักษา">
+                                                                <div class="image-caption">
+                                                                    ตัวอย่างผลงานการรักษาที่มีการบันทึกอย่างเป็นระบบ
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="image-container">
+                                                                <img src="https://scontent.furt3-1.fna.fbcdn.net/v/t39.30808-6/474056856_1517172205896349_1076640210643158437_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeFlPZ5GPSI2GiBSqENuBoxxa-NMbfQDX6dr40xt9ANfp32wTR_rMcZn-1b3yXQfGfIZxZakuS05AfnoNbivSrti&_nc_ohc=nnjJNDKOF2kQ7kNvgGsOBKw&_nc_oc=AdgpWQ_qfjOUnBB4iO7Rr9Izfo3w4QGrHTdoZoU7kRWwesY8LOBVGxaX4dgaW-S-Kis&_nc_zt=23&_nc_ht=scontent.furt3-1.fna&_nc_gid=AbI-Taa0cJlkZZwFVAnOo5q&oh=00_AYBbnAEWywNB90A2-RmqbAvsuI9fLQo-7Kusn65nJZm80A&oe=67C8F597" alt="ตัวอย่างผลงานการรักษา">
+                                                                <div class="image-caption">
+                                                                    ตัวอย่างผลงานการรักษาที่มีการบันทึกอย่างเป็นระบบ
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
+
                                                 </div>
                                             </div>
 

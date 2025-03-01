@@ -336,7 +336,7 @@
                             <div class="col-lg-4 col-md-6">
                                 <article class="card article-card">
                                     <div class="article-image-wrapper">
-                                        <img src="img/pr/3/1.png" class="article-image" alt="ผิวที่ต้องการทรีตเมนต์">
+                                        <img src="img/pr/4/1.png" class="article-image" alt="ผิวที่ต้องการทรีตเมนต์">
                                         <span class="article-category">การดูแลผิวหน้า</span>
                                     </div>
                                     <div class="card-body">
